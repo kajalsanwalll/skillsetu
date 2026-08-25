@@ -1,13 +1,176 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  INDUSTRY
+  FACULTY
+  ADMIN
+}
+
+enum EvidenceType {
+  ASSESSMENT
+  PROJECT
+  CERTIFICATION
+  INTERNSHIP
+  SELF_REPORTED
+}
+
+enum VerificationStrength {
+  HIGH
+  MEDIUM
+  LOW
+  UNVERIFIED
+}
+
+enum OpportunityType {
+  INTERNSHIP
+  JOB
+  PROJECT
+  MENTORSHIP
+  FDP
+  RESEARCH
+  CONSULTANCY
+  INDUSTRIAL_TRAINING
+  GUEST_LECTURE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentProfile StudentProfile?
+  opportunities  Opportunity[] @relation("IndustryOpportunities")
+}
+
+model StudentProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  careerInterest String?
+  bio            String?
+
+  skills         StudentSkill[]
+  assessments    Assessment[]
+  applications   Application[]
+  evidence       SkillEvidence[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  category    String?
+  description String?
+
+  studentSkills      StudentSkill[]
+  opportunitySkills  OpportunitySkill[]
+  evidence            SkillEvidence[]
+}
+
+model StudentSkill {
+  id                   String @id @default(cuid())
+  studentProfileId     String
+  skillId              String
+
+  proficiency          Float
+  verificationStrength VerificationStrength @default(UNVERIFIED)
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  skill          Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([studentProfileId, skillId])
+}
+
+model SkillEvidence {
+  id               String @id @default(cuid())
+  studentProfileId String
+  skillId          String
+
+  type              EvidenceType
+  title             String
+  description       String?
+  url               String?
+  score             Float?
+  verified          Boolean @default(false)
+
+  verificationStrength VerificationStrength @default(UNVERIFIED)
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  skill          Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Assessment {
+  id               String @id @default(cuid())
+  studentProfileId String
+  title            String
+  score            Float
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Opportunity {
+  id          String   @id @default(cuid())
+  title       String
+  company     String
+  description String
+  location    String?
+  type        OpportunityType
+
+  industryId String
+  industry   User @relation("IndustryOpportunities", fields: [industryId], references: [id])
+
+  skills       OpportunitySkill[]
+  applications Application[]
+
+  createdAt DateTime @default(now())
+}
+
+model OpportunitySkill {
+  id            String @id @default(cuid())
+  opportunityId String
+  skillId       String
+
+  required             Boolean
+  weight               Float
+  minimumProficiency   Float
+
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  skill       Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([opportunityId, skillId])
+}
+
+model Application {
+  id               String @id @default(cuid())
+  studentProfileId String
+  opportunityId    String
+
+  matchScore       Float?
+  status           String @default("APPLIED")
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  opportunity    Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentProfileId, opportunityId])
 }
