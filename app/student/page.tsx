@@ -57,6 +57,21 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [showAddSkill, setShowAddSkill] =
+  useState(false);
+
+  const [skillName, setSkillName] =
+  useState("");
+
+  const [proficiency, setProficiency] =
+  useState(50);
+
+  const [savingSkill, setSavingSkill] =
+  useState(false);
+
+  const [skillError, setSkillError] =
+  useState("");
+
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -112,6 +127,64 @@ export default function StudentDashboard() {
       </main>
     );
   }
+
+  async function handleAddSkill() {
+  setSkillError("");
+  setSavingSkill(true);
+
+  try {
+    const response = await fetch(
+      "/api/student/skills",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          skillName,
+          proficiency,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Failed to add skill."
+      );
+    }
+
+    // Refresh profile
+    const profileResponse = await fetch(
+      "/api/student/profile"
+    );
+
+    const profileData =
+      await profileResponse.json();
+
+    if (!profileResponse.ok) {
+      throw new Error(
+        profileData.error ||
+          "Skill was added but profile could not be refreshed."
+      );
+    }
+
+    setProfile(profileData.profile);
+
+    setSkillName("");
+    setProficiency(50);
+    setShowAddSkill(false);
+  } catch (error) {
+    setSkillError(
+      error instanceof Error
+        ? error.message
+        : "Failed to add skill."
+    );
+  } finally {
+    setSavingSkill(false);
+  }
+}
 
   return (
     <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
@@ -219,9 +292,13 @@ export default function StudentDashboard() {
             </div>
 
             <button
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
-            >
-              + Add Skill
+                onClick={() => {
+                       setSkillError("");
+                       setShowAddSkill(true);
+                }}
+                className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+                >
+                + Add Skill
             </button>
           </div>
 
@@ -290,6 +367,120 @@ export default function StudentDashboard() {
           )}
 
         </section>
+
+        {showAddSkill && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
+         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111116] p-7 shadow-2xl">
+
+          <div className="flex items-start justify-between mb-6">
+         <div>
+          <h2 className="text-xl font-semibold">
+            Add a Skill
+          </h2>
+
+          <p className="text-sm text-gray-400 mt-1">
+            Tell SkillSetu what you're good at.
+          </p>
+         </div>
+
+         <button
+          onClick={() => setShowAddSkill(false)}
+          className="text-gray-500 hover:text-white text-xl"
+         >
+          ×
+         </button>
+         </div>
+
+          <div className="space-y-5">
+
+         {/* Skill name */}
+         <div>
+          <label className="block text-sm text-gray-300 mb-2">
+            Skill
+          </label>
+
+          <input
+            value={skillName}
+            onChange={(e) =>
+              setSkillName(e.target.value)
+            }
+            placeholder="e.g. React"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
+          />
+         </div>
+
+         {/* Proficiency */}
+         <div>
+
+          <div className="flex justify-between mb-2">
+            <label className="text-sm text-gray-300">
+              Proficiency
+            </label>
+
+            <span className="text-purple-300 font-semibold">
+              {proficiency}%
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={proficiency}
+            onChange={(e) =>
+              setProficiency(
+                Number(e.target.value)
+              )
+            }
+            className="w-full"
+          />
+
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>Beginner</span>
+            <span>Intermediate</span>
+            <span>Advanced</span>
+          </div>
+
+         </div>
+
+         {/* Error */}
+         {skillError && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+            {skillError}
+          </div>
+         )}
+
+         {/* Buttons */}
+         <div className="flex gap-3 pt-2">
+
+          <button
+            onClick={() =>
+              setShowAddSkill(false)
+            }
+            className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/5"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={handleAddSkill}
+            disabled={
+              savingSkill ||
+              !skillName.trim()
+            }
+            className="flex-1 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {savingSkill
+              ? "Adding..."
+              : "Add Skill"}
+          </button>
+
+         </div>
+
+          </div>
+         </div>
+         </div>
+        )}
 
         {/* Evidence */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
