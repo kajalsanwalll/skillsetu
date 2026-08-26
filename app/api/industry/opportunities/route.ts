@@ -1,38 +1,172 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { z } from "zod";
-
 import { prisma } from "@/lib/prisma";
-import { normalizeSkillName } from "@/lib/skills/normalize";
-
-const skillSchema = z.object({
-  name: z.string().min(1),
-  category: z.string().min(1),
-  minimumProficiency: z.number().min(0).max(100),
-  weight: z.number().min(0).max(1),
-  required: z.boolean(),
-});
-
-const opportunitySchema = z.object({
-  title: z.string().min(1),
-  company: z.string().min(1),
-  description: z.string().min(1),
-  location: z.string().nullable(),
-  type: z.enum([
-    "INTERNSHIP",
-    "JOB",
-    "PROJECT",
-    "MENTORSHIP",
-    "FDP",
-    "RESEARCH",
-    "CONSULTANCY",
-    "INDUSTRIAL_TRAINING",
-    "GUEST_LECTURE",
-  ]),
-  skills: z.array(skillSchema).min(1),
-});
+import { extractedOpportunitySchema } from "@/lib/ai/schemas";
 
 export async function POST(request: Request) {
+  try {
+    // 1. Authenticate
+    const { isAuthenticated, userId } = await auth();
+
+    if (!isAuthenticated || !userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // 2. Find SkillSetu user
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          error:
+            "SkillSetu user not found. Please complete setup.",
+        },
+        { status: 404 }
+      );
+    }
+
+    // 3. Industry-only authorization
+    if (user.role !== "INDUSTRY") {
+      return NextResponse.json(
+        {
+          error:
+            "Only industry users can create opportunities.",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4. Read request body
+    const body = await request.json();
+
+    // 5. Validate opportunity
+    const parsed =
+      extractedOpportunitySchema.safeParse(body);
+
+    if (!parsed.success) {
+      console.error(
+        "INVALID_OPPORTUNITY_DATA:",
+        parsed.error.flatten()
+      );
+
+      return NextResponse.json(
+        {
+          error: "Invalid opportunity data.",
+          details: parsed.error.flatten(),
+        },
+        { status: 400 }
+      );
+    }
+
+    const data = parsed.data;
+
+    /*
+     * ----------------------------------------------------
+     * 6. Create/reuse Skills
+     * ----------------------------------------------------
+     *
+     * We intentionally do this OUTSIDE the transaction.
+     * This avoids long-running interactive transactions
+     * with Neon.
+     */
+
+    const skillRecords = [];
+
+    for (const extractedSkill of data.skills) {
+      const skill = await prisma.skill.upsert({
+        where: {
+          name: extractedSkill.name.trim(),
+        },
+        update: {
+          category: extractedSkill.category.trim(),
+        },
+        create: {
+          name: extractedSkill.name.trim(),
+          category: extractedSkill.category.trim(),
+        },
+      });
+
+      skillRecords.push({
+        skillId: skill.id,
+        required: extractedSkill.required,
+        weight: extractedSkill.weight,
+        minimumProficiency:
+          extractedSkill.minimumProficiency,
+      });
+    }
+
+    /*
+     * ----------------------------------------------------
+     * 7. Create Opportunity
+     * ----------------------------------------------------
+     *
+     * Nested create handles OpportunitySkill records.
+     */
+
+    const opportunity =
+      await prisma.opportunity.create({
+        data: {
+          title: data.title.trim(),
+
+          company: data.company.trim(),
+
+          description: data.description.trim(),
+
+          location:
+            data.location?.trim() || null,
+
+          type: data.type,
+
+          industryId: user.id,
+
+          skills: {
+            create: skillRecords,
+          },
+        },
+
+        include: {
+          skills: {
+            include: {
+              skill: true,
+            },
+          },
+        },
+      });
+
+    // 8. Return result
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Opportunity created successfully.",
+        opportunity,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error(
+      "OPPORTUNITY_CREATE_ERROR:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Failed to create opportunity.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
   try {
     const { isAuthenticated, userId } = await auth();
 
@@ -43,123 +177,63 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-
-    const parsed = opportunitySchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid opportunity data",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 }
-      );
-    }
-
-    const data = parsed.data;
-
-    // Find the current industry user
-    const industryUser = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
       },
     });
 
-    if (!industryUser) {
+    if (!user) {
       return NextResponse.json(
-        {
-          error: "Industry user not found",
-        },
+        { error: "User not found" },
         { status: 404 }
       );
     }
 
-    if (industryUser.role !== "INDUSTRY") {
+    if (user.role !== "INDUSTRY") {
       return NextResponse.json(
         {
-          error: "Only industry users can create opportunities",
+          error:
+            "Only industry users can view industry opportunities.",
         },
         { status: 403 }
       );
     }
 
-    // Create everything atomically
-    const opportunity = await prisma.$transaction(
-      async (tx) => {
-        const createdOpportunity =
-          await tx.opportunity.create({
-            data: {
-              title: data.title,
-              company: data.company,
-              description: data.description,
-              location: data.location,
-              type: data.type,
-              industryId: industryUser.id,
-            },
-          });
+    const opportunities =
+      await prisma.opportunity.findMany({
+        where: {
+          industryId: user.id,
+        },
 
-        for (const inputSkill of data.skills) {
-          const canonicalName =
-            normalizeSkillName(inputSkill.name);
-
-          const skill = await tx.skill.upsert({
-            where: {
-              name: canonicalName,
-            },
-            update: {},
-            create: {
-              name: canonicalName,
-              category: inputSkill.category,
-            },
-          });
-
-          await tx.opportunitySkill.create({
-            data: {
-              opportunityId: createdOpportunity.id,
-              skillId: skill.id,
-              required: inputSkill.required,
-              weight: inputSkill.weight,
-              minimumProficiency:
-                inputSkill.minimumProficiency,
-            },
-          });
-        }
-
-        return tx.opportunity.findUnique({
-          where: {
-            id: createdOpportunity.id,
-          },
-          include: {
-            skills: {
-              include: {
-                skill: true,
-              },
+        include: {
+          skills: {
+            include: {
+              skill: true,
             },
           },
-        });
-      }
-    );
 
-    return NextResponse.json(
-      {
-        success: true,
-        opportunity,
-      },
-      { status: 201 }
-    );
+          applications: true,
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+    return NextResponse.json({
+      opportunities,
+    });
   } catch (error) {
     console.error(
-      "CREATE_OPPORTUNITY_ERROR:",
+      "INDUSTRY_OPPORTUNITIES_GET_ERROR:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create opportunity",
+          "Failed to fetch opportunities.",
       },
       { status: 500 }
     );

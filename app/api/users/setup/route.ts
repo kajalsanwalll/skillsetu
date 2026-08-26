@@ -2,10 +2,11 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Role = "STUDENT" | "INDUSTRY" | "FACULTY";
+type Role = "STUDENT" | "INDUSTRY";
 
 export async function POST(req: Request) {
   try {
+    // 1. Check authentication
     const { isAuthenticated, userId } = await auth();
 
     if (!isAuthenticated || !userId) {
@@ -15,16 +16,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // 2. Read request body
     const body = await req.json();
     const role = body.role as Role;
 
-    if (!["STUDENT", "INDUSTRY", "FACULTY"].includes(role)) {
+    // 3. Validate role
+    if (role !== "STUDENT" && role !== "INDUSTRY") {
       return NextResponse.json(
-        { error: "Invalid role" },
+        {
+          error: "Invalid role. Choose STUDENT or INDUSTRY.",
+        },
         { status: 400 }
       );
     }
 
+    // 4. Get Clerk user
     const clerkUser = await currentUser();
 
     if (!clerkUser) {
@@ -34,6 +40,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // 5. Get email
     const email = clerkUser.emailAddresses[0]?.emailAddress;
 
     if (!email) {
@@ -43,28 +50,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // 6. Get name
     const name =
       [clerkUser.firstName, clerkUser.lastName]
         .filter(Boolean)
         .join(" ") || "SkillSetu User";
 
+    // 7. Check whether user already exists
     const existingUser = await prisma.user.findUnique({
       where: {
         clerkId: userId,
       },
     });
 
+    // 8. If user exists, update role
     if (existingUser) {
-      // If changing away from STUDENT,
-      // remove the StudentProfile.
-      if (role !== "STUDENT") {
-        await prisma.studentProfile.deleteMany({
-          where: {
-            userId: existingUser.id,
-          },
-        });
-      }
-
       const updatedUser = await prisma.user.update({
         where: {
           clerkId: userId,
@@ -73,20 +73,16 @@ export async function POST(req: Request) {
           name,
           email,
           role,
-          ...(role === "STUDENT"
+          ...(role === "STUDENT" && !existingUser.studentProfile
             ? {
                 studentProfile: {
-                  upsert: {
-                    create: {},
-                    update: {},
-                  },
+                  create: {},
                 },
               }
             : {}),
         },
         include: {
           studentProfile: true,
-          opportunities: true,
         },
       });
 
@@ -96,6 +92,7 @@ export async function POST(req: Request) {
       });
     }
 
+    // 9. Create a new SkillSetu user
     const user = await prisma.user.create({
       data: {
         clerkId: userId,
@@ -113,10 +110,10 @@ export async function POST(req: Request) {
       },
       include: {
         studentProfile: true,
-        opportunities: true,
       },
     });
 
+    // 10. Return success
     return NextResponse.json(
       {
         message: "Setup completed successfully",
