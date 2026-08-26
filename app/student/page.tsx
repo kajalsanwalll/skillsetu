@@ -369,57 +369,68 @@ export default function StudentDashboard() {
         </section>
 
         {showAddSkill && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
-         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111116] p-7 shadow-2xl">
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-          <div className="flex items-start justify-between mb-6">
-         <div>
-          <h2 className="text-xl font-semibold">
+    <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+
+      {/* Header */}
+      <div className="flex items-start justify-between">
+
+        <div>
+          <h2 className="text-2xl font-semibold text-white">
             Add a Skill
           </h2>
 
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-gray-400">
             Tell SkillSetu what you're good at.
           </p>
-         </div>
+        </div>
 
-         <button
+        <button
+          type="button"
           onClick={() => setShowAddSkill(false)}
-          className="text-gray-500 hover:text-white text-xl"
-         >
+          className="text-2xl text-gray-500 hover:text-white"
+        >
           ×
-         </button>
-         </div>
+        </button>
 
-          <div className="space-y-5">
+      </div>
 
-         {/* Skill name */}
-         <div>
-          <label className="block text-sm text-gray-300 mb-2">
+      {/* Form */}
+      <div className="mt-6 space-y-5">
+
+        {/* Skill */}
+        <div>
+          <label
+            htmlFor="skill-name"
+            className="mb-2 block text-sm font-medium text-gray-300"
+          >
             Skill
           </label>
 
           <input
+            id="skill-name"
+            type="text"
             value={skillName}
-            onChange={(e) =>
-              setSkillName(e.target.value)
-            }
-            placeholder="e.g. React"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
+            onChange={(e) => setSkillName(e.target.value)}
+            placeholder="e.g. React, Python, SQL"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
           />
-         </div>
+        </div>
 
-         {/* Proficiency */}
-         <div>
+        {/* Proficiency */}
+        <div>
 
-          <div className="flex justify-between mb-2">
-            <label className="text-sm text-gray-300">
+          <div className="mb-2 flex items-center justify-between">
+
+            <label className="text-sm font-medium text-gray-300">
               Proficiency
             </label>
 
-            <span className="text-purple-300 font-semibold">
+            <span className="font-semibold text-purple-400">
               {proficiency}%
             </span>
+
           </div>
 
           <input
@@ -428,59 +439,56 @@ export default function StudentDashboard() {
             max="100"
             value={proficiency}
             onChange={(e) =>
-              setProficiency(
-                Number(e.target.value)
-              )
+              setProficiency(Number(e.target.value))
             }
             className="w-full"
           />
 
-          <div className="flex justify-between text-xs text-gray-500 mt-2">
+          <div className="mt-2 flex justify-between text-xs text-gray-500">
             <span>Beginner</span>
             <span>Intermediate</span>
             <span>Advanced</span>
           </div>
 
-         </div>
+        </div>
 
-         {/* Error */}
-         {skillError && (
+        {/* Error */}
+        {skillError && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
             {skillError}
           </div>
-         )}
+        )}
 
-         {/* Buttons */}
-         <div className="flex gap-3 pt-2">
+        {/* Buttons */}
+        <div className="flex gap-3 pt-2">
 
           <button
-            onClick={() =>
-              setShowAddSkill(false)
-            }
-            className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/5"
+            type="button"
+            onClick={() => setShowAddSkill(false)}
+            className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
           >
             Cancel
           </button>
 
           <button
+            type="button"
             onClick={handleAddSkill}
             disabled={
-              savingSkill ||
-              !skillName.trim()
+              savingSkill || !skillName.trim()
             }
-            className="flex-1 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {savingSkill
-              ? "Adding..."
-              : "Add Skill"}
+            {savingSkill ? "Adding..." : "Add Skill"}
           </button>
 
-         </div>
+        </div>
 
-          </div>
-         </div>
-         </div>
-        )}
+      </div>
+
+    </div>
+
+  </div>
+)}
 
         {/* Evidence */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
