@@ -1,0 +1,396 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type Skill = {
+  id: string;
+  name: string;
+  category: string | null;
+};
+
+type StudentSkill = {
+  id: string;
+  proficiency: number;
+  verificationStrength: string;
+  skill: Skill;
+};
+
+type Evidence = {
+  id: string;
+  title: string;
+  type: string;
+  verified: boolean;
+  verificationStrength: string;
+  skill: Skill;
+};
+
+type Assessment = {
+  id: string;
+  title: string;
+  score: number;
+};
+
+type StudentProfile = {
+  id: string;
+  careerInterest: string | null;
+  bio: string | null;
+  skills: StudentSkill[];
+  evidence: Evidence[];
+  assessments: Assessment[];
+};
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
+
+export default function StudentDashboard() {
+  const [user, setUser] = useState<User | null>(
+    null
+  );
+
+  const [profile, setProfile] =
+    useState<StudentProfile | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const response = await fetch(
+          "/api/student/profile"
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+              "Failed to load student profile."
+          );
+        }
+
+        setUser(data.user);
+        setProfile(data.profile);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load student profile."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-gray-400">
+            Loading your Skill DNA...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !profile || !user) {
+    return (
+      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+            {error || "Student profile unavailable."}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
+        <section className="mb-10">
+          <p className="text-sm text-purple-400 mb-2">
+            STUDENT
+          </p>
+
+          <h1 className="text-4xl font-bold">
+            Welcome, {user.name}
+          </h1>
+
+          <p className="text-gray-400 mt-2">
+            Build your Skill DNA and discover
+            opportunities that match your strengths.
+          </p>
+        </section>
+
+        {/* Stats */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-sm text-gray-400">
+              Skills
+            </p>
+
+            <p className="text-3xl font-bold mt-2">
+              {profile.skills.length}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-sm text-gray-400">
+              Evidence
+            </p>
+
+            <p className="text-3xl font-bold mt-2">
+              {profile.evidence.length}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-sm text-gray-400">
+              Assessments
+            </p>
+
+            <p className="text-3xl font-bold mt-2">
+              {profile.assessments.length}
+            </p>
+          </div>
+
+        </section>
+
+        {/* Career */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+
+          <h2 className="text-xl font-semibold mb-4">
+            Career Profile
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+
+            <div>
+              <p className="text-xs text-gray-500">
+                Career interest
+              </p>
+
+              <p className="mt-2 text-gray-200">
+                {profile.careerInterest ||
+                  "Not set yet"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs text-gray-500">
+                About you
+              </p>
+
+              <p className="mt-2 text-gray-200">
+                {profile.bio ||
+                  "Tell SkillSetu about yourself."}
+              </p>
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* Skill DNA */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-semibold">
+                Your Skill DNA
+              </h2>
+
+              <p className="text-sm text-gray-400 mt-1">
+                Skills you currently have and how
+                strongly they are verified.
+              </p>
+            </div>
+
+            <button
+              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+            >
+              + Add Skill
+            </button>
+          </div>
+
+          {profile.skills.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
+              <p className="text-gray-400">
+                Your Skill DNA is empty.
+              </p>
+
+              <p className="text-sm text-gray-500 mt-2">
+                Add your first skill to start building
+                your profile.
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+
+              {profile.skills.map(
+                (studentSkill) => (
+                  <div
+                    key={studentSkill.id}
+                    className="rounded-xl border border-white/10 p-5"
+                  >
+
+                    <div className="flex justify-between gap-4">
+
+                      <div>
+                        <h3 className="font-semibold">
+                          {studentSkill.skill.name}
+                        </h3>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                          {studentSkill.skill.category ||
+                            "General"}
+                        </p>
+                      </div>
+
+                      <span className="text-purple-300 font-semibold">
+                        {studentSkill.proficiency}%
+                      </span>
+
+                    </div>
+
+                    <div className="h-2 rounded-full bg-white/10 mt-4 overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            studentSkill.proficiency,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+
+                    <p className="text-xs text-gray-500 mt-3">
+                      Verification:{" "}
+                      {studentSkill.verificationStrength}
+                    </p>
+
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+        {/* Evidence */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+
+          <h2 className="text-xl font-semibold">
+            Evidence
+          </h2>
+
+          <p className="text-sm text-gray-400 mt-1 mb-6">
+            Proof supporting your skills.
+          </p>
+
+          {profile.evidence.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+              <p className="text-gray-500">
+                No evidence added yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+
+              {profile.evidence.map(
+                (evidence) => (
+                  <div
+                    key={evidence.id}
+                    className="rounded-xl border border-white/10 p-4"
+                  >
+
+                    <div className="flex justify-between">
+
+                      <div>
+                        <p className="font-medium">
+                          {evidence.title}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          {evidence.skill.name} •{" "}
+                          {evidence.type}
+                        </p>
+                      </div>
+
+                      <span className="text-xs text-gray-400">
+                        {evidence.verified
+                          ? "✓ Verified"
+                          : "Unverified"}
+                      </span>
+
+                    </div>
+
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+        {/* Assessments */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+
+          <h2 className="text-xl font-semibold">
+            Assessments
+          </h2>
+
+          <p className="text-sm text-gray-400 mt-1 mb-6">
+            Your assessment performance.
+          </p>
+
+          {profile.assessments.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+              <p className="text-gray-500">
+                No assessments yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+
+              {profile.assessments.map(
+                (assessment) => (
+                  <div
+                    key={assessment.id}
+                    className="rounded-xl border border-white/10 p-4 flex justify-between"
+                  >
+                    <span>
+                      {assessment.title}
+                    </span>
+
+                    <span className="font-semibold text-purple-300">
+                      {assessment.score}%
+                    </span>
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+      </div>
+    </main>
+  );
+}
