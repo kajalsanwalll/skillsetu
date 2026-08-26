@@ -19,9 +19,26 @@ type Evidence = {
   id: string;
   title: string;
   type: string;
+  description: string | null;
+  url: string | null;
+  score: number | null;
   verified: boolean;
   verificationStrength: string;
   skill: Skill;
+};
+
+type AcademicCredential = {
+  id: string;
+  source: string;
+  credentialId: string | null;
+  title: string;
+  institution: string | null;
+  score: number | null;
+  credits: number | null;
+  issueDate: string | null;
+  verificationUrl: string | null;
+  verified: boolean;
+  verificationStrength: string;
 };
 
 type Assessment = {
@@ -37,6 +54,7 @@ type StudentProfile = {
   skills: StudentSkill[];
   evidence: Evidence[];
   assessments: Assessment[];
+  academicCredentials?: AcademicCredential[];
 };
 
 type User = {
@@ -47,62 +65,412 @@ type User = {
 };
 
 export default function StudentDashboard() {
-  const [user, setUser] = useState<User | null>(
-    null
-  );
+  const [user, setUser] = useState<User | null>(null);
 
   const [profile, setProfile] =
     useState<StudentProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState("");
 
+  // =========================
+  // ADD SKILL
+  // =========================
+
   const [showAddSkill, setShowAddSkill] =
-  useState(false);
+    useState(false);
 
   const [skillName, setSkillName] =
-  useState("");
+    useState("");
 
   const [proficiency, setProficiency] =
-  useState(50);
+    useState(50);
 
   const [savingSkill, setSavingSkill] =
-  useState(false);
+    useState(false);
 
   const [skillError, setSkillError] =
-  useState("");
+    useState("");
+
+  // =========================
+  // EVIDENCE
+  // =========================
+
+  const [showEvidenceModal, setShowEvidenceModal] =
+    useState(false);
+
+  const [evidence, setEvidence] =
+    useState<Evidence[]>([]);
+
+  const [selectedSkillId, setSelectedSkillId] =
+    useState("");
+
+  const [evidenceType, setEvidenceType] =
+    useState("PROJECT");
+
+  const [evidenceTitle, setEvidenceTitle] =
+    useState("");
+
+  const [evidenceDescription, setEvidenceDescription] =
+    useState("");
+
+  const [evidenceUrl, setEvidenceUrl] =
+    useState("");
+
+  const [evidenceScore, setEvidenceScore] =
+    useState("");
+
+  const [savingEvidence, setSavingEvidence] =
+    useState(false);
+
+  const [evidenceError, setEvidenceError] =
+    useState("");
+
+  // =========================
+  // ACADEMIC CREDENTIALS
+  // =========================
+
+  const [showCredentialModal, setShowCredentialModal] =
+    useState(false);
+
+  const [credentials, setCredentials] =
+    useState<AcademicCredential[]>([]);
+
+  const [credentialSource, setCredentialSource] =
+    useState("NPTEL");
+
+  const [credentialId, setCredentialId] =
+    useState("");
+
+  const [credentialTitle, setCredentialTitle] =
+    useState("");
+
+  const [credentialInstitution, setCredentialInstitution] =
+    useState("");
+
+  const [credentialScore, setCredentialScore] =
+    useState("");
+
+  const [credentialCredits, setCredentialCredits] =
+    useState("");
+
+  const [credentialDate, setCredentialDate] =
+    useState("");
+
+  const [credentialUrl, setCredentialUrl] =
+    useState("");
+
+  const [savingCredential, setSavingCredential] =
+    useState(false);
+
+  const [credentialError, setCredentialError] =
+    useState("");
+
+  // =========================
+  // LOAD PROFILE
+  // =========================
+
+  async function loadProfile() {
+    try {
+      const response = await fetch(
+        "/api/student/profile"
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to load student profile."
+        );
+      }
+
+      setUser(data.user);
+      setProfile(data.profile);
+
+      // Keep local evidence/credential state
+      // synchronized with profile if available.
+      setEvidence(
+        data.profile?.evidence || []
+      );
+
+      setCredentials(
+        data.profile?.academicCredentials || []
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load student profile."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const response = await fetch(
-          "/api/student/profile"
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ||
-              "Failed to load student profile."
-          );
-        }
-
-        setUser(data.user);
-        setProfile(data.profile);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load student profile."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadProfile();
   }, []);
+
+  // =========================
+  // LOAD EVIDENCE
+  // =========================
+
+  async function loadEvidence() {
+    try {
+      const response = await fetch(
+        "/api/student/evidence"
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEvidence(
+          data.evidence || []
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load evidence:",
+        error
+      );
+    }
+  }
+
+  // =========================
+  // LOAD CREDENTIALS
+  // =========================
+
+  async function loadCredentials() {
+    try {
+      const response = await fetch(
+        "/api/student/credentials"
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCredentials(
+          data.credentials || []
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load credentials:",
+        error
+      );
+    }
+  }
+
+  // =========================
+  // ADD SKILL
+  // =========================
+
+  async function handleAddSkill() {
+    setSkillError("");
+    setSavingSkill(true);
+
+    try {
+      const response = await fetch(
+        "/api/student/skills",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            skillName,
+            proficiency,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to add skill."
+        );
+      }
+
+      await loadProfile();
+
+      setSkillName("");
+      setProficiency(50);
+      setShowAddSkill(false);
+    } catch (error) {
+      setSkillError(
+        error instanceof Error
+          ? error.message
+          : "Failed to add skill."
+      );
+    } finally {
+      setSavingSkill(false);
+    }
+  }
+
+  // =========================
+  // ADD EVIDENCE
+  // =========================
+
+  async function handleAddEvidence() {
+    setEvidenceError("");
+    setSavingEvidence(true);
+
+    try {
+      if (!selectedSkillId) {
+        throw new Error(
+          "Please select a skill."
+        );
+      }
+
+      if (!evidenceTitle.trim()) {
+        throw new Error(
+          "Please enter an evidence title."
+        );
+      }
+
+      const response = await fetch(
+        "/api/student/evidence",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            skillId: selectedSkillId,
+            type: evidenceType,
+            title: evidenceTitle.trim(),
+            description:
+              evidenceDescription.trim() ||
+              null,
+            url:
+              evidenceUrl.trim() ||
+              null,
+            score:
+              evidenceScore.trim()
+                ? Number(evidenceScore)
+                : null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to add evidence."
+        );
+      }
+
+      await loadProfile();
+      await loadEvidence();
+
+      setSelectedSkillId("");
+      setEvidenceType("PROJECT");
+      setEvidenceTitle("");
+      setEvidenceDescription("");
+      setEvidenceUrl("");
+      setEvidenceScore("");
+
+      setShowEvidenceModal(false);
+    } catch (error) {
+      setEvidenceError(
+        error instanceof Error
+          ? error.message
+          : "Failed to add evidence."
+      );
+    } finally {
+      setSavingEvidence(false);
+    }
+  }
+
+  // =========================
+  // ADD ACADEMIC CREDENTIAL
+  // =========================
+
+  async function handleAddCredential() {
+    setCredentialError("");
+    setSavingCredential(true);
+
+    try {
+      if (!credentialTitle.trim()) {
+        throw new Error(
+          "Please enter the credential title."
+        );
+      }
+
+      const response = await fetch(
+        "/api/student/credentials",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            source: credentialSource,
+            credentialId:
+              credentialId.trim() || null,
+            title: credentialTitle.trim(),
+            institution:
+              credentialInstitution.trim() ||
+              null,
+            score:
+              credentialScore.trim()
+                ? Number(credentialScore)
+                : null,
+            credits:
+              credentialCredits.trim()
+                ? Number(credentialCredits)
+                : null,
+            issueDate:
+              credentialDate || null,
+            verificationUrl:
+              credentialUrl.trim() ||
+              null,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to add credential."
+        );
+      }
+
+      await loadProfile();
+      await loadCredentials();
+
+      setCredentialSource("NPTEL");
+      setCredentialId("");
+      setCredentialTitle("");
+      setCredentialInstitution("");
+      setCredentialScore("");
+      setCredentialCredits("");
+      setCredentialDate("");
+      setCredentialUrl("");
+
+      setShowCredentialModal(false);
+    } catch (error) {
+      setCredentialError(
+        error instanceof Error
+          ? error.message
+          : "Failed to add credential."
+      );
+    } finally {
+      setSavingCredential(false);
+    }
+  }
+
+  // =========================
+  // LOADING
+  // =========================
 
   if (loading) {
     return (
@@ -116,81 +484,33 @@ export default function StudentDashboard() {
     );
   }
 
+  // =========================
+  // ERROR
+  // =========================
+
   if (error || !profile || !user) {
     return (
       <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
-            {error || "Student profile unavailable."}
+            {error ||
+              "Student profile unavailable."}
           </div>
         </div>
       </main>
     );
   }
 
-  async function handleAddSkill() {
-  setSkillError("");
-  setSavingSkill(true);
-
-  try {
-    const response = await fetch(
-      "/api/student/skills",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          skillName,
-          proficiency,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Failed to add skill."
-      );
-    }
-
-    // Refresh profile
-    const profileResponse = await fetch(
-      "/api/student/profile"
-    );
-
-    const profileData =
-      await profileResponse.json();
-
-    if (!profileResponse.ok) {
-      throw new Error(
-        profileData.error ||
-          "Skill was added but profile could not be refreshed."
-      );
-    }
-
-    setProfile(profileData.profile);
-
-    setSkillName("");
-    setProficiency(50);
-    setShowAddSkill(false);
-  } catch (error) {
-    setSkillError(
-      error instanceof Error
-        ? error.message
-        : "Failed to add skill."
-    );
-  } finally {
-    setSavingSkill(false);
-  }
-}
+  // =========================
+  // UI
+  // =========================
 
   return (
     <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
+        {/* HEADER */}
+
         <section className="mb-10">
           <p className="text-sm text-purple-400 mb-2">
             STUDENT
@@ -206,8 +526,9 @@ export default function StudentDashboard() {
           </p>
         </section>
 
-        {/* Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+        {/* STATS */}
+
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
             <p className="text-sm text-gray-400">
@@ -231,6 +552,16 @@ export default function StudentDashboard() {
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
             <p className="text-sm text-gray-400">
+              Credentials
+            </p>
+
+            <p className="text-3xl font-bold mt-2">
+              {credentials.length}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <p className="text-sm text-gray-400">
               Assessments
             </p>
 
@@ -241,7 +572,8 @@ export default function StudentDashboard() {
 
         </section>
 
-        {/* Career */}
+        {/* CAREER PROFILE */}
+
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
 
           <h2 className="text-xl font-semibold mb-4">
@@ -276,10 +608,12 @@ export default function StudentDashboard() {
 
         </section>
 
-        {/* Skill DNA */}
+        {/* SKILL DNA */}
+
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
 
           <div className="flex items-center justify-between mb-6">
+
             <div>
               <h2 className="text-xl font-semibold">
                 Your Skill DNA
@@ -292,18 +626,20 @@ export default function StudentDashboard() {
             </div>
 
             <button
-                onClick={() => {
-                       setSkillError("");
-                       setShowAddSkill(true);
-                }}
-                className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
-                >
-                + Add Skill
+              onClick={() => {
+                setSkillError("");
+                setShowAddSkill(true);
+              }}
+              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+            >
+              + Add Skill
             </button>
+
           </div>
 
           {profile.skills.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
+
               <p className="text-gray-400">
                 Your Skill DNA is empty.
               </p>
@@ -312,12 +648,14 @@ export default function StudentDashboard() {
                 Add your first skill to start building
                 your profile.
               </p>
+
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
 
               {profile.skills.map(
                 (studentSkill) => (
+
                   <div
                     key={studentSkill.id}
                     className="rounded-xl border border-white/10 p-5"
@@ -343,6 +681,7 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="h-2 rounded-full bg-white/10 mt-4 overflow-hidden">
+
                       <div
                         className="h-full bg-purple-500 rounded-full"
                         style={{
@@ -352,6 +691,7 @@ export default function StudentDashboard() {
                           )}%`,
                         }}
                       />
+
                     </div>
 
                     <p className="text-xs text-gray-500 mt-3">
@@ -360,6 +700,7 @@ export default function StudentDashboard() {
                     </p>
 
                   </div>
+
                 )
               )}
 
@@ -368,186 +709,936 @@ export default function StudentDashboard() {
 
         </section>
 
+        {/* ADD SKILL MODAL */}
+
         {showAddSkill && (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-    <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between">
 
-        <div>
-          <h2 className="text-2xl font-semibold text-white">
-            Add a Skill
-          </h2>
+                <div>
+                  <h2 className="text-2xl font-semibold text-white">
+                    Add a Skill
+                  </h2>
 
-          <p className="mt-1 text-sm text-gray-400">
-            Tell SkillSetu what you're good at.
-          </p>
-        </div>
+                  <p className="mt-1 text-sm text-gray-400">
+                    Tell SkillSetu what you are good at.
+                  </p>
+                </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddSkill(false)}
-          className="text-2xl text-gray-500 hover:text-white"
-        >
-          ×
-        </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowAddSkill(false)
+                  }
+                  className="text-2xl text-gray-500 hover:text-white"
+                >
+                  ×
+                </button>
 
-      </div>
+              </div>
 
-      {/* Form */}
-      <div className="mt-6 space-y-5">
+              <div className="mt-6 space-y-5">
 
-        {/* Skill */}
-        <div>
-          <label
-            htmlFor="skill-name"
-            className="mb-2 block text-sm font-medium text-gray-300"
-          >
-            Skill
-          </label>
+                <div>
+                  <label
+                    htmlFor="skill-name"
+                    className="mb-2 block text-sm font-medium text-gray-300"
+                  >
+                    Skill
+                  </label>
 
-          <input
-            id="skill-name"
-            type="text"
-            value={skillName}
-            onChange={(e) => setSkillName(e.target.value)}
-            placeholder="e.g. React, Python, SQL"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-          />
-        </div>
+                  <input
+                    id="skill-name"
+                    type="text"
+                    value={skillName}
+                    onChange={(e) =>
+                      setSkillName(e.target.value)
+                    }
+                    placeholder="e.g. React, Python, SQL"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+                </div>
 
-        {/* Proficiency */}
-        <div>
+                <div>
 
-          <div className="mb-2 flex items-center justify-between">
+                  <div className="mb-2 flex items-center justify-between">
 
-            <label className="text-sm font-medium text-gray-300">
-              Proficiency
-            </label>
+                    <label className="text-sm font-medium text-gray-300">
+                      Proficiency
+                    </label>
 
-            <span className="font-semibold text-purple-400">
-              {proficiency}%
-            </span>
+                    <span className="font-semibold text-purple-400">
+                      {proficiency}%
+                    </span>
 
-          </div>
+                  </div>
 
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={proficiency}
-            onChange={(e) =>
-              setProficiency(Number(e.target.value))
-            }
-            className="w-full"
-          />
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={proficiency}
+                    onChange={(e) =>
+                      setProficiency(
+                        Number(e.target.value)
+                      )
+                    }
+                    className="w-full"
+                  />
 
-          <div className="mt-2 flex justify-between text-xs text-gray-500">
-            <span>Beginner</span>
-            <span>Intermediate</span>
-            <span>Advanced</span>
-          </div>
+                  <div className="mt-2 flex justify-between text-xs text-gray-500">
+                    <span>Beginner</span>
+                    <span>Intermediate</span>
+                    <span>Advanced</span>
+                  </div>
 
-        </div>
+                </div>
 
-        {/* Error */}
-        {skillError && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-            {skillError}
+                {skillError && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                    {skillError}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowAddSkill(false)
+                    }
+                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    disabled={
+                      savingSkill ||
+                      !skillName.trim()
+                    }
+                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {savingSkill
+                      ? "Adding..."
+                      : "Add Skill"}
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
           </div>
         )}
 
-        {/* Buttons */}
-        <div className="flex gap-3 pt-2">
+        {/* EVIDENCE */}
 
-          <button
-            type="button"
-            onClick={() => setShowAddSkill(false)}
-            className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAddSkill}
-            disabled={
-              savingSkill || !skillName.trim()
-            }
-            className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {savingSkill ? "Adding..." : "Add Skill"}
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
-
-        {/* Evidence */}
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
 
-          <h2 className="text-xl font-semibold">
-            Evidence
-          </h2>
+          <div className="flex items-center justify-between mb-6">
 
-          <p className="text-sm text-gray-400 mt-1 mb-6">
-            Proof supporting your skills.
-          </p>
+            <div>
+              <h2 className="text-xl font-semibold">
+                Evidence
+              </h2>
+
+              <p className="text-sm text-gray-400 mt-1">
+                Proof supporting your skills.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEvidenceError("");
+                setShowEvidenceModal(true);
+              }}
+              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+            >
+              + Add Evidence
+            </button>
+
+          </div>
 
           {profile.evidence.length === 0 ? (
+
             <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+
               <p className="text-gray-500">
                 No evidence added yet.
               </p>
+
+              <p className="text-sm text-gray-600 mt-2">
+                Add projects, certifications,
+                internships or assessments.
+              </p>
+
             </div>
+
           ) : (
+
             <div className="space-y-3">
 
               {profile.evidence.map(
-                (evidence) => (
+                (item) => (
+
                   <div
-                    key={evidence.id}
-                    className="rounded-xl border border-white/10 p-4"
+                    key={item.id}
+                    className="rounded-xl border border-white/10 p-5"
                   >
 
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-4">
 
                       <div>
+
                         <p className="font-medium">
-                          {evidence.title}
+                          {item.title}
                         </p>
 
-                        <p className="text-sm text-gray-500">
-                          {evidence.skill.name} •{" "}
-                          {evidence.type}
+                        <p className="text-sm text-gray-500 mt-1">
+                          {item.skill.name} •{" "}
+                          {item.type}
                         </p>
+
                       </div>
 
-                      <span className="text-xs text-gray-400">
-                        {evidence.verified
+                      <span
+                        className={`text-xs ${
+                          item.verified
+                            ? "text-green-400"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {item.verified
                           ? "✓ Verified"
-                          : "Unverified"}
+                          : item.verificationStrength}
                       </span>
 
                     </div>
 
+                    {item.description && (
+                      <p className="mt-3 text-sm text-gray-400">
+                        {item.description}
+                      </p>
+                    )}
+
+                    {item.score !== null &&
+                      item.score !== undefined && (
+                        <p className="mt-3 text-sm text-gray-300">
+                          Score:{" "}
+                          <span className="text-white font-semibold">
+                            {item.score}
+                          </span>
+                        </p>
+                      )}
+
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-block text-sm text-purple-400 hover:text-purple-300"
+                      >
+                        View Evidence →
+                      </a>
+                    )}
+
                   </div>
+
                 )
               )}
 
             </div>
+
           )}
 
         </section>
 
-        {/* Assessments */}
+        {/* ADD EVIDENCE MODAL */}
+
+        {showEvidenceModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+
+              <div className="flex items-start justify-between">
+
+                <div>
+                  <h2 className="text-2xl font-semibold">
+                    Add Evidence
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-400">
+                    Add proof supporting one of your skills.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowEvidenceModal(false)
+                  }
+                  className="text-2xl text-gray-500 hover:text-white"
+                >
+                  ×
+                </button>
+
+              </div>
+
+              <div className="mt-6 space-y-5">
+
+                {/* SKILL */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Skill
+                  </label>
+
+                  <select
+                    value={selectedSkillId}
+                    onChange={(e) =>
+                      setSelectedSkillId(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white outline-none"
+                  >
+
+                    <option value="">
+                      Select a skill
+                    </option>
+
+                    {profile.skills.map(
+                      (studentSkill) => (
+                        <option
+                          key={
+                            studentSkill.skill.id
+                          }
+                          value={
+                            studentSkill.skill.id
+                        }
+                        >
+                          {
+                            studentSkill.skill
+                              .name
+                          }
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                </div>
+
+                {/* TYPE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Evidence Type
+                  </label>
+
+                  <select
+                    value={evidenceType}
+                    onChange={(e) =>
+                      setEvidenceType(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
+                  >
+
+                    <option value="PROJECT">
+                      Project
+                    </option>
+
+                    <option value="CERTIFICATION">
+                      Certification
+                    </option>
+
+                    <option value="INTERNSHIP">
+                      Internship
+                    </option>
+
+                    <option value="ASSESSMENT">
+                      Assessment
+                    </option>
+
+                    <option value="SELF_REPORTED">
+                      Self Reported
+                    </option>
+
+                  </select>
+
+                </div>
+
+                {/* TITLE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Title
+                  </label>
+
+                  <input
+                    type="text"
+                    value={evidenceTitle}
+                    onChange={(e) =>
+                      setEvidenceTitle(
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. Full-stack Portfolio"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* DESCRIPTION */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Description
+                  </label>
+
+                  <textarea
+                    value={evidenceDescription}
+                    onChange={(e) =>
+                      setEvidenceDescription(
+                        e.target.value
+                      )
+                    }
+                    rows={4}
+                    placeholder="Describe what you built or achieved..."
+                    className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* URL */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Evidence URL
+                  </label>
+
+                  <input
+                    type="url"
+                    value={evidenceUrl}
+                    onChange={(e) =>
+                      setEvidenceUrl(
+                        e.target.value
+                      )
+                    }
+                    placeholder="https://github.com/..."
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* SCORE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Score{" "}
+                    <span className="text-gray-500">
+                      (optional)
+                    </span>
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={evidenceScore}
+                    onChange={(e) =>
+                      setEvidenceScore(
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. 85"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {evidenceError && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                    {evidenceError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowEvidenceModal(false)
+                    }
+                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddEvidence}
+                    disabled={
+                      savingEvidence ||
+                      !selectedSkillId ||
+                      !evidenceTitle.trim()
+                    }
+                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {savingEvidence
+                      ? "Adding..."
+                      : "Add Evidence"}
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ACADEMIC CREDENTIALS */}
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+
+          <div className="flex items-center justify-between mb-6">
+
+            <div>
+
+              <h2 className="text-xl font-semibold">
+                Academic Credentials
+              </h2>
+
+              <p className="text-sm text-gray-400 mt-1">
+                NPTEL and other recognized academic achievements.
+              </p>
+
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCredentialError("");
+                setShowCredentialModal(true);
+              }}
+              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+            >
+              + Add Credential
+            </button>
+
+          </div>
+
+          {credentials.length === 0 ? (
+
+            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+
+              <p className="text-gray-500">
+                No academic credentials added yet.
+              </p>
+
+              <p className="text-sm text-gray-600 mt-2">
+                Add your NPTEL certifications and academic achievements.
+              </p>
+
+            </div>
+
+          ) : (
+
+            <div className="grid md:grid-cols-2 gap-4">
+
+              {credentials.map(
+                (credential) => (
+
+                  <div
+                    key={credential.id}
+                    className="rounded-xl border border-white/10 p-5"
+                  >
+
+                    <div className="flex items-start justify-between gap-4">
+
+                      <div>
+
+                        <p className="text-xs uppercase tracking-wider text-purple-400">
+                          {credential.source}
+                        </p>
+
+                        <h3 className="mt-1 font-semibold">
+                          {credential.title}
+                        </h3>
+
+                        {credential.institution && (
+                          <p className="mt-1 text-sm text-gray-500">
+                            {credential.institution}
+                          </p>
+                        )}
+
+                      </div>
+
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs ${
+                          credential.verified
+                            ? "bg-green-500/10 text-green-400"
+                            : "bg-white/5 text-gray-400"
+                        }`}
+                      >
+                        {credential.verified
+                          ? "Verified"
+                          : credential.verificationStrength}
+                      </span>
+
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-300">
+
+                      {credential.score !== null &&
+                        credential.score !== undefined && (
+                          <span>
+                            Score:{" "}
+                            <strong className="text-white">
+                              {credential.score}%
+                            </strong>
+                          </span>
+                        )}
+
+                      {credential.credits !== null &&
+                        credential.credits !== undefined && (
+                          <span>
+                            Credits:{" "}
+                            <strong className="text-white">
+                              {credential.credits}
+                            </strong>
+                          </span>
+                        )}
+
+                    </div>
+
+                    {credential.credentialId && (
+                      <p className="mt-3 text-xs text-gray-500">
+                        Credential ID:{" "}
+                        {credential.credentialId}
+                      </p>
+                    )}
+
+                    {credential.issueDate && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Issued:{" "}
+                        {new Date(
+                          credential.issueDate
+                        ).toLocaleDateString()}
+                      </p>
+                    )}
+
+                    {credential.verificationUrl && (
+                      <a
+                        href={
+                          credential.verificationUrl
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-block text-sm text-purple-400 hover:text-purple-300"
+                      >
+                        Verify Credential →
+                      </a>
+                    )}
+
+                  </div>
+
+                )
+              )}
+
+            </div>
+
+          )}
+
+        </section>
+
+        {/* ADD CREDENTIAL MODAL */}
+
+        {showCredentialModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+
+              <div className="flex items-start justify-between">
+
+                <div>
+
+                  <h2 className="text-2xl font-semibold">
+                    Add Academic Credential
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-400">
+                    Add an NPTEL certification or academic achievement.
+                  </p>
+
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowCredentialModal(false)
+                  }
+                  className="text-2xl text-gray-500 hover:text-white"
+                >
+                  ×
+                </button>
+
+              </div>
+
+              <div className="mt-6 space-y-5">
+
+                {/* SOURCE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Source
+                  </label>
+
+                  <select
+                    value={credentialSource}
+                    onChange={(e) =>
+                      setCredentialSource(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
+                  >
+
+                    <option value="NPTEL">
+                      NPTEL
+                    </option>
+
+                    <option value="ACADEMIC_CREDENTIAL">
+                      Academic Credential
+                    </option>
+
+                  </select>
+
+                </div>
+
+                {/* TITLE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Course / Credential Title
+                  </label>
+
+                  <input
+                    type="text"
+                    value={credentialTitle}
+                    onChange={(e) =>
+                      setCredentialTitle(
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. Programming in Python"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* INSTITUTION */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Institution
+                  </label>
+
+                  <input
+                    type="text"
+                    value={credentialInstitution}
+                    onChange={(e) =>
+                      setCredentialInstitution(
+                        e.target.value
+                      )
+                    }
+                    placeholder="e.g. NPTEL / IIT Madras"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* CREDENTIAL ID */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Credential ID
+                  </label>
+
+                  <input
+                    type="text"
+                    value={credentialId}
+                    onChange={(e) =>
+                      setCredentialId(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Certificate / credential ID"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* SCORE + CREDITS */}
+
+                <div className="grid grid-cols-2 gap-4">
+
+                  <div>
+
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Score (%)
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={credentialScore}
+                      onChange={(e) =>
+                        setCredentialScore(
+                          e.target.value
+                        )
+                      }
+                      placeholder="82"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    />
+
+                  </div>
+
+                  <div>
+
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Credits
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={credentialCredits}
+                      onChange={(e) =>
+                        setCredentialCredits(
+                          e.target.value
+                        )
+                      }
+                      placeholder="3"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    />
+
+                  </div>
+
+                </div>
+
+                {/* DATE */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Issue Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={credentialDate}
+                    onChange={(e) =>
+                      setCredentialDate(
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {/* VERIFICATION URL */}
+
+                <div>
+
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Verification URL
+                  </label>
+
+                  <input
+                    type="url"
+                    value={credentialUrl}
+                    onChange={(e) =>
+                      setCredentialUrl(
+                        e.target.value
+                      )
+                    }
+                    placeholder="Certificate verification URL"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                  />
+
+                </div>
+
+                {credentialError && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                    {credentialError}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowCredentialModal(false)
+                    }
+                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleAddCredential
+                    }
+                    disabled={
+                      savingCredential ||
+                      !credentialTitle.trim()
+                    }
+                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {savingCredential
+                      ? "Adding..."
+                      : "Add Credential"}
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ASSESSMENTS */}
+
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
 
           <h2 className="text-xl font-semibold">
@@ -559,20 +1650,27 @@ export default function StudentDashboard() {
           </p>
 
           {profile.assessments.length === 0 ? (
+
             <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+
               <p className="text-gray-500">
                 No assessments yet.
               </p>
+
             </div>
+
           ) : (
+
             <div className="space-y-3">
 
               {profile.assessments.map(
                 (assessment) => (
+
                   <div
                     key={assessment.id}
                     className="rounded-xl border border-white/10 p-4 flex justify-between"
                   >
+
                     <span>
                       {assessment.title}
                     </span>
@@ -580,11 +1678,14 @@ export default function StudentDashboard() {
                     <span className="font-semibold text-purple-300">
                       {assessment.score}%
                     </span>
+
                   </div>
+
                 )
               )}
 
             </div>
+
           )}
 
         </section>

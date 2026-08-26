@@ -20,6 +20,8 @@ enum EvidenceType {
   CERTIFICATION
   INTERNSHIP
   SELF_REPORTED
+  NPTEL
+  ACADEMIC_CREDENTIAL
 }
 
 enum VerificationStrength {
@@ -67,6 +69,7 @@ model StudentProfile {
   skills       StudentSkill[]
   assessments  Assessment[]
   applications Application[]
+  academicCredentials AcademicCredential[]
   evidence     SkillEvidence[]
 
   createdAt DateTime @default(now())
@@ -116,6 +119,31 @@ model SkillEvidence {
   skill          Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+}
+
+model AcademicCredential {
+  id                String   @id @default(cuid())
+
+  studentProfileId  String
+
+  source            String
+  credentialId      String?
+  title             String
+  institution       String?
+
+  score             Float?
+  credits           Float?
+
+  issueDate         DateTime?
+  verificationUrl   String?
+
+  verified          Boolean @default(false)
+  verificationStrength VerificationStrength @default(UNVERIFIED)
+
+  studentProfile    StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Assessment {
