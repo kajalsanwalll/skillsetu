@@ -1,309 +1,297 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import {
-  calculateSkillGaps,
-  calculateReadiness,
-} from "@/lib/gap-engine";
+"use client";
 
-export default async function OpportunityPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { isAuthenticated, userId } = await auth();
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-  if (!isAuthenticated || !userId) {
-    redirect("/sign-in");
+type Skill = {
+  id: string;
+  name: string;
+  category: string | null;
+  required: boolean;
+  minimumProficiency: number;
+  weight: number;
+};
+
+type Opportunity = {
+  id: string;
+  title: string;
+  company: string;
+  description: string;
+  location: string | null;
+  type: string;
+  createdAt: string;
+  skills: Skill[];
+};
+
+export default function OpportunityDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+
+  const [opportunity, setOpportunity] =
+    useState<Opportunity | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [applied, setApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState("");
+
+  useEffect(() => {
+    async function loadOpportunity() {
+      try {
+        const response = await fetch(
+          `/api/student/opportunities/${params.id}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+              "Failed to load opportunity."
+          );
+        }
+
+        setOpportunity(data.opportunity);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load opportunity."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (params.id) {
+      loadOpportunity();
+    }
+  }, [params.id]);
+
+  async function handleApply() {
+    if (!opportunity) return;
+
+    setApplying(true);
+    setApplyError("");
+
+    try {
+      const response = await fetch(
+        `/api/student/opportunities/${opportunity.id}/apply`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setApplied(true);
+          return;
+        }
+
+        throw new Error(
+          data.error || "Failed to apply."
+        );
+      }
+
+      setApplied(true);
+    } catch (error) {
+      setApplyError(
+        error instanceof Error
+          ? error.message
+          : "Failed to apply."
+      );
+    } finally {
+      setApplying(false);
+    }
   }
 
-  const { id } = await params;
-
-  const user = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    include: {
-      studentProfile: {
-        include: {
-          skills: {
-            include: {
-              skill: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!user?.studentProfile) {
-    redirect("/setup");
-  }
-
-  const opportunity =
-    await prisma.opportunity.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        skills: {
-          include: {
-            skill: true,
-          },
-        },
-      },
-    });
-
-  if (!opportunity) {
-    redirect("/student/dashboard");
-  }
-
-  const studentSkills =
-    user.studentProfile.skills.map(
-      (studentSkill) => ({
-        skillId: studentSkill.skill.id,
-        skillName: studentSkill.skill.name,
-        proficiency: studentSkill.proficiency,
-      })
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-gray-400">
+            Loading opportunity...
+          </p>
+        </div>
+      </main>
     );
+  }
 
-  const targetSkills =
-    opportunity.skills.map(
-      (opportunitySkill) => ({
-        skillId: opportunitySkill.skill.id,
-        skillName: opportunitySkill.skill.name,
-        minimumProficiency:
-          opportunitySkill.minimumProficiency,
-        weight: opportunitySkill.weight,
-        required: opportunitySkill.required,
-      })
+  if (error || !opportunity) {
+    return (
+      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+            {error || "Opportunity not found."}
+          </div>
+
+          <button
+            onClick={() =>
+              router.push("/student/opportunities")
+            }
+            className="mt-5 rounded-xl border border-white/10 px-5 py-3 text-sm hover:bg-white/5"
+          >
+            ← Back to Opportunities
+          </button>
+        </div>
+      </main>
     );
-
-  const gaps = calculateSkillGaps(
-    studentSkills,
-    targetSkills
-  );
-
-  const readiness =
-    calculateReadiness(gaps);
-
-  const strong = gaps.filter(
-    (gap) => gap.status === "STRONG"
-  );
-
-  const moderate = gaps.filter(
-    (gap) => gap.status === "MODERATE"
-  );
-
-  const critical = gaps.filter(
-    (gap) => gap.status === "CRITICAL"
-  );
+  }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto max-w-5xl space-y-8">
+    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <div className="max-w-4xl mx-auto">
 
-        {/* Job Header */}
+        {/* Back */}
+        <button
+          onClick={() =>
+            router.push("/student/opportunities")
+          }
+          className="mb-8 text-sm text-gray-400 hover:text-white transition"
+        >
+          ← Back to Opportunities
+        </button>
 
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
+        {/* Main card */}
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
 
-          <p className="text-sm font-medium text-blue-600">
-            {opportunity.type}
-          </p>
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
 
-          <h1 className="mt-2 text-4xl font-bold">
-            {opportunity.title}
-          </h1>
+            <div>
+              <span className="inline-block rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300 mb-4">
+                {opportunity.type.replaceAll(
+                  "_",
+                  " "
+                )}
+              </span>
 
-          <p className="mt-2 text-lg text-gray-600">
-            {opportunity.company}
-          </p>
+              <h1 className="text-4xl font-bold">
+                {opportunity.title}
+              </h1>
 
-          <p className="mt-4 text-gray-500">
-            {opportunity.description}
-          </p>
+              <p className="text-xl text-purple-300 mt-2">
+                {opportunity.company}
+              </p>
 
-          {opportunity.location && (
-            <p className="mt-4 text-sm text-gray-500">
-              📍 {opportunity.location}
-            </p>
-          )}
-
-        </section>
-
-        {/* Readiness */}
-
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
-
-          <p className="text-sm text-gray-500">
-            YOUR READINESS
-          </p>
-
-          <div className="mt-3 flex items-end gap-3">
-            <span className="text-6xl font-bold">
-              {readiness}%
-            </span>
-
-            <span className="mb-2 text-gray-500">
-              match readiness
-            </span>
-          </div>
-
-          <div className="mt-6 h-4 overflow-hidden rounded-full bg-gray-100">
-            <div
-              className="h-full rounded-full bg-black"
-              style={{
-                width: `${readiness}%`,
-              }}
-            />
-          </div>
-
-          <p className="mt-4 text-gray-600">
-            Your score is calculated from your current
-            Skill DNA against the requirements of this
-            opportunity.
-          </p>
-
-        </section>
-
-        {/* Strong */}
-
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
-
-          <h2 className="text-xl font-bold">
-            ✓ Strong Skills
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            You're currently meeting the expected level.
-          </p>
-
-          <div className="mt-6 space-y-4">
-
-            {strong.map((gap) => (
-              <div
-                key={gap.skillId}
-                className="flex items-center justify-between rounded-xl border p-4"
-              >
-                <div>
-                  <p className="font-semibold">
-                    {gap.skillName}
-                  </p>
-
-                  <p className="text-sm text-gray-500">
-                    Required: {gap.requiredProficiency}%
-                  </p>
-                </div>
-
-                <p className="font-bold">
-                  {gap.currentProficiency}%
+              {opportunity.location && (
+                <p className="text-sm text-gray-500 mt-3">
+                  📍 {opportunity.location}
                 </p>
-              </div>
-            ))}
+              )}
+            </div>
 
           </div>
 
-        </section>
+          {/* Description */}
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <h2 className="text-xl font-semibold mb-4">
+              About the Opportunity
+            </h2>
 
-        {/* Moderate */}
+            <p className="text-gray-400 leading-relaxed whitespace-pre-line">
+              {opportunity.description}
+            </p>
+          </div>
 
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
+          {/* Skills */}
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <h2 className="text-xl font-semibold mb-2">
+              Required Skills
+            </h2>
 
-          <h2 className="text-xl font-bold">
-            ⚠ Moderate Gaps
-          </h2>
+            <p className="text-sm text-gray-500 mb-5">
+              Skills required for this opportunity.
+            </p>
 
-          <div className="mt-6 space-y-4">
+            <div className="space-y-3">
+              {opportunity.skills.map(
+                (skill) => (
+                  <div
+                    key={skill.id}
+                    className="rounded-xl border border-white/10 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-4">
 
-            {moderate.map((gap) => (
-              <div
-                key={gap.skillId}
-                className="rounded-xl border p-5"
-              >
+                      <div>
+                        <p className="font-medium">
+                          {skill.name}
+                        </p>
 
-                <div className="flex justify-between">
+                        {skill.category && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {skill.category}
+                          </p>
+                        )}
+                      </div>
 
-                  <div>
-                    <p className="font-semibold">
-                      {gap.skillName}
-                    </p>
+                      <div className="text-right">
+                        <p className="text-sm text-purple-300">
+                          {skill.minimumProficiency}%
+                        </p>
 
-                    <p className="mt-1 text-sm text-gray-500">
-                      {gap.currentProficiency}% current
-                      {" → "}
-                      {gap.requiredProficiency}% required
-                    </p>
+                        <p className="text-xs text-gray-500">
+                          Minimum
+                        </p>
+                      </div>
+
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-3">
+
+                      {skill.required ? (
+                        <span className="rounded-full bg-purple-500/10 px-2.5 py-1 text-xs text-purple-300">
+                          Required
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-gray-400">
+                          Preferred
+                        </span>
+                      )}
+
+                      <span className="text-xs text-gray-500">
+                        Weight: {skill.weight}
+                      </span>
+
+                    </div>
                   </div>
-
-                  <p className="font-bold">
-                    -{gap.gap}%
-                  </p>
-
-                </div>
-
-                <button className="mt-4 text-sm font-medium underline">
-                  View learning action →
-                </button>
-
-              </div>
-            ))}
-
+                )
+              )}
+            </div>
           </div>
 
-        </section>
+          {/* Apply */}
+          <div className="mt-8 pt-8 border-t border-white/10">
 
-        {/* Critical */}
-
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
-
-          <h2 className="text-xl font-bold">
-            🔴 Critical Gaps
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            These skills are currently the biggest barriers
-            to readiness.
-          </p>
-
-          <div className="mt-6 space-y-4">
-
-            {critical.map((gap) => (
-              <div
-                key={gap.skillId}
-                className="rounded-xl border p-5"
-              >
-
-                <div className="flex justify-between">
-
-                  <div>
-                    <p className="font-semibold">
-                      {gap.skillName}
-                    </p>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      {gap.currentProficiency}% current
-                      {" → "}
-                      {gap.requiredProficiency}% required
-                    </p>
-                  </div>
-
-                  <p className="font-bold">
-                    -{gap.gap}%
-                  </p>
-
-                </div>
-
-                <button className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white">
-                  Build this skill →
-                </button>
-
+            {applyError && (
+              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                {applyError}
               </div>
-            ))}
+            )}
+
+            <button
+              type="button"
+              onClick={handleApply}
+              disabled={applied || applying}
+              className={`w-full rounded-xl px-5 py-4 text-sm font-semibold transition ${
+                applied
+                  ? "bg-green-600/20 text-green-300 border border-green-500/20"
+                  : "bg-purple-600 text-white hover:bg-purple-500"
+              } disabled:cursor-not-allowed`}
+            >
+              {applying
+                ? "Applying..."
+                : applied
+                ? "✓ Application Submitted"
+                : "Apply Now"}
+            </button>
 
           </div>
-
         </section>
-
       </div>
     </main>
   );

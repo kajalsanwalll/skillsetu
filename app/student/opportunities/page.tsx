@@ -138,6 +138,8 @@ export default function StudentOpportunitiesPage() {
   );
 }
 
+import { useRouter } from "next/navigation";
+
 function OpportunityCard({
   opportunity,
 }: {
@@ -146,6 +148,8 @@ function OpportunityCard({
   const matchScore = Math.round(
     opportunity.matchScore
   );
+
+  const router = useRouter();
 
   const [applied, setApplied] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -295,11 +299,16 @@ function OpportunityCard({
 
         {/* Existing button */}
         <button
-          type="button"
-          className="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
-        >
-          View Opportunity
-        </button>
+  type="button"
+  onClick={() =>
+    router.push(
+      `/student/opportunities/${opportunity.id}`
+    )
+  }
+  className="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
+>
+  View Opportunity
+</button>
 
         {/* Apply button */}
         <button
