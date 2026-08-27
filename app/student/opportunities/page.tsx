@@ -123,7 +123,6 @@ export default function StudentOpportunitiesPage() {
           </div>
         ) : (
           <div className="space-y-5">
-
             {opportunities.map(
               (opportunity) => (
                 <OpportunityCard
@@ -132,7 +131,6 @@ export default function StudentOpportunitiesPage() {
                 />
               )
             )}
-
           </div>
         )}
       </div>
@@ -149,14 +147,56 @@ function OpportunityCard({
     opportunity.matchScore
   );
 
+  const [applied, setApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState("");
+
+  async function handleApply() {
+    setApplying(true);
+    setApplyError("");
+
+    try {
+      const response = await fetch(
+        `/api/student/opportunities/${opportunity.id}/apply`,
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // If the API says the student already applied,
+        // keep the UI in the Applied state.
+        if (response.status === 409) {
+          setApplied(true);
+          return;
+        }
+
+        throw new Error(
+          data.error || "Failed to apply."
+        );
+      }
+
+      setApplied(true);
+    } catch (error) {
+      setApplyError(
+        error instanceof Error
+          ? error.message
+          : "Failed to apply."
+      );
+    } finally {
+      setApplying(false);
+    }
+  }
+
   return (
     <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-purple-500/30 transition">
 
+      {/* Main information */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
 
-        {/* Main information */}
         <div className="flex-1">
-
           <div className="flex flex-wrap items-center gap-3 mb-3">
 
             <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
@@ -171,7 +211,6 @@ function OpportunityCard({
                 📍 {opportunity.location}
               </span>
             )}
-
           </div>
 
           <h2 className="text-2xl font-semibold">
@@ -185,12 +224,10 @@ function OpportunityCard({
           <p className="text-gray-400 mt-4 leading-relaxed">
             {opportunity.description}
           </p>
-
         </div>
 
         {/* Match score */}
         <div className="shrink-0 md:w-32 text-center">
-
           <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4">
 
             <p className="text-3xl font-bold text-purple-300">
@@ -202,9 +239,7 @@ function OpportunityCard({
             </p>
 
           </div>
-
         </div>
-
       </div>
 
       {/* Skills */}
@@ -246,21 +281,45 @@ function OpportunityCard({
         <p className="text-xs text-gray-500 mt-3">
           * Required skill
         </p>
-
       </div>
 
-      {/* Action */}
-      <div className="mt-6 flex justify-end">
+      {/* Apply error */}
+      {applyError && (
+        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+          {applyError}
+        </div>
+      )}
 
+      {/* Actions */}
+      <div className="mt-6 flex justify-end gap-3">
+
+        {/* Existing button */}
         <button
           type="button"
-          className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold hover:bg-purple-500 transition"
+          className="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
         >
           View Opportunity
         </button>
 
-      </div>
+        {/* Apply button */}
+        <button
+          type="button"
+          onClick={handleApply}
+          disabled={applied || applying}
+          className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
+            applied
+              ? "bg-green-600/20 text-green-300 border border-green-500/20"
+              : "bg-purple-600 text-white hover:bg-purple-500"
+          } disabled:cursor-not-allowed`}
+        >
+          {applying
+            ? "Applying..."
+            : applied
+            ? "✓ Applied"
+            : "Apply Now"}
+        </button>
 
+      </div>
     </article>
   );
 }
