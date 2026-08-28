@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -170,34 +171,97 @@ export default function IndustryOpportunityDetailPage() {
     loadData();
   }, [opportunityId]);
 
+  /* ---------------------------------------------
+     LOADING
+  --------------------------------------------- */
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-gray-400">
-            Loading opportunity...
-          </p>
+      <main className="min-h-screen bg-[#08080c] text-white">
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-purple-600/10 blur-[130px]" />
+          <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-indigo-600/10 blur-[130px]" />
         </div>
-      </main>
-    );
-  }
 
-  if (error || !opportunity) {
-    return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
-            {error ||
-              "Opportunity not found."}
+        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-4 w-40 rounded bg-white/10" />
+            <div className="h-10 w-96 rounded bg-white/10" />
+            <div className="h-4 w-72 rounded bg-white/5" />
+
+            <div className="h-64 rounded-3xl border border-white/[0.07] bg-white/[0.025]" />
+
+            <div className="h-48 rounded-3xl border border-white/[0.07] bg-white/[0.025]" />
           </div>
         </div>
       </main>
     );
   }
 
+  /* ---------------------------------------------
+     ERROR
+  --------------------------------------------- */
+
+  if (error || !opportunity) {
+    return (
+      <main className="min-h-screen bg-[#08080c] text-white">
+        <div className="pointer-events-none fixed inset-0 overflow-hidden">
+          <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-purple-600/10 blur-[130px]" />
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-5 py-10 sm:px-8">
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                "/industry/opportunities"
+              )
+            }
+            className="group mb-8 flex items-center gap-2 text-sm text-gray-500 transition hover:text-white"
+          >
+            <span className="transition-transform group-hover:-translate-x-1">
+              ←
+            </span>
+            Back to Opportunities
+          </button>
+
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-6 text-red-300">
+            <div className="flex items-start gap-3">
+              <span className="text-lg">⚠</span>
+
+              <div>
+                <p className="font-semibold">
+                  Something went wrong
+                </p>
+
+                <p className="mt-1 text-sm text-red-300/80">
+                  {error ||
+                    "Opportunity not found."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  /* ---------------------------------------------
+     MAIN PAGE
+  --------------------------------------------- */
+
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-      <div className="max-w-6xl mx-auto">
+    <main className="min-h-screen bg-[#08080c] text-white">
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-[450px] w-[450px] rounded-full bg-purple-600/[0.08] blur-[140px]" />
+
+        <div className="absolute right-[-120px] top-[25%] h-[450px] w-[450px] rounded-full bg-indigo-600/[0.07] blur-[140px]" />
+
+        <div className="absolute bottom-[-150px] left-[35%] h-[400px] w-[400px] rounded-full bg-purple-500/[0.04] blur-[130px]" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10">
 
         {/* Back */}
         <button
@@ -207,313 +271,402 @@ export default function IndustryOpportunityDetailPage() {
               "/industry/opportunities"
             )
           }
-          className="mb-6 text-sm text-gray-400 hover:text-white transition"
+          className="group mb-8 flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-white"
         >
-          ← Back to Opportunities
+          <span className="transition-transform duration-200 group-hover:-translate-x-1">
+            ←
+          </span>
+
+          Back to Opportunities
         </button>
 
-        {/* Opportunity */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-8">
+        {/* -----------------------------------------
+            OPPORTUNITY HEADER
+        ----------------------------------------- */}
 
-          <div className="flex flex-col md:flex-row md:justify-between gap-6">
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] p-6 backdrop-blur-sm sm:p-8">
 
-            <div className="flex-1">
+          {/* Card glow */}
+          <div className="pointer-events-none absolute -right-32 -top-32 h-72 w-72 rounded-full bg-purple-600/[0.07] blur-[90px]" />
 
-              <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="relative">
 
-                <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
-                  {opportunity.type.replaceAll(
-                    "_",
-                    " "
-                  )}
-                </span>
+            {/* Meta */}
+            <div className="mb-5 flex flex-wrap items-center gap-3">
 
-                {opportunity.location && (
-                  <span className="text-sm text-gray-500">
-                    📍 {opportunity.location}
-                  </span>
+              <span className="rounded-full border border-purple-500/20 bg-purple-500/[0.08] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-purple-300">
+                {opportunity.type.replaceAll(
+                  "_",
+                  " "
                 )}
+              </span>
 
+              {opportunity.location && (
+                <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <span>📍</span>
+                  {opportunity.location}
+                </span>
+              )}
+            </div>
+
+            {/* Title */}
+            <h1 className="max-w-4xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+              {opportunity.title}
+            </h1>
+
+            <p className="mt-2 text-base font-medium text-purple-300">
+              {opportunity.company}
+            </p>
+
+            <p className="mt-5 max-w-4xl text-sm leading-7 text-gray-500 sm:text-base">
+              {opportunity.description}
+            </p>
+
+            {/* Required skills */}
+            <div className="mt-8 border-t border-white/[0.07] pt-7">
+
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    Required Skills
+                  </h2>
+
+                  <p className="mt-1 text-xs text-gray-600">
+                    Skills required for this opportunity
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-white/[0.04] px-3 py-1 text-xs text-gray-500">
+                  {opportunity.skills.length} skills
+                </span>
               </div>
 
-              <h1 className="text-3xl font-bold">
-                {opportunity.title}
-              </h1>
+              <div className="flex flex-wrap gap-3">
+                {opportunity.skills.map(
+                  (skill) => (
+                    <div
+                      key={skill.id}
+                      className={`
+                        rounded-2xl
+                        border
+                        px-4
+                        py-3
+                        transition-all
+                        duration-200
+                        ${
+                          skill.required
+                            ? "border-purple-500/20 bg-purple-500/[0.08] hover:border-purple-500/30 hover:bg-purple-500/[0.12]"
+                            : "border-white/[0.07] bg-white/[0.025] hover:border-white/[0.12] hover:bg-white/[0.04]"
+                        }
+                      `}
+                    >
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-200">
+                          {skill.name}
+                        </p>
 
-              <p className="text-purple-300 mt-2">
-                {opportunity.company}
-              </p>
+                        {skill.required && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
+                        )}
+                      </div>
 
-              <p className="text-gray-400 mt-5 leading-relaxed">
-                {opportunity.description}
-              </p>
-
-            </div>
-
-          </div>
-
-          {/* Required skills */}
-
-          <div className="mt-7 pt-6 border-t border-white/10">
-
-            <h2 className="text-lg font-semibold mb-4">
-              Required Skills
-            </h2>
-
-            <div className="flex flex-wrap gap-3">
-
-              {opportunity.skills.map(
-                (skill) => (
-                  <div
-                    key={skill.id}
-                    className={`rounded-xl border px-4 py-3 ${
-                      skill.required
-                        ? "border-purple-500/20 bg-purple-500/10"
-                        : "border-white/10 bg-white/[0.03]"
-                    }`}
-                  >
-                    <p className="font-medium">
-                      {skill.name}
-                    </p>
-
-                    <p className="text-xs text-gray-500 mt-1">
-                      Minimum:{" "}
-                      {skill.minimumProficiency}%
-                    </p>
-
-                    {skill.required && (
-                      <p className="text-xs text-purple-400 mt-1">
-                        Required
+                      <p className="mt-1 text-[11px] text-gray-600">
+                        Minimum{" "}
+                        {skill.minimumProficiency}%
                       </p>
-                    )}
-                  </div>
-                )
-              )}
 
+                      {skill.required && (
+                        <p className="mt-1 text-[11px] font-medium text-purple-400">
+                          Required
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
             </div>
-
           </div>
         </section>
 
-        {/* Applicants */}
+        {/* -----------------------------------------
+            APPLICANTS
+        ----------------------------------------- */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+        <section className="overflow-hidden rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm">
 
-          <div className="flex items-center justify-between mb-6">
+          {/* Section header */}
+          <div className="flex flex-col gap-4 border-b border-white/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between sm:p-7">
 
             <div>
-              <h2 className="text-2xl font-semibold">
-                Applicants
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-semibold">
+                  Applicants
+                </h2>
 
-              <p className="text-sm text-gray-400 mt-1">
+                <span className="rounded-full border border-purple-500/20 bg-purple-500/[0.08] px-3 py-1 text-xs font-semibold text-purple-300">
+                  {applicants.length}
+                </span>
+              </div>
+
+              <p className="mt-1 text-sm text-gray-600">
                 Students who applied to this
                 opportunity.
               </p>
             </div>
 
-            <div className="rounded-xl bg-purple-500/10 px-4 py-2">
-              <span className="text-purple-300 font-semibold">
-                {applicants.length}
-              </span>
-
-              <span className="text-gray-400 text-sm ml-1">
-                applicants
-              </span>
-            </div>
-
+            {applicants.length > 0 && (
+              <div className="text-xs text-gray-600">
+                Ranked by application
+              </div>
+            )}
           </div>
 
-          {applicantsLoading ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
-              <p className="text-gray-400">
-                Loading applicants...
-              </p>
-            </div>
-          ) : applicantsError ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
-              {applicantsError}
-            </div>
-          ) : applicants.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
-              <p className="text-gray-400">
-                No applications yet.
-              </p>
+          <div className="p-5 sm:p-7">
 
-              <p className="text-sm text-gray-500 mt-2">
-                Applicants will appear here when
-                students apply.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
+            {applicantsLoading ? (
+              <div className="animate-pulse space-y-4">
+                {[1, 2, 3].map((item) => (
+                  <div
+                    key={item}
+                    className="h-36 rounded-2xl border border-white/[0.07] bg-white/[0.025]"
+                  />
+                ))}
+              </div>
+            ) : applicantsError ? (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-5 text-red-300">
+                <div className="flex gap-3">
+                  <span>⚠</span>
 
-              {applicants.map(
-                (application) => {
+                  <div>
+                    <p className="font-medium">
+                      Unable to load applicants
+                    </p>
 
-                  const matchScore =
-                    Math.round(
-                      application.matchScore ?? 0
-                    );
+                    <p className="mt-1 text-sm text-red-300/70">
+                      {applicantsError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : applicants.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-white/[0.09] bg-white/[0.015] p-14 text-center">
 
-                  return (
-                    <div
-                      key={
-                        application.applicationId
-                      }
-                      className="rounded-xl border border-white/10 bg-black/10 p-5"
-                    >
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03] text-2xl">
+                  👥
+                </div>
 
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <h3 className="text-lg font-semibold">
+                  No applications yet
+                </h3>
 
-                        {/* Student */}
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600">
+                  Applicants will appear here when
+                  students apply to this opportunity.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
 
-                        <div className="flex-1">
+                {applicants.map(
+                  (application) => {
+                    const matchScore =
+                      Math.round(
+                        application.matchScore ?? 0
+                      );
 
-                          <h3 className="text-lg font-semibold">
-                            {
-                              application.student
-                                .name
-                            }
-                          </h3>
+                    return (
+                      <div
+                        key={
+                          application.applicationId
+                        }
+                        className="
+                          group
+                          relative
+                          overflow-hidden
+                          rounded-2xl
+                          border
+                          border-white/[0.07]
+                          bg-black/20
+                          p-5
+                          transition-all
+                          duration-200
+                          hover:border-purple-500/20
+                          hover:bg-white/[0.025]
+                          sm:p-6
+                        "
+                      >
 
-                          <p className="text-sm text-gray-500 mt-1">
-                            {
-                              application.student
-                                .email
-                            }
-                          </p>
+                        {/* Hover glow */}
+                        <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-purple-500/[0.04] blur-3xl transition-all group-hover:bg-purple-500/[0.08]" />
 
-                          {application.student
-                            .careerInterest && (
-                            <p className="text-sm text-gray-400 mt-2">
-                              {
-                                application.student
-                                  .careerInterest
-                              }
-                            </p>
-                          )}
+                        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center">
 
-                        </div>
+                          {/* Student */}
+                          <div className="flex min-w-0 flex-1 items-center gap-4">
 
-                        {/* Match */}
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/15 to-indigo-500/10 text-base font-bold text-purple-300">
+                              {application.student.name
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
 
-                        <div className="shrink-0 text-center">
+                            <div className="min-w-0">
+                              <h3 className="truncate text-lg font-semibold">
+                                {
+                                  application.student
+                                    .name
+                                }
+                              </h3>
 
-                          <div className="rounded-xl border border-purple-500/20 bg-purple-500/10 px-5 py-3">
+                              <p className="truncate text-sm text-gray-500">
+                                {
+                                  application.student
+                                    .email
+                                }
+                              </p>
 
-                            <p className="text-2xl font-bold text-purple-300">
-                              {matchScore}%
-                            </p>
-
-                            <p className="text-xs text-gray-500">
-                              Skill Match
-                            </p>
-
+                              {application.student
+                                .careerInterest && (
+                                <p className="mt-1 truncate text-xs text-gray-600">
+                                  {
+                                    application.student
+                                      .careerInterest
+                                  }
+                                </p>
+                              )}
+                            </div>
                           </div>
 
+                          {/* Match */}
+                          <div className="flex shrink-0 items-center gap-3">
+
+                            <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.08] px-5 py-3 text-center">
+
+                              <p className="text-2xl font-bold tracking-tight text-purple-300">
+                                {matchScore}%
+                              </p>
+
+                              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-gray-600">
+                                Skill Match
+                              </p>
+                            </div>
+
+                            {/* Status */}
+                            <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                              {application.status.replaceAll(
+                                "_",
+                                " "
+                              )}
+                            </span>
+                          </div>
+
+                          {/* View */}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedApplicant(
+                                application
+                              )
+                            }
+                            className="
+                              shrink-0
+                              rounded-xl
+                              bg-purple-600
+                              px-5
+                              py-3
+                              text-sm
+                              font-semibold
+                              text-white
+                              transition-all
+                              hover:bg-purple-500
+                              hover:shadow-lg
+                              hover:shadow-purple-600/20
+                            "
+                          >
+                            View Profile
+                            <span className="ml-2">
+                              →
+                            </span>
+                          </button>
                         </div>
 
-                        {/* Status */}
+                        {/* Skills */}
+                        <div className="relative mt-5 border-t border-white/[0.06] pt-4">
 
-                        <div className="shrink-0">
+                          <div className="flex flex-wrap gap-2">
 
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
-                            {application.status}
-                          </span>
+                            {application.student.skills
+                              .slice(0, 8)
+                              .map((skill) => (
+                                <span
+                                  key={skill.id}
+                                  className="rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-gray-400"
+                                >
+                                  {skill.name}
 
-                        </div>
-
-                        {/* View */}
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedApplicant(
-                              application
-                            )
-                          }
-                          className="rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold hover:bg-purple-500 transition"
-                        >
-                          View Profile
-                        </button>
-
-                      </div>
-
-                      {/* Top skills */}
-
-                      <div className="mt-5 pt-4 border-t border-white/10">
-
-                        <p className="text-xs text-gray-500 mb-2">
-                          Skills
-                        </p>
-
-                        <div className="flex flex-wrap gap-2">
-
-                          {application.student.skills
-                            .slice(0, 8)
-                            .map((skill) => (
-                              <span
-                                key={skill.id}
-                                className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-gray-300"
-                              >
-                                {skill.name}{" "}
-                                <span className="text-purple-400">
-                                  {
-                                    skill.proficiency
-                                  }
-                                  %
+                                  <span className="ml-2 font-semibold text-purple-300">
+                                    {
+                                      skill.proficiency
+                                    }
+                                    %
+                                  </span>
                                 </span>
-                              </span>
-                            ))}
+                              ))}
 
+                          </div>
                         </div>
-
                       </div>
-
-                    </div>
-                  );
-                }
-              )}
-
-            </div>
-          )}
-
+                    );
+                  }
+                )}
+              </div>
+            )}
+          </div>
         </section>
-
       </div>
 
-      {/* Applicant Profile Modal */}
+      {/* -------------------------------------------
+          APPLICANT PROFILE MODAL
+      ------------------------------------------- */}
 
       {selectedApplicant && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm sm:p-6">
 
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-7 shadow-2xl">
+          <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101014] shadow-2xl shadow-black/50">
 
-            {/* Header */}
+            {/* Modal glow */}
+            <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-purple-600/[0.08] blur-[80px]" />
 
-            <div className="flex items-start justify-between">
+            {/* Modal header */}
+            <div className="relative flex items-start justify-between border-b border-white/[0.07] p-6 sm:p-7">
 
-              <div>
+              <div className="flex items-center gap-4">
 
-                <p className="text-sm text-purple-400">
-                  STUDENT PROFILE
-                </p>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/15 to-indigo-500/10 text-xl font-bold text-purple-300">
+                  {selectedApplicant.student.name
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
 
-                <h2 className="text-2xl font-bold mt-1">
-                  {
-                    selectedApplicant.student
-                      .name
-                  }
-                </h2>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-purple-400">
+                    Student Profile
+                  </p>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  {
-                    selectedApplicant.student
-                      .email
-                  }
-                </p>
+                  <h2 className="mt-1 text-xl font-bold sm:text-2xl">
+                    {
+                      selectedApplicant.student
+                        .name
+                    }
+                  </h2>
 
+                  <p className="mt-1 text-sm text-gray-600">
+                    {
+                      selectedApplicant.student
+                        .email
+                    }
+                  </p>
+                </div>
               </div>
 
               <button
@@ -521,344 +674,369 @@ export default function IndustryOpportunityDetailPage() {
                 onClick={() =>
                   setSelectedApplicant(null)
                 }
-                className="text-2xl text-gray-500 hover:text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-xl text-gray-500 transition hover:border-white/[0.14] hover:bg-white/[0.05] hover:text-white"
               >
                 ×
               </button>
-
             </div>
 
-            {/* Match + Status */}
+            {/* Modal body */}
+            <div className="relative overflow-y-auto p-6 sm:p-7">
 
-            <div className="grid grid-cols-2 gap-4 mt-6">
+              {/* Match / Status */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-              <div className="rounded-xl border border-purple-500/20 bg-purple-500/10 p-4">
+                <div className="relative overflow-hidden rounded-2xl border border-purple-500/20 bg-purple-500/[0.07] p-5">
 
-                <p className="text-xs text-gray-500">
-                  Skill Match
-                </p>
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-purple-500/10 blur-2xl" />
 
-                <p className="text-2xl font-bold text-purple-300 mt-1">
-                  {Math.round(
-                    selectedApplicant.matchScore ??
-                      0
-                  )}
-                  %
-                </p>
+                  <p className="text-xs uppercase tracking-wider text-gray-600">
+                    Skill Match
+                  </p>
 
+                  <p className="mt-1 text-3xl font-bold text-purple-300">
+                    {Math.round(
+                      selectedApplicant.matchScore ??
+                        0
+                    )}
+                    %
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5">
+
+                  <p className="text-xs uppercase tracking-wider text-gray-600">
+                    Application Status
+                  </p>
+
+                  <p className="mt-2 inline-flex rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-300">
+                    {
+                      selectedApplicant.status
+                    }
+                  </p>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              {/* Bio */}
+              {selectedApplicant.student.bio && (
+                <div className="mt-7">
 
-                <p className="text-xs text-gray-500">
-                  Application Status
-                </p>
+                  <SectionHeading
+                    title="About"
+                    description="Student profile"
+                  />
 
-                <p className="text-lg font-semibold mt-1">
-                  {
-                    selectedApplicant.status
-                  }
-                </p>
+                  <div className="mt-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+                    <p className="text-sm leading-7 text-gray-400">
+                      {
+                        selectedApplicant.student
+                          .bio
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
 
-              </div>
+              {/* Skills */}
+              <div className="mt-8">
 
-            </div>
+                <SectionHeading
+                  title="Skill DNA"
+                  description={`${selectedApplicant.student.skills.length} verified capabilities`}
+                />
 
-            {/* Bio */}
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
 
-            {selectedApplicant.student.bio && (
-              <div className="mt-6">
+                  {selectedApplicant.student.skills.map(
+                    (skill) => (
+                      <div
+                        key={skill.id}
+                        className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 transition hover:border-purple-500/15"
+                      >
 
-                <h3 className="font-semibold">
-                  About
-                </h3>
+                        <div className="flex items-start justify-between gap-4">
 
-                <p className="text-gray-400 mt-2 leading-relaxed">
-                  {
-                    selectedApplicant.student
-                      .bio
-                  }
-                </p>
+                          <div>
+                            <p className="font-medium text-gray-200">
+                              {skill.name}
+                            </p>
 
-              </div>
-            )}
+                            <p className="mt-1 text-xs text-gray-600">
+                              {skill.category ||
+                                "General"}
+                            </p>
+                          </div>
 
-            {/* Skills */}
-
-            <div className="mt-7">
-
-              <h3 className="font-semibold">
-                Skill DNA
-              </h3>
-
-              <div className="grid md:grid-cols-2 gap-3 mt-3">
-
-                {selectedApplicant.student.skills.map(
-                  (skill) => (
-                    <div
-                      key={skill.id}
-                      className="rounded-xl border border-white/10 p-4"
-                    >
-
-                      <div className="flex justify-between">
-
-                        <div>
-                          <p className="font-medium">
-                            {skill.name}
-                          </p>
-
-                          <p className="text-xs text-gray-500 mt-1">
-                            {skill.category ||
-                              "General"}
-                          </p>
+                          <span className="font-semibold text-purple-300">
+                            {skill.proficiency}%
+                          </span>
                         </div>
 
-                        <span className="text-purple-300 font-semibold">
-                          {skill.proficiency}%
-                        </span>
+                        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
 
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-purple-600 to-indigo-400"
+                            style={{
+                              width: `${Math.min(
+                                skill.proficiency,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between">
+
+                          <span className="text-[10px] uppercase tracking-wider text-gray-700">
+                            Verification
+                          </span>
+
+                          <span className="text-xs text-gray-500">
+                            {
+                              skill.verificationStrength
+                            }
+                          </span>
+                        </div>
                       </div>
+                    )
+                  )}
+                </div>
+              </div>
 
-                      <div className="h-1.5 rounded-full bg-white/10 mt-3 overflow-hidden">
+              {/* Evidence */}
+              <div className="mt-8">
 
+                <SectionHeading
+                  title="Evidence"
+                  description="Submitted skill evidence"
+                />
+
+                {selectedApplicant.student
+                  .evidence.length === 0 ? (
+                  <EmptySection text="No evidence submitted." />
+                ) : (
+                  <div className="mt-4 space-y-3">
+
+                    {selectedApplicant.student.evidence.map(
+                      (evidence) => (
                         <div
-                          className="h-full bg-purple-500 rounded-full"
-                          style={{
-                            width: `${Math.min(
-                              skill.proficiency,
-                              100
-                            )}%`,
-                          }}
-                        />
+                          key={evidence.id}
+                          className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+                        >
 
-                      </div>
+                          <div className="flex items-start justify-between gap-4">
 
-                      <p className="text-xs text-gray-500 mt-2">
-                        Verification:{" "}
-                        {
-                          skill.verificationStrength
-                        }
-                      </p>
+                            <div className="min-w-0">
 
-                    </div>
-                  )
+                              <p className="font-medium text-gray-200">
+                                {evidence.title}
+                              </p>
+
+                              <p className="mt-1 text-xs text-gray-600">
+                                {evidence.skill?.name ||
+                                  "General"}{" "}
+                                •{" "}
+                                {evidence.type}
+                              </p>
+                            </div>
+
+                            <span
+                              className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${
+                                evidence.verified
+                                  ? "border-green-500/20 bg-green-500/[0.07] text-green-400"
+                                  : "border-white/[0.07] bg-white/[0.03] text-gray-600"
+                              }`}
+                            >
+                              {evidence.verified
+                                ? "✓ Verified"
+                                : "Unverified"}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
                 )}
-
               </div>
 
-            </div>
+              {/* Assessments */}
+              <div className="mt-8">
 
-            {/* Evidence */}
+                <SectionHeading
+                  title="Assessments"
+                  description="Assessment performance"
+                />
 
-            <div className="mt-7">
+                {selectedApplicant.student
+                  .assessments.length === 0 ? (
+                  <EmptySection text="No assessments." />
+                ) : (
+                  <div className="mt-4 space-y-3">
 
-              <h3 className="font-semibold">
-                Evidence
-              </h3>
+                    {selectedApplicant.student.assessments.map(
+                      (assessment) => (
+                        <div
+                          key={assessment.id}
+                          className="flex items-center justify-between rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+                        >
 
-              {selectedApplicant.student
-                .evidence.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-3">
-                  No evidence submitted.
-                </p>
-              ) : (
-                <div className="space-y-2 mt-3">
-
-                  {selectedApplicant.student.evidence.map(
-                    (evidence) => (
-                      <div
-                        key={evidence.id}
-                        className="rounded-xl border border-white/10 p-4"
-                      >
-
-                        <div className="flex justify-between gap-4">
-
-                          <div>
-
-                            <p className="font-medium">
-                              {evidence.title}
-                            </p>
-
-                            <p className="text-xs text-gray-500 mt-1">
-                              {evidence.skill?.name ||
-                                "General"}{" "}
-                              •{" "}
-                              {evidence.type}
-                            </p>
-
-                          </div>
-
-                          <span
-                            className={`text-xs ${
-                              evidence.verified
-                                ? "text-green-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {evidence.verified
-                              ? "✓ Verified"
-                              : "Unverified"}
+                          <span className="text-sm text-gray-300">
+                            {assessment.title}
                           </span>
 
+                          <span className="rounded-lg bg-purple-500/[0.08] px-3 py-1.5 text-sm font-semibold text-purple-300">
+                            {assessment.score}%
+                          </span>
                         </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
 
-                      </div>
-                    )
-                  )}
+              {/* Academic credentials */}
+              <div className="mt-8">
 
-                </div>
-              )}
+                <SectionHeading
+                  title="Academic Credentials"
+                  description="Academic and external credentials"
+                />
 
-            </div>
+                {selectedApplicant.student
+                  .academicCredentials.length ===
+                0 ? (
+                  <EmptySection text="No academic credentials." />
+                ) : (
+                  <div className="mt-4 space-y-3">
 
-            {/* Assessments */}
+                    {selectedApplicant.student.academicCredentials.map(
+                      (credential) => (
+                        <div
+                          key={credential.id}
+                          className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+                        >
 
-            <div className="mt-7">
+                          <div className="flex items-start justify-between gap-4">
 
-              <h3 className="font-semibold">
-                Assessments
-              </h3>
+                            <div className="min-w-0">
 
-              {selectedApplicant.student
-                .assessments.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-3">
-                  No assessments.
-                </p>
-              ) : (
-                <div className="space-y-2 mt-3">
+                              <p className="font-medium text-gray-200">
+                                {credential.title}
+                              </p>
 
-                  {selectedApplicant.student.assessments.map(
-                    (assessment) => (
-                      <div
-                        key={assessment.id}
-                        className="flex justify-between rounded-xl border border-white/10 p-4"
-                      >
+                              <p className="mt-1 text-xs text-gray-600">
+                                {credential.source}
+                                {credential.institution
+                                  ? ` • ${credential.institution}`
+                                  : ""}
+                              </p>
+                            </div>
 
-                        <span>
-                          {assessment.title}
-                        </span>
-
-                        <span className="text-purple-300 font-semibold">
-                          {assessment.score}%
-                        </span>
-
-                      </div>
-                    )
-                  )}
-
-                </div>
-              )}
-
-            </div>
-
-            {/* Academic / NPTEL */}
-
-            <div className="mt-7">
-
-              <h3 className="font-semibold">
-                Academic Credentials
-              </h3>
-
-              {selectedApplicant.student
-                .academicCredentials.length ===
-              0 ? (
-                <p className="text-sm text-gray-500 mt-3">
-                  No academic credentials.
-                </p>
-              ) : (
-                <div className="space-y-2 mt-3">
-
-                  {selectedApplicant.student.academicCredentials.map(
-                    (credential) => (
-                      <div
-                        key={credential.id}
-                        className="rounded-xl border border-white/10 p-4"
-                      >
-
-                        <div className="flex justify-between gap-4">
-
-                          <div>
-
-                            <p className="font-medium">
-                              {credential.title}
-                            </p>
-
-                            <p className="text-xs text-gray-500 mt-1">
-                              {credential.source}
-                              {credential.institution
-                                ? ` • ${credential.institution}`
-                                : ""}
-                            </p>
-
+                            <span
+                              className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${
+                                credential.verified
+                                  ? "border-green-500/20 bg-green-500/[0.07] text-green-400"
+                                  : "border-white/[0.07] bg-white/[0.03] text-gray-600"
+                              }`}
+                            >
+                              {credential.verified
+                                ? "✓ Verified"
+                                : "Unverified"}
+                            </span>
                           </div>
 
-                          <span
-                            className={`text-xs ${
-                              credential.verified
-                                ? "text-green-400"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {credential.verified
-                              ? "✓ Verified"
-                              : "Unverified"}
-                          </span>
+                          {(credential.score !==
+                            null ||
+                            credential.credits !==
+                              null) && (
+                            <div className="mt-4 flex flex-wrap gap-2">
 
-                        </div>
+                              {credential.score !==
+                                null && (
+                                <span className="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-gray-500">
+                                  Score:{" "}
+                                  <span className="text-gray-300">
+                                    {
+                                      credential.score
+                                    }
+                                  </span>
+                                </span>
+                              )}
 
-                        <div className="flex gap-4 mt-3 text-xs text-gray-400">
-
-                          {credential.score !==
-                            null && (
-                            <span>
-                              Score:{" "}
-                              {
-                                credential.score
-                              }
-                            </span>
+                              {credential.credits !==
+                                null && (
+                                <span className="rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-gray-500">
+                                  Credits:{" "}
+                                  <span className="text-gray-300">
+                                    {
+                                      credential.credits
+                                    }
+                                  </span>
+                                </span>
+                              )}
+                            </div>
                           )}
-
-                          {credential.credits !==
-                            null && (
-                            <span>
-                              Credits:{" "}
-                              {
-                                credential.credits
-                              }
-                            </span>
-                          )}
-
                         </div>
-
-                      </div>
-                    )
-                  )}
-
-                </div>
-              )}
-
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Close */}
-
-            <div className="mt-7 pt-5 border-t border-white/10">
+            {/* Modal footer */}
+            <div className="border-t border-white/[0.07] bg-black/20 p-5 sm:p-6">
 
               <button
                 type="button"
                 onClick={() =>
                   setSelectedApplicant(null)
                 }
-                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-sm font-medium text-gray-300 transition hover:border-white/[0.15] hover:bg-white/[0.05] hover:text-white"
               >
-                Close
+                Close Profile
               </button>
-
             </div>
-
           </div>
-
         </div>
       )}
     </main>
   );
 }
+
+/* ---------------------------------------------
+   SMALL UI HELPERS
+--------------------------------------------- */
+
+function SectionHeading({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div>
+      <h3 className="font-semibold text-gray-200">
+        {title}
+      </h3>
+
+      <p className="mt-1 text-xs text-gray-600">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+function EmptySection({
+  text,
+}: {
+  text: string;
+}) {
+  return (
+    <div className="mt-4 rounded-2xl border border-dashed border-white/[0.07] bg-white/[0.015] p-5 text-sm text-gray-600">
+      {text}
+    </div>
+  );
+}
+

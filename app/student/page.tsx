@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -63,6 +64,18 @@ type User = {
   email: string;
   role: string;
 };
+
+const inputClass =
+  "w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-gray-600 outline-none transition focus:border-indigo-500/50 focus:bg-white/[0.06] focus:ring-2 focus:ring-indigo-500/10";
+
+const selectClass =
+  "w-full rounded-xl border border-white/10 bg-[#15151c] px-4 py-3 text-sm text-white outline-none transition focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10";
+
+const primaryButtonClass =
+  "rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/15 transition hover:-translate-y-0.5 hover:from-indigo-400 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50";
+
+const sectionClass =
+  "relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] shadow-xl shadow-black/10";
 
 export default function StudentDashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -189,8 +202,6 @@ export default function StudentDashboard() {
       setUser(data.user);
       setProfile(data.profile);
 
-      // Keep local evidence/credential state
-      // synchronized with profile if available.
       setEvidence(
         data.profile?.evidence || []
       );
@@ -474,11 +485,31 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-gray-400">
-            Loading your Skill DNA...
-          </p>
+      <main className="relative min-h-screen overflow-hidden bg-[#08090d] px-5 py-8 text-white sm:px-8 lg:px-10">
+
+        <Background />
+
+        <div className="relative mx-auto max-w-6xl">
+
+          <div className="mb-10">
+            <div className="h-4 w-24 animate-pulse rounded bg-white/10" />
+
+            <div className="mt-5 h-12 w-80 max-w-full animate-pulse rounded-xl bg-white/10" />
+
+            <div className="mt-4 h-5 w-[500px] max-w-full animate-pulse rounded bg-white/[0.06]" />
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="h-32 animate-pulse rounded-2xl border border-white/10 bg-white/[0.025]"
+              />
+            ))}
+          </div>
+
+          <div className="mt-8 h-80 animate-pulse rounded-3xl border border-white/10 bg-white/[0.025]" />
+
         </div>
       </main>
     );
@@ -490,369 +521,413 @@ export default function StudentDashboard() {
 
   if (error || !profile || !user) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
-            {error ||
-              "Student profile unavailable."}
+      <main className="relative min-h-screen overflow-hidden bg-[#08090d] px-5 py-8 text-white sm:px-8 lg:px-10">
+
+        <Background />
+
+        <div className="relative mx-auto max-w-6xl">
+
+          <div className="rounded-3xl border border-red-500/20 bg-red-500/[0.06] p-8">
+
+            <div className="flex items-start gap-4">
+
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-300">
+                !
+              </div>
+
+              <div>
+                <h2 className="font-semibold text-red-200">
+                  Student profile unavailable
+                </h2>
+
+                <p className="mt-2 text-sm text-red-300/70">
+                  {error ||
+                    "Student profile unavailable."}
+                </p>
+              </div>
+
+            </div>
+
           </div>
+
         </div>
       </main>
     );
   }
 
-  // =========================
-  // UI
-  // =========================
+  const averageSkill =
+    profile.skills.length > 0
+      ? Math.round(
+          profile.skills.reduce(
+            (sum, skill) =>
+              sum + skill.proficiency,
+            0
+          ) / profile.skills.length
+        )
+      : 0;
+
+  const verifiedSkills =
+    profile.skills.filter(
+      (skill) =>
+        skill.verificationStrength
+          ?.toLowerCase()
+          .includes("verif")
+    ).length;
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-      <div className="max-w-6xl mx-auto">
+    <main className="relative min-h-screen overflow-hidden bg-[#08090d] px-5 py-8 text-white sm:px-8 lg:px-10">
 
-        {/* HEADER */}
+      <Background />
 
-        <section className="mb-10">
-          <p className="text-sm text-purple-400 mb-2">
-            STUDENT
-          </p>
+      <div className="relative mx-auto max-w-6xl">
 
-          <h1 className="text-4xl font-bold">
-            Welcome, {user.name}
-          </h1>
+        {/* =========================================
+            HEADER
+        ========================================= */}
 
-          <p className="text-gray-400 mt-2">
-            Build your Skill DNA and discover
-            opportunities that match your strengths.
-          </p>
-        </section>
+        <section className="mb-9">
 
-        {/* STATS */}
+          <div className="mb-6 flex items-center justify-between">
 
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
+            <div className="flex items-center gap-3">
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Skills
-            </p>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold shadow-lg shadow-indigo-500/20">
+                S
+              </div>
 
-            <p className="text-3xl font-bold mt-2">
-              {profile.skills.length}
-            </p>
-          </div>
+              <div>
+                <p className="text-sm font-semibold tracking-tight">
+                  SkillSetu
+                </p>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Evidence
-            </p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-600">
+                  Student Profile
+                </p>
+              </div>
 
-            <p className="text-3xl font-bold mt-2">
-              {profile.evidence.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Credentials
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {credentials.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Assessments
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {profile.assessments.length}
-            </p>
-          </div>
-
-        </section>
-
-        {/* CAREER PROFILE */}
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
-
-          <h2 className="text-xl font-semibold mb-4">
-            Career Profile
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-
-            <div>
-              <p className="text-xs text-gray-500">
-                Career interest
-              </p>
-
-              <p className="mt-2 text-gray-200">
-                {profile.careerInterest ||
-                  "Not set yet"}
-              </p>
             </div>
 
-            <div>
-              <p className="text-xs text-gray-500">
-                About you
-              </p>
-
-              <p className="mt-2 text-gray-200">
-                {profile.bio ||
-                  "Tell SkillSetu about yourself."}
-              </p>
+            <div className="hidden rounded-full border border-white/10 bg-white/[0.025] px-4 py-2 text-xs text-gray-500 sm:block">
+              Your Skill DNA
             </div>
 
           </div>
 
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] p-7 sm:p-9">
+
+            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-500/[0.10] blur-[90px]" />
+
+            <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-purple-500/[0.07] blur-[90px]" />
+
+            <div className="relative flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
+
+              <div className="flex items-center gap-5">
+
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-3xl font-bold text-indigo-300 ring-1 ring-indigo-400/20">
+                  {user.name
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+
+                <div>
+
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-indigo-400/10 bg-indigo-500/[0.07] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
+                    Student
+                  </div>
+
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                    Welcome, {user.name}
+                  </h1>
+
+                  <p className="mt-2 text-sm text-gray-500">
+                    Build your Skill DNA and turn your abilities into opportunities.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="shrink-0">
+
+                <div className="rounded-2xl border border-white/10 bg-black/20 px-6 py-5 text-center">
+
+                  <p className="text-[10px] uppercase tracking-widest text-gray-600">
+                    Skill Readiness
+                  </p>
+
+                  <p className="mt-1 text-4xl font-bold text-white">
+                    {averageSkill}%
+                  </p>
+
+                  <div className="mt-3 h-1.5 w-32 overflow-hidden rounded-full bg-white/[0.07]">
+
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                      style={{
+                        width: `${averageSkill}%`,
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
         </section>
 
-        {/* SKILL DNA */}
+        {/* =========================================
+            STATS
+        ========================================= */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-          <div className="flex items-center justify-between mb-6">
+          <StatCard
+            icon="✦"
+            label="Skills"
+            value={profile.skills.length}
+            description="Capabilities in your DNA"
+          />
 
-            <div>
-              <h2 className="text-xl font-semibold">
-                Your Skill DNA
-              </h2>
+          <StatCard
+            icon="◈"
+            label="Evidence"
+            value={profile.evidence.length}
+            description="Proof of your abilities"
+          />
 
-              <p className="text-sm text-gray-400 mt-1">
-                Skills you currently have and how
-                strongly they are verified.
-              </p>
-            </div>
+          <StatCard
+            icon="◆"
+            label="Credentials"
+            value={credentials.length}
+            description="Academic achievements"
+          />
+
+          <StatCard
+            icon="◎"
+            label="Assessments"
+            value={profile.assessments.length}
+            description="Performance records"
+          />
+
+        </section>
+
+        {/* =========================================
+            CAREER PROFILE
+        ========================================= */}
+
+        <section className={`${sectionClass} mb-6 p-6 sm:p-7`}>
+
+          <SectionHeader
+            icon="◎"
+            eyebrow="PROFILE"
+            title="Career Profile"
+            description="Your current career direction and personal profile."
+          />
+
+          <div className="mt-7 grid gap-4 md:grid-cols-2">
+
+            <InfoCard
+              label="Career interest"
+              value={
+                profile.careerInterest ||
+                "Not set yet"
+              }
+              icon="↗"
+            />
+
+            <InfoCard
+              label="About you"
+              value={
+                profile.bio ||
+                "Tell SkillSetu about yourself."
+              }
+              icon="✎"
+              multiline
+            />
+
+          </div>
+
+        </section>
+
+        {/* =========================================
+            SKILL DNA
+        ========================================= */}
+
+        <section className={`${sectionClass} mb-6 p-6 sm:p-7`}>
+
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
+
+            <SectionHeader
+              icon="✦"
+              eyebrow="CAPABILITY PROFILE"
+              title="Your Skill DNA"
+              description="A live view of the capabilities you have built."
+            />
 
             <button
+              type="button"
               onClick={() => {
                 setSkillError("");
                 setShowAddSkill(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className={primaryButtonClass}
             >
               + Add Skill
             </button>
 
           </div>
 
-          {profile.skills.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
+          <div className="mt-7">
 
-              <p className="text-gray-400">
-                Your Skill DNA is empty.
-              </p>
+            {profile.skills.length === 0 ? (
 
-              <p className="text-sm text-gray-500 mt-2">
-                Add your first skill to start building
-                your profile.
-              </p>
-
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-
-              {profile.skills.map(
-                (studentSkill) => (
-
-                  <div
-                    key={studentSkill.id}
-                    className="rounded-xl border border-white/10 p-5"
+              <EmptyState
+                icon="✦"
+                title="No skills added yet"
+                description="Start building your Skill DNA by adding your first skill."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSkillError("");
+                      setShowAddSkill(true);
+                    }}
+                    className={primaryButtonClass}
                   >
+                    Add Your First Skill
+                  </button>
+                }
+              />
 
-                    <div className="flex justify-between gap-4">
+            ) : (
 
-                      <div>
-                        <h3 className="font-semibold">
-                          {studentSkill.skill.name}
-                        </h3>
+              <div className="grid gap-4 md:grid-cols-2">
 
-                        <p className="text-xs text-gray-500 mt-1">
-                          {studentSkill.skill.category ||
-                            "General"}
-                        </p>
-                      </div>
+                {profile.skills.map(
+                  (studentSkill) => {
 
-                      <span className="text-purple-300 font-semibold">
-                        {studentSkill.proficiency}%
-                      </span>
+                    const percentage =
+                      Math.min(
+                        Math.max(
+                          studentSkill.proficiency,
+                          0
+                        ),
+                        100
+                      );
 
-                    </div>
-
-                    <div className="h-2 rounded-full bg-white/10 mt-4 overflow-hidden">
-
+                    return (
                       <div
-                        className="h-full bg-purple-500 rounded-full"
-                        style={{
-                          width: `${Math.min(
-                            studentSkill.proficiency,
-                            100
-                          )}%`,
-                        }}
-                      />
+                        key={studentSkill.id}
+                        className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-500/20 hover:bg-white/[0.035]"
+                      >
 
-                    </div>
+                        <div className="flex items-start justify-between gap-4">
 
-                    <p className="text-xs text-gray-500 mt-3">
-                      Verification:{" "}
-                      {studentSkill.verificationStrength}
-                    </p>
+                          <div className="flex items-center gap-3">
 
-                  </div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/[0.08] text-indigo-300">
+                              ✦
+                            </div>
 
-                )
-              )}
+                            <div>
 
-            </div>
-          )}
+                              <h3 className="font-semibold text-gray-100">
+                                {studentSkill.skill.name}
+                              </h3>
+
+                              <p className="mt-0.5 text-xs text-gray-600">
+                                {studentSkill.skill.category ||
+                                  "General"}
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                          <span className="text-lg font-bold text-indigo-300">
+                            {studentSkill.proficiency}%
+                          </span>
+
+                        </div>
+
+                        <div className="mt-5">
+
+                          <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
+                              style={{
+                                width: `${percentage}%`,
+                              }}
+                            />
+
+                          </div>
+
+                          <div className="mt-2 flex justify-between">
+
+                            <span className="text-[10px] text-gray-700">
+                              Proficiency
+                            </span>
+
+                            <span className="text-[10px] text-gray-600">
+                              {percentage >= 75
+                                ? "Strong"
+                                : percentage >= 50
+                                ? "Developing"
+                                : "Building"}
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                        <div className="mt-4 flex items-center gap-2 border-t border-white/[0.06] pt-4">
+
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] text-emerald-300">
+                            ✓
+                          </span>
+
+                          <span className="text-xs text-gray-600">
+                            Verification:{" "}
+                            <span className="text-gray-400">
+                              {studentSkill.verificationStrength}
+                            </span>
+                          </span>
+
+                        </div>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+            )}
+
+          </div>
 
         </section>
 
-        {/* ADD SKILL MODAL */}
+        {/* =========================================
+            EVIDENCE
+        ========================================= */}
 
-        {showAddSkill && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+        <section className={`${sectionClass} mb-6 p-6 sm:p-7`}>
 
-            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
 
-              <div className="flex items-start justify-between">
-
-                <div>
-                  <h2 className="text-2xl font-semibold text-white">
-                    Add a Skill
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-400">
-                    Tell SkillSetu what you are good at.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowAddSkill(false)
-                  }
-                  className="text-2xl text-gray-500 hover:text-white"
-                >
-                  ×
-                </button>
-
-              </div>
-
-              <div className="mt-6 space-y-5">
-
-                <div>
-                  <label
-                    htmlFor="skill-name"
-                    className="mb-2 block text-sm font-medium text-gray-300"
-                  >
-                    Skill
-                  </label>
-
-                  <input
-                    id="skill-name"
-                    type="text"
-                    value={skillName}
-                    onChange={(e) =>
-                      setSkillName(e.target.value)
-                    }
-                    placeholder="e.g. React, Python, SQL"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                <div>
-
-                  <div className="mb-2 flex items-center justify-between">
-
-                    <label className="text-sm font-medium text-gray-300">
-                      Proficiency
-                    </label>
-
-                    <span className="font-semibold text-purple-400">
-                      {proficiency}%
-                    </span>
-
-                  </div>
-
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={proficiency}
-                    onChange={(e) =>
-                      setProficiency(
-                        Number(e.target.value)
-                      )
-                    }
-                    className="w-full"
-                  />
-
-                  <div className="mt-2 flex justify-between text-xs text-gray-500">
-                    <span>Beginner</span>
-                    <span>Intermediate</span>
-                    <span>Advanced</span>
-                  </div>
-
-                </div>
-
-                {skillError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                    {skillError}
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-2">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowAddSkill(false)
-                    }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAddSkill}
-                    disabled={
-                      savingSkill ||
-                      !skillName.trim()
-                    }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {savingSkill
-                      ? "Adding..."
-                      : "Add Skill"}
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* EVIDENCE */}
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
-
-          <div className="flex items-center justify-between mb-6">
-
-            <div>
-              <h2 className="text-xl font-semibold">
-                Evidence
-              </h2>
-
-              <p className="text-sm text-gray-400 mt-1">
-                Proof supporting your skills.
-              </p>
-            </div>
+            <SectionHeader
+              icon="◈"
+              eyebrow="PROOF OF WORK"
+              title="Evidence"
+              description="Projects, certifications, internships and assessments supporting your skills."
+            />
 
             <button
               type="button"
@@ -860,378 +935,151 @@ export default function StudentDashboard() {
                 setEvidenceError("");
                 setShowEvidenceModal(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className={primaryButtonClass}
             >
               + Add Evidence
             </button>
 
           </div>
 
-          {profile.evidence.length === 0 ? (
+          <div className="mt-7">
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            {profile.evidence.length === 0 ? (
 
-              <p className="text-gray-500">
-                No evidence added yet.
-              </p>
-
-              <p className="text-sm text-gray-600 mt-2">
-                Add projects, certifications,
-                internships or assessments.
-              </p>
-
-            </div>
-
-          ) : (
-
-            <div className="space-y-3">
-
-              {profile.evidence.map(
-                (item) => (
-
-                  <div
-                    key={item.id}
-                    className="rounded-xl border border-white/10 p-5"
+              <EmptyState
+                icon="◈"
+                title="No evidence added yet"
+                description="Add projects, certifications, internships or assessments to strengthen your Skill DNA."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEvidenceError("");
+                      setShowEvidenceModal(true);
+                    }}
+                    className={primaryButtonClass}
                   >
+                    Add Evidence
+                  </button>
+                }
+              />
 
-                    <div className="flex justify-between gap-4">
+            ) : (
 
-                      <div>
+              <div className="grid gap-4 md:grid-cols-2">
 
-                        <p className="font-medium">
-                          {item.title}
-                        </p>
+                {profile.evidence.map(
+                  (item) => (
 
-                        <p className="text-sm text-gray-500 mt-1">
-                          {item.skill.name} •{" "}
-                          {item.type}
-                        </p>
+                    <div
+                      key={item.id}
+                      className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-purple-500/20 hover:bg-white/[0.035]"
+                    >
+
+                      <div className="flex items-start justify-between gap-4">
+
+                        <div className="flex min-w-0 items-start gap-3">
+
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/[0.08] text-purple-300">
+                            ◈
+                          </div>
+
+                          <div className="min-w-0">
+
+                            <p className="truncate font-semibold text-gray-100">
+                              {item.title}
+                            </p>
+
+                            <p className="mt-1 text-xs text-gray-600">
+                              {item.skill.name}{" "}
+                              <span className="mx-1">
+                                •
+                              </span>{" "}
+                              {item.type}
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-medium ${
+                            item.verified
+                              ? "border-emerald-500/15 bg-emerald-500/[0.07] text-emerald-300"
+                              : "border-white/10 bg-white/[0.03] text-gray-500"
+                          }`}
+                        >
+                          {item.verified
+                            ? "✓ Verified"
+                            : item.verificationStrength}
+                        </span>
 
                       </div>
 
-                      <span
-                        className={`text-xs ${
-                          item.verified
-                            ? "text-green-400"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {item.verified
-                          ? "✓ Verified"
-                          : item.verificationStrength}
-                      </span>
-
-                    </div>
-
-                    {item.description && (
-                      <p className="mt-3 text-sm text-gray-400">
-                        {item.description}
-                      </p>
-                    )}
-
-                    {item.score !== null &&
-                      item.score !== undefined && (
-                        <p className="mt-3 text-sm text-gray-300">
-                          Score:{" "}
-                          <span className="text-white font-semibold">
-                            {item.score}
-                          </span>
+                      {item.description && (
+                        <p className="mt-4 text-sm leading-6 text-gray-500">
+                          {item.description}
                         </p>
                       )}
 
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-3 inline-block text-sm text-purple-400 hover:text-purple-300"
-                      >
-                        View Evidence →
-                      </a>
-                    )}
+                      <div className="mt-5 flex flex-wrap items-center gap-3">
 
-                  </div>
+                        {item.score !== null &&
+                          item.score !==
+                            undefined && (
+                            <div className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2">
 
-                )
-              )}
+                              <p className="text-[9px] uppercase tracking-wider text-gray-600">
+                                Score
+                              </p>
 
-            </div>
+                              <p className="mt-0.5 text-sm font-semibold text-white">
+                                {item.score}
+                              </p>
 
-          )}
+                            </div>
+                          )}
+
+                        {item.url && (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-xl border border-indigo-500/10 bg-indigo-500/[0.05] px-3.5 py-2 text-xs font-medium text-indigo-300 transition hover:bg-indigo-500/[0.10]"
+                          >
+                            View Evidence →
+                          </a>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                  )
+                )}
+
+              </div>
+
+            )}
+
+          </div>
 
         </section>
 
-        {/* ADD EVIDENCE MODAL */}
+        {/* =========================================
+            CREDENTIALS
+        ========================================= */}
 
-        {showEvidenceModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+        <section className={`${sectionClass} mb-6 p-6 sm:p-7`}>
 
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
 
-              <div className="flex items-start justify-between">
-
-                <div>
-                  <h2 className="text-2xl font-semibold">
-                    Add Evidence
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-400">
-                    Add proof supporting one of your skills.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowEvidenceModal(false)
-                  }
-                  className="text-2xl text-gray-500 hover:text-white"
-                >
-                  ×
-                </button>
-
-              </div>
-
-              <div className="mt-6 space-y-5">
-
-                {/* SKILL */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Skill
-                  </label>
-
-                  <select
-                    value={selectedSkillId}
-                    onChange={(e) =>
-                      setSelectedSkillId(
-                        e.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white outline-none"
-                  >
-
-                    <option value="">
-                      Select a skill
-                    </option>
-
-                    {profile.skills.map(
-                      (studentSkill) => (
-                        <option
-                          key={
-                            studentSkill.skill.id
-                          }
-                          value={
-                            studentSkill.skill.id
-                        }
-                        >
-                          {
-                            studentSkill.skill
-                              .name
-                          }
-                        </option>
-                      )
-                    )}
-
-                  </select>
-
-                </div>
-
-                {/* TYPE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Evidence Type
-                  </label>
-
-                  <select
-                    value={evidenceType}
-                    onChange={(e) =>
-                      setEvidenceType(
-                        e.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
-                  >
-
-                    <option value="PROJECT">
-                      Project
-                    </option>
-
-                    <option value="CERTIFICATION">
-                      Certification
-                    </option>
-
-                    <option value="INTERNSHIP">
-                      Internship
-                    </option>
-
-                    <option value="ASSESSMENT">
-                      Assessment
-                    </option>
-
-                    <option value="SELF_REPORTED">
-                      Self Reported
-                    </option>
-
-                  </select>
-
-                </div>
-
-                {/* TITLE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Title
-                  </label>
-
-                  <input
-                    type="text"
-                    value={evidenceTitle}
-                    onChange={(e) =>
-                      setEvidenceTitle(
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. Full-stack Portfolio"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* DESCRIPTION */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Description
-                  </label>
-
-                  <textarea
-                    value={evidenceDescription}
-                    onChange={(e) =>
-                      setEvidenceDescription(
-                        e.target.value
-                      )
-                    }
-                    rows={4}
-                    placeholder="Describe what you built or achieved..."
-                    className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* URL */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Evidence URL
-                  </label>
-
-                  <input
-                    type="url"
-                    value={evidenceUrl}
-                    onChange={(e) =>
-                      setEvidenceUrl(
-                        e.target.value
-                      )
-                    }
-                    placeholder="https://github.com/..."
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* SCORE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Score{" "}
-                    <span className="text-gray-500">
-                      (optional)
-                    </span>
-                  </label>
-
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={evidenceScore}
-                    onChange={(e) =>
-                      setEvidenceScore(
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. 85"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {evidenceError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                    {evidenceError}
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowEvidenceModal(false)
-                    }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAddEvidence}
-                    disabled={
-                      savingEvidence ||
-                      !selectedSkillId ||
-                      !evidenceTitle.trim()
-                    }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {savingEvidence
-                      ? "Adding..."
-                      : "Add Evidence"}
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* ACADEMIC CREDENTIALS */}
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
-
-          <div className="flex items-center justify-between mb-6">
-
-            <div>
-
-              <h2 className="text-xl font-semibold">
-                Academic Credentials
-              </h2>
-
-              <p className="text-sm text-gray-400 mt-1">
-                NPTEL and other recognized academic achievements.
-              </p>
-
-            </div>
+            <SectionHeader
+              icon="◆"
+              eyebrow="ACADEMIC ACHIEVEMENTS"
+              title="Academic Credentials"
+              description="NPTEL and other recognized academic achievements."
+            />
 
             <button
               type="button"
@@ -1239,458 +1087,1126 @@ export default function StudentDashboard() {
                 setCredentialError("");
                 setShowCredentialModal(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className={primaryButtonClass}
             >
               + Add Credential
             </button>
 
           </div>
 
-          {credentials.length === 0 ? (
+          <div className="mt-7">
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            {credentials.length === 0 ? (
 
-              <p className="text-gray-500">
-                No academic credentials added yet.
-              </p>
-
-              <p className="text-sm text-gray-600 mt-2">
-                Add your NPTEL certifications and academic achievements.
-              </p>
-
-            </div>
-
-          ) : (
-
-            <div className="grid md:grid-cols-2 gap-4">
-
-              {credentials.map(
-                (credential) => (
-
-                  <div
-                    key={credential.id}
-                    className="rounded-xl border border-white/10 p-5"
+              <EmptyState
+                icon="◆"
+                title="No academic credentials yet"
+                description="Add your NPTEL certifications and academic achievements."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCredentialError("");
+                      setShowCredentialModal(true);
+                    }}
+                    className={primaryButtonClass}
                   >
+                    Add Credential
+                  </button>
+                }
+              />
 
-                    <div className="flex items-start justify-between gap-4">
+            ) : (
 
-                      <div>
+              <div className="grid gap-4 md:grid-cols-2">
 
-                        <p className="text-xs uppercase tracking-wider text-purple-400">
-                          {credential.source}
-                        </p>
+                {credentials.map(
+                  (credential) => (
 
-                        <h3 className="mt-1 font-semibold">
-                          {credential.title}
-                        </h3>
+                    <div
+                      key={credential.id}
+                      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-500/20 hover:bg-white/[0.035]"
+                    >
 
-                        {credential.institution && (
-                          <p className="mt-1 text-sm text-gray-500">
-                            {credential.institution}
+                      <div className="pointer-events-none absolute -right-16 -top-16 h-32 w-32 rounded-full bg-indigo-500/[0.06] blur-2xl" />
+
+                      <div className="relative">
+
+                        <div className="flex items-start justify-between gap-4">
+
+                          <div>
+
+                            <span className="rounded-full border border-indigo-500/10 bg-indigo-500/[0.07] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-indigo-300">
+                              {credential.source}
+                            </span>
+
+                            <h3 className="mt-4 text-lg font-semibold text-gray-100">
+                              {credential.title}
+                            </h3>
+
+                            {credential.institution && (
+                              <p className="mt-1 text-sm text-gray-500">
+                                {credential.institution}
+                              </p>
+                            )}
+
+                          </div>
+
+                          <span
+                            className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] ${
+                              credential.verified
+                                ? "border-emerald-500/15 bg-emerald-500/[0.07] text-emerald-300"
+                                : "border-white/10 bg-white/[0.03] text-gray-500"
+                            }`}
+                          >
+                            {credential.verified
+                              ? "✓ Verified"
+                              : credential.verificationStrength}
+                          </span>
+
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-2 gap-3">
+
+                          {credential.score !==
+                            null &&
+                            credential.score !==
+                              undefined && (
+                              <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+
+                                <p className="text-[9px] uppercase tracking-wider text-gray-600">
+                                  Score
+                                </p>
+
+                                <p className="mt-1 text-lg font-bold text-white">
+                                  {credential.score}%
+                                </p>
+
+                              </div>
+                            )}
+
+                          {credential.credits !==
+                            null &&
+                            credential.credits !==
+                              undefined && (
+                              <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+
+                                <p className="text-[9px] uppercase tracking-wider text-gray-600">
+                                  Credits
+                                </p>
+
+                                <p className="mt-1 text-lg font-bold text-white">
+                                  {credential.credits}
+                                </p>
+
+                              </div>
+                            )}
+
+                        </div>
+
+                        {credential.credentialId && (
+                          <p className="mt-4 text-xs text-gray-600">
+                            Credential ID:{" "}
+                            <span className="text-gray-400">
+                              {credential.credentialId}
+                            </span>
                           </p>
+                        )}
+
+                        {credential.issueDate && (
+                          <p className="mt-2 text-xs text-gray-600">
+                            Issued:{" "}
+                            <span className="text-gray-400">
+                              {new Date(
+                                credential.issueDate
+                              ).toLocaleDateString()}
+                            </span>
+                          </p>
+                        )}
+
+                        {credential.verificationUrl && (
+                          <a
+                            href={
+                              credential.verificationUrl
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-indigo-300 transition hover:text-indigo-200"
+                          >
+                            Verify Credential
+                            <span>→</span>
+                          </a>
                         )}
 
                       </div>
 
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs ${
-                          credential.verified
-                            ? "bg-green-500/10 text-green-400"
-                            : "bg-white/5 text-gray-400"
-                        }`}
-                      >
-                        {credential.verified
-                          ? "Verified"
-                          : credential.verificationStrength}
-                      </span>
-
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-300">
+                  )
+                )}
 
-                      {credential.score !== null &&
-                        credential.score !== undefined && (
-                          <span>
-                            Score:{" "}
-                            <strong className="text-white">
-                              {credential.score}%
-                            </strong>
-                          </span>
-                        )}
+              </div>
 
-                      {credential.credits !== null &&
-                        credential.credits !== undefined && (
-                          <span>
-                            Credits:{" "}
-                            <strong className="text-white">
-                              {credential.credits}
-                            </strong>
-                          </span>
-                        )}
+            )}
 
-                    </div>
-
-                    {credential.credentialId && (
-                      <p className="mt-3 text-xs text-gray-500">
-                        Credential ID:{" "}
-                        {credential.credentialId}
-                      </p>
-                    )}
-
-                    {credential.issueDate && (
-                      <p className="mt-2 text-xs text-gray-500">
-                        Issued:{" "}
-                        {new Date(
-                          credential.issueDate
-                        ).toLocaleDateString()}
-                      </p>
-                    )}
-
-                    {credential.verificationUrl && (
-                      <a
-                        href={
-                          credential.verificationUrl
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-4 inline-block text-sm text-purple-400 hover:text-purple-300"
-                      >
-                        Verify Credential →
-                      </a>
-                    )}
-
-                  </div>
-
-                )
-              )}
-
-            </div>
-
-          )}
+          </div>
 
         </section>
 
-        {/* ADD CREDENTIAL MODAL */}
+        {/* =========================================
+            ASSESSMENTS
+        ========================================= */}
 
-        {showCredentialModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
+        <section className={`${sectionClass} p-6 sm:p-7`}>
 
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+          <SectionHeader
+            icon="◎"
+            eyebrow="PERFORMANCE"
+            title="Assessments"
+            description="Your assessment performance."
+          />
 
-              <div className="flex items-start justify-between">
+          <div className="mt-7">
 
-                <div>
+            {profile.assessments.length === 0 ? (
 
-                  <h2 className="text-2xl font-semibold">
-                    Add Academic Credential
-                  </h2>
+              <EmptyState
+                icon="◎"
+                title="No assessments yet"
+                description="Your assessment results will appear here."
+              />
 
-                  <p className="mt-1 text-sm text-gray-400">
-                    Add an NPTEL certification or academic achievement.
-                  </p>
+            ) : (
 
-                </div>
+              <div className="space-y-3">
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowCredentialModal(false)
+                {profile.assessments.map(
+                  (assessment) => {
+
+                    const score = Math.min(
+                      Math.max(
+                        assessment.score,
+                        0
+                      ),
+                      100
+                    );
+
+                    return (
+                      <div
+                        key={assessment.id}
+                        className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-indigo-500/15"
+                      >
+
+                        <div className="flex items-center justify-between gap-5">
+
+                          <div className="min-w-0">
+
+                            <p className="font-medium text-gray-200">
+                              {assessment.title}
+                            </p>
+
+                            <div className="mt-3 h-1.5 w-full max-w-xl overflow-hidden rounded-full bg-white/[0.06]">
+
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+                                style={{
+                                  width: `${score}%`,
+                                }}
+                              />
+
+                            </div>
+
+                          </div>
+
+                          <div className="shrink-0 text-right">
+
+                            <p className="text-2xl font-bold text-indigo-300">
+                              {assessment.score}%
+                            </p>
+
+                            <p className="text-[10px] text-gray-600">
+                              Score
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+                    );
                   }
-                  className="text-2xl text-gray-500 hover:text-white"
-                >
-                  ×
-                </button>
-
-              </div>
-
-              <div className="mt-6 space-y-5">
-
-                {/* SOURCE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Source
-                  </label>
-
-                  <select
-                    value={credentialSource}
-                    onChange={(e) =>
-                      setCredentialSource(
-                        e.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
-                  >
-
-                    <option value="NPTEL">
-                      NPTEL
-                    </option>
-
-                    <option value="ACADEMIC_CREDENTIAL">
-                      Academic Credential
-                    </option>
-
-                  </select>
-
-                </div>
-
-                {/* TITLE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Course / Credential Title
-                  </label>
-
-                  <input
-                    type="text"
-                    value={credentialTitle}
-                    onChange={(e) =>
-                      setCredentialTitle(
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. Programming in Python"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* INSTITUTION */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Institution
-                  </label>
-
-                  <input
-                    type="text"
-                    value={credentialInstitution}
-                    onChange={(e) =>
-                      setCredentialInstitution(
-                        e.target.value
-                      )
-                    }
-                    placeholder="e.g. NPTEL / IIT Madras"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* CREDENTIAL ID */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Credential ID
-                  </label>
-
-                  <input
-                    type="text"
-                    value={credentialId}
-                    onChange={(e) =>
-                      setCredentialId(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Certificate / credential ID"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* SCORE + CREDITS */}
-
-                <div className="grid grid-cols-2 gap-4">
-
-                  <div>
-
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                      Score (%)
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={credentialScore}
-                      onChange={(e) =>
-                        setCredentialScore(
-                          e.target.value
-                        )
-                      }
-                      placeholder="82"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                      Credits
-                    </label>
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      value={credentialCredits}
-                      onChange={(e) =>
-                        setCredentialCredits(
-                          e.target.value
-                        )
-                      }
-                      placeholder="3"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* DATE */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Issue Date
-                  </label>
-
-                  <input
-                    type="date"
-                    value={credentialDate}
-                    onChange={(e) =>
-                      setCredentialDate(
-                        e.target.value
-                      )
-                    }
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {/* VERIFICATION URL */}
-
-                <div>
-
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
-                    Verification URL
-                  </label>
-
-                  <input
-                    type="url"
-                    value={credentialUrl}
-                    onChange={(e) =>
-                      setCredentialUrl(
-                        e.target.value
-                      )
-                    }
-                    placeholder="Certificate verification URL"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
-                  />
-
-                </div>
-
-                {credentialError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                    {credentialError}
-                  </div>
                 )}
 
-                <div className="flex gap-3">
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowCredentialModal(false)
-                    }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
-                  >
-                    Cancel
-                  </button>
+            )}
 
-                  <button
-                    type="button"
-                    onClick={
-                      handleAddCredential
-                    }
-                    disabled={
-                      savingCredential ||
-                      !credentialTitle.trim()
-                    }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {savingCredential
-                      ? "Adding..."
-                      : "Add Credential"}
-                  </button>
+          </div>
 
-                </div>
+        </section>
+
+        {/* FOOTER */}
+
+        <div className="py-8 text-center">
+
+          <p className="text-xs text-gray-700">
+            SkillSetu · Build your skills. Prove your capabilities. Find your opportunities.
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* =========================================
+          ADD SKILL MODAL
+      ========================================= */}
+
+      {showAddSkill && (
+        <ModalShell
+          onClose={() =>
+            setShowAddSkill(false)
+          }
+        >
+
+          <ModalHeader
+            icon="✦"
+            title="Add a Skill"
+            description="Tell SkillSetu what you are good at."
+            onClose={() =>
+              setShowAddSkill(false)
+            }
+          />
+
+          <div className="mt-7 space-y-6">
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Skill name
+              </label>
+
+              <input
+                type="text"
+                value={skillName}
+                onChange={(e) =>
+                  setSkillName(e.target.value)
+                }
+                placeholder="e.g. Python, React, Data Analysis"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+
+              <div className="mb-3 flex items-center justify-between">
+
+                <label className="text-sm font-medium text-gray-300">
+                  Proficiency
+                </label>
+
+                <span className="rounded-lg bg-indigo-500/10 px-2.5 py-1 text-sm font-semibold text-indigo-300">
+                  {proficiency}%
+                </span>
 
               </div>
+
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={proficiency}
+                onChange={(e) =>
+                  setProficiency(
+                    Number(e.target.value)
+                  )
+                }
+                className="w-full accent-indigo-500"
+              />
+
+              <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wider text-gray-700">
+                <span>Beginner</span>
+                <span>Intermediate</span>
+                <span>Advanced</span>
+              </div>
+
+            </div>
+
+            {skillError && (
+              <ErrorBox>
+                {skillError}
+              </ErrorBox>
+            )}
+
+            <div className="flex gap-3 pt-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowAddSkill(false)
+                }
+                className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleAddSkill}
+                disabled={
+                  savingSkill ||
+                  !skillName.trim()
+                }
+                className={`flex-1 ${primaryButtonClass}`}
+              >
+                {savingSkill
+                  ? "Adding..."
+                  : "Add Skill"}
+              </button>
 
             </div>
 
           </div>
-        )}
 
-        {/* ASSESSMENTS */}
+        </ModalShell>
+      )}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+      {/* =========================================
+          ADD EVIDENCE MODAL
+      ========================================= */}
 
-          <h2 className="text-xl font-semibold">
-            Assessments
-          </h2>
+      {showEvidenceModal && (
+        <ModalShell
+          onClose={() =>
+            setShowEvidenceModal(false)
+          }
+        >
 
-          <p className="text-sm text-gray-400 mt-1 mb-6">
-            Your assessment performance.
-          </p>
+          <ModalHeader
+            icon="◈"
+            title="Add Evidence"
+            description="Add proof supporting one of your skills."
+            onClose={() =>
+              setShowEvidenceModal(false)
+            }
+          />
 
-          {profile.assessments.length === 0 ? (
+          <div className="mt-7 space-y-5">
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Skill
+              </label>
 
-              <p className="text-gray-500">
-                No assessments yet.
-              </p>
+              <select
+                value={selectedSkillId}
+                onChange={(e) =>
+                  setSelectedSkillId(
+                    e.target.value
+                  )
+                }
+                className={selectClass}
+              >
+                <option value="">
+                  Select a skill
+                </option>
+
+                {profile.skills.map(
+                  (studentSkill) => (
+                    <option
+                      key={
+                        studentSkill.skill.id
+                      }
+                      value={
+                        studentSkill.skill.id
+                      }
+                    >
+                      {studentSkill.skill.name}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Evidence Type
+              </label>
+
+              <select
+                value={evidenceType}
+                onChange={(e) =>
+                  setEvidenceType(
+                    e.target.value
+                  )
+                }
+                className={selectClass}
+              >
+                <option value="PROJECT">
+                  Project
+                </option>
+
+                <option value="CERTIFICATION">
+                  Certification
+                </option>
+
+                <option value="INTERNSHIP">
+                  Internship
+                </option>
+
+                <option value="ASSESSMENT">
+                  Assessment
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Evidence Title
+              </label>
+
+              <input
+                type="text"
+                value={evidenceTitle}
+                onChange={(e) =>
+                  setEvidenceTitle(
+                    e.target.value
+                  )
+                }
+                placeholder="e.g. Full-stack internship"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Description
+              </label>
+
+              <textarea
+                value={evidenceDescription}
+                onChange={(e) =>
+                  setEvidenceDescription(
+                    e.target.value
+                  )
+                }
+                placeholder="Describe the work or achievement..."
+                rows={4}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Evidence URL
+              </label>
+
+              <input
+                type="url"
+                value={evidenceUrl}
+                onChange={(e) =>
+                  setEvidenceUrl(
+                    e.target.value
+                  )
+                }
+                placeholder="https://..."
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Score
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={evidenceScore}
+                onChange={(e) =>
+                  setEvidenceScore(
+                    e.target.value
+                  )
+                }
+                placeholder="85"
+                className={inputClass}
+              />
+            </div>
+
+            {evidenceError && (
+              <ErrorBox>
+                {evidenceError}
+              </ErrorBox>
+            )}
+
+            <div className="flex gap-3 pt-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowEvidenceModal(false)
+                }
+                className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  handleAddEvidence
+                }
+                disabled={
+                  savingEvidence ||
+                  !selectedSkillId ||
+                  !evidenceTitle.trim()
+                }
+                className={`flex-1 ${primaryButtonClass}`}
+              >
+                {savingEvidence
+                  ? "Adding..."
+                  : "Add Evidence"}
+              </button>
 
             </div>
 
-          ) : (
+          </div>
 
-            <div className="space-y-3">
+        </ModalShell>
+      )}
 
-              {profile.assessments.map(
-                (assessment) => (
+      {/* =========================================
+          ADD CREDENTIAL MODAL
+      ========================================= */}
 
-                  <div
-                    key={assessment.id}
-                    className="rounded-xl border border-white/10 p-4 flex justify-between"
-                  >
+      {showCredentialModal && (
+        <ModalShell
+          onClose={() =>
+            setShowCredentialModal(false)
+          }
+        >
 
-                    <span>
-                      {assessment.title}
-                    </span>
+          <ModalHeader
+            icon="◆"
+            title="Add Academic Credential"
+            description="Add an NPTEL certification or academic achievement."
+            onClose={() =>
+              setShowCredentialModal(false)
+            }
+          />
 
-                    <span className="font-semibold text-purple-300">
-                      {assessment.score}%
-                    </span>
+          <div className="mt-7 space-y-5">
 
-                  </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Source
+              </label>
 
-                )
-              )}
+              <select
+                value={credentialSource}
+                onChange={(e) =>
+                  setCredentialSource(
+                    e.target.value
+                  )
+                }
+                className={selectClass}
+              >
+                <option value="NPTEL">
+                  NPTEL
+                </option>
+
+                <option value="ACADEMIC_CREDENTIAL">
+                  Academic Credential
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Course / Credential Title
+              </label>
+
+              <input
+                type="text"
+                value={credentialTitle}
+                onChange={(e) =>
+                  setCredentialTitle(
+                    e.target.value
+                  )
+                }
+                placeholder="e.g. Programming in Java"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Credential ID
+              </label>
+
+              <input
+                type="text"
+                value={credentialId}
+                onChange={(e) =>
+                  setCredentialId(
+                    e.target.value
+                  )
+                }
+                placeholder="Optional"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Institution
+              </label>
+
+              <input
+                type="text"
+                value={credentialInstitution}
+                onChange={(e) =>
+                  setCredentialInstitution(
+                    e.target.value
+                  )
+                }
+                placeholder="e.g. IIT Madras"
+                className={inputClass}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+
+              <div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Score (%)
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={credentialScore}
+                  onChange={(e) =>
+                    setCredentialScore(
+                      e.target.value
+                    )
+                  }
+                  placeholder="82"
+                  className={inputClass}
+                />
+
+              </div>
+
+              <div>
+
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Credits
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={credentialCredits}
+                  onChange={(e) =>
+                    setCredentialCredits(
+                      e.target.value
+                    )
+                  }
+                  placeholder="3"
+                  className={inputClass}
+                />
+
+              </div>
 
             </div>
 
-          )}
+            <div>
 
-        </section>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Issue Date
+              </label>
 
-      </div>
+              <input
+                type="date"
+                value={credentialDate}
+                onChange={(e) =>
+                  setCredentialDate(
+                    e.target.value
+                  )
+                }
+                className={inputClass}
+              />
+
+            </div>
+
+            <div>
+
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Verification URL
+              </label>
+
+              <input
+                type="url"
+                value={credentialUrl}
+                onChange={(e) =>
+                  setCredentialUrl(
+                    e.target.value
+                  )
+                }
+                placeholder="https://..."
+                className={inputClass}
+              />
+
+            </div>
+
+            {credentialError && (
+              <ErrorBox>
+                {credentialError}
+              </ErrorBox>
+            )}
+
+            <div className="flex gap-3 pt-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowCredentialModal(false)
+                }
+                className="flex-1 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold text-gray-400 transition hover:bg-white/[0.05] hover:text-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  handleAddCredential
+                }
+                disabled={
+                  savingCredential ||
+                  !credentialTitle.trim()
+                }
+                className={`flex-1 ${primaryButtonClass}`}
+              >
+                {savingCredential
+                  ? "Adding..."
+                  : "Add Credential"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </ModalShell>
+      )}
+
     </main>
   );
 }
+
+/* =================================================
+   BACKGROUND
+================================================= */
+
+function Background() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+
+      <div className="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-indigo-600/10 blur-[140px]" />
+
+      <div className="absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-purple-600/10 blur-[140px]" />
+
+      <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-indigo-500/[0.025] blur-[120px]" />
+
+      <div
+        className="absolute inset-0 opacity-[0.018]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+    </div>
+  );
+}
+
+/* =================================================
+   STAT CARD
+================================================= */
+
+function StatCard({
+  icon,
+  label,
+  value,
+  description,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  description: string;
+}) {
+  return (
+    <div className="group rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-500/20 hover:bg-white/[0.035]">
+
+      <div className="flex items-start justify-between">
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/[0.08] text-indigo-300">
+          {icon}
+        </div>
+
+        <span className="text-[10px] uppercase tracking-widest text-gray-700">
+          SkillSetu
+        </span>
+
+      </div>
+
+      <p className="mt-5 text-xs font-medium uppercase tracking-wider text-gray-600">
+        {label}
+      </p>
+
+      <p className="mt-1 text-3xl font-bold text-white">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs text-gray-700">
+        {description}
+      </p>
+
+    </div>
+  );
+}
+
+/* =================================================
+   SECTION HEADER
+================================================= */
+
+function SectionHeader({
+  icon,
+  eyebrow,
+  title,
+  description,
+}: {
+  icon: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-500/10 bg-indigo-500/[0.07] text-indigo-300">
+        {icon}
+      </div>
+
+      <div>
+
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-400/70">
+          {eyebrow}
+        </p>
+
+        <h2 className="mt-1 text-xl font-bold tracking-tight text-white">
+          {title}
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          {description}
+        </p>
+
+      </div>
+
+    </div>
+  );
+}
+
+/* =================================================
+   INFO CARD
+================================================= */
+
+function InfoCard({
+  label,
+  value,
+  icon,
+  multiline = false,
+}: {
+  label: string;
+  value: string;
+  icon: string;
+  multiline?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+
+      <div className="flex items-center gap-2">
+
+        <span className="text-indigo-400">
+          {icon}
+        </span>
+
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+          {label}
+        </p>
+
+      </div>
+
+      <p
+        className={`mt-3 text-sm leading-7 text-gray-300 ${
+          multiline ? "min-h-14" : ""
+        }`}
+      >
+        {value}
+      </p>
+
+    </div>
+  );
+}
+
+/* =================================================
+   EMPTY STATE
+================================================= */
+
+function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.015] px-6 py-12 text-center">
+
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/10 bg-indigo-500/[0.06] text-xl text-indigo-300">
+        {icon}
+      </div>
+
+      <h3 className="mt-5 font-semibold text-gray-200">
+        {title}
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600">
+        {description}
+      </p>
+
+      {action && (
+        <div className="mt-6">
+          {action}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+/* =================================================
+   ERROR BOX
+================================================= */
+
+function ErrorBox({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] p-3.5 text-sm text-red-300">
+
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/10">
+        !
+      </span>
+
+      <span>{children}</span>
+
+    </div>
+  );
+}
+
+/* =================================================
+   MODAL SHELL
+================================================= */
+
+function ModalShell({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md sm:p-6"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+
+      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/10 bg-[#101117] p-6 shadow-2xl shadow-black/50 sm:p-7">
+
+        <div className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full bg-indigo-500/[0.08] blur-3xl" />
+
+        <div className="relative">
+          {children}
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+/* =================================================
+   MODAL HEADER
+================================================= */
+
+function ModalHeader({
+  icon,
+  title,
+  description,
+  onClose,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-5">
+
+      <div className="flex items-start gap-3">
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/[0.08] text-indigo-300">
+          {icon}
+        </div>
+
+        <div>
+
+          <h2 className="text-xl font-bold text-white">
+            {title}
+          </h2>
+
+          <p className="mt-1 text-sm leading-6 text-gray-500">
+            {description}
+          </p>
+
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] text-lg text-gray-500 transition hover:bg-white/[0.06] hover:text-white"
+      >
+        ×
+      </button>
+
+    </div>
+  );
+}
+
