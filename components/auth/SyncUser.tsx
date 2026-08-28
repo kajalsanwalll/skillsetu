@@ -13,7 +13,7 @@ export default function SyncUser() {
       return;
     }
 
-    async function syncUser() {
+    const syncUser = async () => {
       try {
         const response = await fetch("/api/users/sync", {
           method: "POST",
@@ -21,36 +21,56 @@ export default function SyncUser() {
 
         const data = await response.json();
 
-        console.log("SYNC STATUS:", response.status);
-        console.log("SYNC RESPONSE:", data);
-
         if (!response.ok) {
-          console.error("Failed to sync user:", data);
+          console.error(
+            "Failed to sync user:",
+            data.error
+          );
           return;
         }
 
-        const user = data.user;
+        console.log("SkillSetu user:", data.user);
+        console.log("User exists:", data.userExists);
 
-        console.log("SkillSetu user:", user);
-
-        // Existing Student
-        if (user?.role === "STUDENT") {
-          router.replace("/student/dashboard");
+        // -----------------------------------------
+        // NEW USER
+        // -----------------------------------------
+        if (!data.userExists) {
+          router.push("/setup");
           return;
         }
 
-        // Existing Industry
-        if (user?.role === "INDUSTRY") {
-          router.replace("/industry");
+        // -----------------------------------------
+        // EXISTING USER
+        // -----------------------------------------
+        const role = data.user?.role;
+
+        if (role === "STUDENT") {
+          router.push("/student/dashboard");
           return;
         }
 
-        // No role yet
-        router.replace("/setup");
+        if (role === "INDUSTRY") {
+          router.push("/industry");
+          return;
+        }
+
+        if (role === "FACULTY") {
+          router.push("/academy");
+          return;
+        }
+
+        // -----------------------------------------
+        // Unknown / invalid role
+        // -----------------------------------------
+        console.error(
+          "Unknown SkillSetu role:",
+          role
+        );
       } catch (error) {
         console.error("Sync error:", error);
       }
-    }
+    };
 
     syncUser();
   }, [isLoaded, isSignedIn, router]);
