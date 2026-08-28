@@ -29,6 +29,35 @@ export async function PATCH(
       );
     }
 
+    // Get the SkillSetu user
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found." },
+        { status: 404 }
+      );
+    }
+
+    // Only faculty, industry, and admin can verify evidence.
+    if (
+      user.role !== "FACULTY" &&
+      user.role !== "INDUSTRY" &&
+      user.role !== "ADMIN"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Only authorized reviewers can verify evidence.",
+        },
+        { status: 403 }
+      );
+    }
+
     const { id } = await context.params;
 
     const body = await req.json();
@@ -36,8 +65,7 @@ export async function PATCH(
     const requestedStrength =
       body.verificationStrength as VerificationStrength;
 
-    const verified =
-      body.verified === true;
+    const verified = body.verified === true;
 
     if (
       !allowedStrengths.includes(
@@ -53,39 +81,15 @@ export async function PATCH(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        clerkId: userId,
-      },
-      include: {
-        studentProfile: true,
-      },
-    });
-
-    if (!user || user.role !== "STUDENT") {
-      return NextResponse.json(
-        {
-          error: "Student access required.",
-        },
-        { status: 403 }
-      );
-    }
-
-    if (!user.studentProfile) {
-      return NextResponse.json(
-        {
-          error: "Student profile not found.",
-        },
-        { status: 404 }
-      );
-    }
-
+    // Find the evidence
     const evidence =
-      await prisma.skillEvidence.findFirst({
+      await prisma.skillEvidence.findUnique({
         where: {
           id,
-          studentProfileId:
-            user.studentProfile.id,
+        },
+        include: {
+          skill: true,
+          studentProfile: true,
         },
       });
 
@@ -98,6 +102,7 @@ export async function PATCH(
       );
     }
 
+    // Update verification
     const updatedEvidence =
       await prisma.skillEvidence.update({
         where: {
@@ -116,12 +121,12 @@ export async function PATCH(
     return NextResponse.json({
       success: true,
       message:
-        "Evidence verification updated.",
+        "Evidence verification updated successfully.",
       evidence: updatedEvidence,
     });
   } catch (error) {
     console.error(
-      "STUDENT_EVIDENCE_VERIFY_ERROR:",
+      "EVIDENCE_VERIFICATION_ERROR:",
       error
     );
 
