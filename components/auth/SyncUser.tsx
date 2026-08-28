@@ -13,26 +13,44 @@ export default function SyncUser() {
       return;
     }
 
-    const syncUser = async () => {
+    async function syncUser() {
       try {
         const response = await fetch("/api/users/sync", {
           method: "POST",
         });
 
+        const data = await response.json();
+
+        console.log("SYNC STATUS:", response.status);
+        console.log("SYNC RESPONSE:", data);
+
         if (!response.ok) {
-          console.error("Failed to sync user");
+          console.error("Failed to sync user:", data);
           return;
         }
 
-        const data = await response.json();
+        const user = data.user;
 
-        console.log("SkillSetu user:", data.user);
+        console.log("SkillSetu user:", user);
 
-        router.push("/student/dashboard");
+        // Existing Student
+        if (user?.role === "STUDENT") {
+          router.replace("/student/dashboard");
+          return;
+        }
+
+        // Existing Industry
+        if (user?.role === "INDUSTRY") {
+          router.replace("/industry");
+          return;
+        }
+
+        // No role yet
+        router.replace("/setup");
       } catch (error) {
         console.error("Sync error:", error);
       }
-    };
+    }
 
     syncUser();
   }, [isLoaded, isSignedIn, router]);

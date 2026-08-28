@@ -24,7 +24,8 @@ export async function POST(req: Request) {
     if (role !== "STUDENT" && role !== "INDUSTRY") {
       return NextResponse.json(
         {
-          error: "Invalid role. Choose STUDENT or INDUSTRY.",
+          error:
+            "Invalid role. Choose STUDENT or INDUSTRY.",
         },
         { status: 400 }
       );
@@ -41,7 +42,8 @@ export async function POST(req: Request) {
     }
 
     // 5. Get email
-    const email = clerkUser.emailAddresses[0]?.emailAddress;
+    const email =
+      clerkUser.emailAddresses[0]?.emailAddress;
 
     if (!email) {
       return NextResponse.json(
@@ -56,43 +58,100 @@ export async function POST(req: Request) {
         .filter(Boolean)
         .join(" ") || "SkillSetu User";
 
-    // 7. Check whether user already exists
+    // 7. Find existing SkillSetu user
     const existingUser = await prisma.user.findUnique({
       where: {
         clerkId: userId,
       },
+      include: {
+        studentProfile: true,
+      },
     });
 
-    // 8. If user exists, update role
+    // =====================================================
+    // EXISTING USER
+    // =====================================================
+
     if (existingUser) {
-      const updatedUser = await prisma.user.update({
-        where: {
-          clerkId: userId,
-        },
-        data: {
-          name,
-          email,
-          role,
-          ...(role === "STUDENT" && !existingUser.studentProfile
-            ? {
-                studentProfile: {
-                  create: {},
-                },
-              }
-            : {}),
-        },
-        include: {
-          studentProfile: true,
-        },
-      });
+      /*
+       * STUDENT
+       *
+       * Make sure the StudentProfile exists.
+       */
+      if (role === "STUDENT") {
+        let studentProfile = existingUser.studentProfile;
+
+        if (!studentProfile) {
+          studentProfile =
+            await prisma.studentProfile.create({
+              data: {
+                userId: existingUser.id,
+              },
+            });
+        }
+
+        const updatedUser =
+          await prisma.user.update({
+            where: {
+              id: existingUser.id,
+            },
+            data: {
+              name,
+              email,
+              role: "STUDENT",
+            },
+            include: {
+              studentProfile: true,
+            },
+          });
+
+        return NextResponse.json({
+          success: true,
+          message: "Setup completed successfully",
+          user: updatedUser,
+        });
+      }
+
+      /*
+       * INDUSTRY
+       *
+       * If the user previously had a StudentProfile,
+       * remove it first.
+       */
+      if (existingUser.studentProfile) {
+        await prisma.studentProfile.delete({
+          where: {
+            id: existingUser.studentProfile.id,
+          },
+        });
+      }
+
+      const updatedUser =
+        await prisma.user.update({
+          where: {
+            id: existingUser.id,
+          },
+          data: {
+            name,
+            email,
+            role: "INDUSTRY",
+          },
+          include: {
+            studentProfile: true,
+          },
+        });
 
       return NextResponse.json({
+        success: true,
         message: "Setup completed successfully",
         user: updatedUser,
       });
     }
 
-    // 9. Create a new SkillSetu user
+    // =====================================================
+    // NEW USER
+    // =====================================================
+
     const user = await prisma.user.create({
       data: {
         clerkId: userId,
@@ -108,14 +167,15 @@ export async function POST(req: Request) {
             }
           : {}),
       },
+
       include: {
         studentProfile: true,
       },
     });
 
-    // 10. Return success
     return NextResponse.json(
       {
+        success: true,
         message: "Setup completed successfully",
         user,
       },
