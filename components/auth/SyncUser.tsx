@@ -19,16 +19,54 @@ export default function SyncUser() {
           method: "POST",
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          console.error("Failed to sync user");
+          console.error(
+            "Failed to sync user:",
+            data.error
+          );
           return;
         }
 
-        const data = await response.json();
-
         console.log("SkillSetu user:", data.user);
+        console.log("User exists:", data.userExists);
 
-        router.push("/student/dashboard");
+        // -----------------------------------------
+        // NEW USER
+        // -----------------------------------------
+        if (!data.userExists) {
+          router.push("/setup");
+          return;
+        }
+
+        // -----------------------------------------
+        // EXISTING USER
+        // -----------------------------------------
+        const role = data.user?.role;
+
+        if (role === "STUDENT") {
+          router.push("/student/dashboard");
+          return;
+        }
+
+        if (role === "INDUSTRY") {
+          router.push("/industry");
+          return;
+        }
+
+        if (role === "FACULTY") {
+          router.push("/academy");
+          return;
+        }
+
+        // -----------------------------------------
+        // Unknown / invalid role
+        // -----------------------------------------
+        console.error(
+          "Unknown SkillSetu role:",
+          role
+        );
       } catch (error) {
         console.error("Sync error:", error);
       }

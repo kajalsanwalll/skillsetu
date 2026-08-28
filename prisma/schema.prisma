@@ -12,7 +12,7 @@ model User {
   clerkId        String          @unique
   name           String
   email          String          @unique
-  role           UserRole        @default(STUDENT)
+  role           UserRole?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   opportunities  Opportunity[]   @relation("IndustryOpportunities")

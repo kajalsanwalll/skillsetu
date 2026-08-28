@@ -2,10 +2,9 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-type Role = "STUDENT" | "INDUSTRY" | "FACULTY";
-
-export async function POST(req: Request) {
+export async function POST() {
   try {
+    // 1. Authenticate with Clerk
     const { isAuthenticated, userId } = await auth();
 
     if (!isAuthenticated || !userId) {
@@ -15,16 +14,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
-    const role = body.role as Role;
-
-    if (!["STUDENT", "INDUSTRY", "FACULTY"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid role" },
-        { status: 400 }
-      );
-    }
-
+    // 2. Get Clerk user
     const clerkUser = await currentUser();
 
     if (!clerkUser) {
@@ -34,7 +24,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const email = clerkUser.emailAddresses[0]?.emailAddress;
+    const email =
+      clerkUser.emailAddresses[0]?.emailAddress;
 
     if (!email) {
       return NextResponse.json(
@@ -48,68 +39,35 @@ export async function POST(req: Request) {
         .filter(Boolean)
         .join(" ") || "SkillSetu User";
 
+    // 3. Check whether SkillSetu user already exists
     const existingUser = await prisma.user.findUnique({
       where: {
         clerkId: userId,
       },
+      include: {
+        studentProfile: true,
+        opportunities: true,
+      },
     });
 
+    // 4. Existing user
     if (existingUser) {
-      // If changing away from STUDENT,
-      // remove the StudentProfile.
-      if (role !== "STUDENT") {
-        await prisma.studentProfile.deleteMany({
-          where: {
-            userId: existingUser.id,
-          },
-        });
-      }
-
-      const updatedUser = await prisma.user.update({
-        where: {
-          clerkId: userId,
-        },
-        data: {
-          name,
-          email,
-          role,
-          ...(role === "STUDENT"
-            ? {
-                studentProfile: {
-                  upsert: {
-                    create: {},
-                    update: {},
-                  },
-                },
-              }
-            : {}),
-        },
-        include: {
-          studentProfile: true,
-          opportunities: true,
-        },
-      });
-
       return NextResponse.json({
-        message: "Setup completed successfully",
-        user: updatedUser,
+        success: true,
+        userExists: true,
+        user: existingUser,
       });
     }
 
+    // 5. New user
+    //
+    // We intentionally do NOT select a role here.
+    // The user will select their role on /setup.
     const user = await prisma.user.create({
       data: {
         clerkId: userId,
         name,
         email,
-        role,
-
-        ...(role === "STUDENT"
-          ? {
-              studentProfile: {
-                create: {},
-              },
-            }
-          : {}),
       },
       include: {
         studentProfile: true,
@@ -119,17 +77,18 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Setup completed successfully",
+        success: true,
+        userExists: false,
         user,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("USER_SETUP_ERROR:", error);
+    console.error("USER_SYNC_ERROR:", error);
 
     return NextResponse.json(
       {
-        error: "Failed to complete setup",
+        error: "Failed to sync user",
       },
       { status: 500 }
     );
