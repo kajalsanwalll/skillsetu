@@ -1,6 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
@@ -15,7 +14,7 @@ export async function GET() {
       );
     }
 
-    // 2. Find SkillSetu user + student profile
+    // 2. Find SkillSetu user
     const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
@@ -27,7 +26,7 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json(
-        { error: "SkillSetu user not found." },
+        { error: "User not found." },
         { status: 404 }
       );
     }
@@ -36,20 +35,24 @@ export async function GET() {
     if (user.role !== "STUDENT") {
       return NextResponse.json(
         {
-          error: "Only students can view applications.",
+          error:
+            "Only students can view their applications.",
         },
         { status: 403 }
       );
     }
 
+    // 4. Student profile must exist
     if (!user.studentProfile) {
       return NextResponse.json(
-        { error: "Student profile not found." },
+        {
+          error: "Student profile not found.",
+        },
         { status: 404 }
       );
     }
 
-    // 4. Get applications
+    // 5. Fetch student's applications
     const applications =
       await prisma.application.findMany({
         where: {
@@ -76,10 +79,63 @@ export async function GET() {
         },
       });
 
-    // 5. Return applications
+    // 6. Return clean application data
+    const results = applications.map(
+      (application) => ({
+        id: application.id,
+
+        status: application.status,
+
+        matchScore: application.matchScore,
+
+        createdAt: application.createdAt,
+
+        opportunity: {
+          id: application.opportunity.id,
+
+          title: application.opportunity.title,
+
+          company: application.opportunity.company,
+
+          description:
+            application.opportunity.description,
+
+          location:
+            application.opportunity.location,
+
+          type: application.opportunity.type,
+
+          createdAt:
+            application.opportunity.createdAt,
+
+          industry:
+            application.opportunity.industry,
+
+          skills:
+            application.opportunity.skills.map(
+              (item) => ({
+                id: item.skill.id,
+
+                name: item.skill.name,
+
+                category:
+                  item.skill.category,
+
+                required: item.required,
+
+                minimumProficiency:
+                  item.minimumProficiency,
+
+                weight: item.weight,
+              })
+            ),
+        },
+      })
+    );
+
     return NextResponse.json({
       success: true,
-      applications,
+      applications: results,
     });
   } catch (error) {
     console.error(
@@ -89,7 +145,8 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: "Failed to load applications.",
+        error:
+          "Failed to load applications.",
       },
       { status: 500 }
     );

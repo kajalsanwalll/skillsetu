@@ -22,7 +22,12 @@ export async function GET() {
       include: {
         studentProfile: {
           include: {
-            skills: true,
+           skills: true,
+           applications: {
+            select: {
+            opportunityId: true,
+            },
+           },
           },
         },
       },
