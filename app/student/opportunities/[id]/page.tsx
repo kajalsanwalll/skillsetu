@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-type OpportunitySkill = {
-  id: string;
-  name: string;
+type GapSkill = {
+  skillId: string;
+  skillName: string;
   category: string | null;
-  required: boolean;
-  minimumProficiency: number;
+  studentProficiency: number;
+  requiredProficiency: number;
+  gap: number;
   weight: number;
+  required: boolean;
+  status:
+    | "STRONG"
+    | "MODERATE"
+    | "GAP";
 };
 
 type Opportunity = {
@@ -20,37 +26,44 @@ type Opportunity = {
   location: string | null;
   type: string;
   createdAt: string;
+
   industry: {
     name: string;
   };
-  skills: OpportunitySkill[];
+
+  readinessScore: number;
+
+  strongSkills: number;
+  moderateSkills: number;
+  gapSkills: number;
+
+  gapAnalysis: GapSkill[];
 };
 
 export default function OpportunityDetailPage() {
   const params = useParams();
   const router = useRouter();
 
-  const opportunityId = params.id as string;
+  const id = params.id as string;
 
   const [opportunity, setOpportunity] =
     useState<Opportunity | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(true);
 
-  const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(false);
-  const [applicationError, setApplicationError] =
+  const [error, setError] =
     useState("");
 
   useEffect(() => {
     async function loadOpportunity() {
       try {
         const response = await fetch(
-          `/api/student/opportunities/${opportunityId}`
+          `/api/student/opportunities/${id}`
         );
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (!response.ok) {
           throw new Error(
@@ -59,7 +72,9 @@ export default function OpportunityDetailPage() {
           );
         }
 
-        setOpportunity(data.opportunity);
+        setOpportunity(
+          data.opportunity
+        );
       } catch (error) {
         setError(
           error instanceof Error
@@ -71,291 +86,321 @@ export default function OpportunityDetailPage() {
       }
     }
 
-    if (opportunityId) {
+    if (id) {
       loadOpportunity();
     }
-  }, [opportunityId]);
-
-  async function handleApply() {
-    setApplying(true);
-    setApplicationError("");
-
-    try {
-      const response = await fetch(
-        "/api/student/applications",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            opportunityId,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          setApplied(true);
-          return;
-        }
-
-        throw new Error(
-          data.error ||
-            "Failed to submit application."
-        );
-      }
-
-      setApplied(true);
-    } catch (error) {
-      setApplicationError(
-        error instanceof Error
-          ? error.message
-          : "Failed to submit application."
-      );
-    } finally {
-      setApplying(false);
-    }
-  }
+  }, [id]);
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-gray-400">
-            Loading opportunity...
+      <main className="min-h-screen bg-gray-50 px-6 py-10">
+        <div className="mx-auto max-w-5xl">
+          <p className="text-gray-500">
+            Analyzing your Skill DNA...
           </p>
         </div>
       </main>
     );
   }
 
-  if (error || !opportunity) {
+  if (error) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
-            {error ||
-              "Opportunity not found."}
+      <main className="min-h-screen bg-gray-50 px-6 py-10">
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-600">
+            {error}
           </div>
-
-          <button
-            onClick={() =>
-              router.push(
-                "/student/opportunities"
-              )
-            }
-            className="mt-5 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:bg-white/5"
-          >
-            ← Back to Opportunities
-          </button>
         </div>
       </main>
     );
   }
 
+  if (!opportunity) {
+    return null;
+  }
+
+  const strongSkills =
+    opportunity.gapAnalysis.filter(
+      (skill) =>
+        skill.status === "STRONG"
+    );
+
+  const moderateSkills =
+    opportunity.gapAnalysis.filter(
+      (skill) =>
+        skill.status === "MODERATE"
+    );
+
+  const gapSkills =
+    opportunity.gapAnalysis.filter(
+      (skill) =>
+        skill.status === "GAP"
+    );
+
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-      <div className="max-w-5xl mx-auto">
+    <main className="min-h-screen bg-gray-50 px-6 py-10">
+      <div className="mx-auto max-w-5xl space-y-8">
 
         {/* Back */}
         <button
+          type="button"
           onClick={() =>
             router.push(
               "/student/opportunities"
             )
           }
-          className="mb-8 text-sm text-gray-400 hover:text-white transition"
+          className="text-sm text-gray-500 hover:text-black"
         >
-          ← Back to Opportunities
+          ← Back to opportunities
         </button>
 
-        {/* Main Card */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
+        {/* Header */}
+        <section className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
 
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-
-            <div className="flex-1">
-
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-
-                <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
-                  {opportunity.type.replaceAll(
-                    "_",
-                    " "
-                  )}
-                </span>
-
-                {opportunity.location && (
-                  <span className="text-sm text-gray-500">
-                    📍 {opportunity.location}
-                  </span>
+            <div>
+              <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+                {opportunity.type.replaceAll(
+                  "_",
+                  " "
                 )}
+              </span>
 
-              </div>
-
-              <h1 className="text-4xl font-bold">
+              <h1 className="mt-4 text-3xl font-bold">
                 {opportunity.title}
               </h1>
 
-              <p className="mt-2 text-lg text-purple-300">
+              <p className="mt-2 text-lg text-purple-600">
                 {opportunity.company}
               </p>
 
-              {opportunity.industry?.name && (
-                <p className="mt-1 text-sm text-gray-500">
-                  Posted by{" "}
-                  {opportunity.industry.name}
+              {opportunity.location && (
+                <p className="mt-2 text-sm text-gray-500">
+                  📍 {opportunity.location}
                 </p>
               )}
-
             </div>
 
-            {/* Apply */}
-            <div className="shrink-0">
+            {/* Readiness */}
+            <div className="shrink-0 rounded-2xl border border-purple-200 bg-purple-50 p-6 text-center">
+              <p className="text-4xl font-bold text-purple-700">
+                {opportunity.readinessScore}%
+              </p>
 
-              {applied ? (
-                <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-6 py-3 text-center">
-                  <p className="font-semibold text-green-300">
-                    ✓ Applied
-                  </p>
-                  <p className="mt-1 text-xs text-green-400/70">
-                    Application submitted
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  disabled={applying}
-                  className="rounded-xl bg-purple-600 px-7 py-3 font-semibold text-white hover:bg-purple-500 transition disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {applying
-                    ? "Applying..."
-                    : "Apply Now"}
-                </button>
-              )}
-
+              <p className="mt-1 text-sm text-gray-500">
+                Readiness
+              </p>
             </div>
-
           </div>
 
-          {/* Application Error */}
-          {applicationError && (
-            <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-              {applicationError}
-            </div>
-          )}
-
-          {/* Description */}
-          <div className="mt-10 border-t border-white/10 pt-8">
-
-            <h2 className="text-xl font-semibold">
-              About the Opportunity
-            </h2>
-
-            <p className="mt-4 whitespace-pre-wrap leading-7 text-gray-400">
+          <div className="mt-8 border-t pt-6">
+            <p className="leading-7 text-gray-600">
               {opportunity.description}
             </p>
-
           </div>
+        </section>
 
-          {/* Skills */}
-          <div className="mt-10 border-t border-white/10 pt-8">
+        {/* Explanation */}
+        <section>
+          <h2 className="text-2xl font-bold">
+            Your Skill Match
+          </h2>
 
-            <h2 className="text-xl font-semibold">
-              Required Skills
-            </h2>
+          <p className="mt-1 text-gray-500">
+            Your readiness is calculated by
+            comparing your current Skill DNA
+            against this opportunity&apos;s
+            required proficiency levels and
+            skill weights.
+          </p>
+        </section>
+
+        {/* Summary */}
+        <section className="grid gap-5 md:grid-cols-3">
+
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm text-gray-500">
+              Strong Skills
+            </p>
+
+            <p className="mt-2 text-4xl font-bold">
+              {strongSkills.length}
+            </p>
 
             <p className="mt-1 text-sm text-gray-500">
-              Skills identified from the
-              opportunity requirements.
+              Requirements you currently meet
             </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-
-              {opportunity.skills.map(
-                (skill) => (
-                  <div
-                    key={skill.id}
-                    className={`rounded-xl border px-4 py-3 ${
-                      skill.required
-                        ? "border-purple-500/20 bg-purple-500/10"
-                        : "border-white/10 bg-white/[0.03]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-
-                      <span className="font-medium">
-                        {skill.name}
-                      </span>
-
-                      {skill.required && (
-                        <span className="text-purple-400">
-                          *
-                        </span>
-                      )}
-
-                    </div>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      Minimum proficiency:{" "}
-                      {skill.minimumProficiency}%
-                    </p>
-
-                  </div>
-                )
-              )}
-
-            </div>
-
-            <p className="mt-4 text-xs text-gray-500">
-              * Required skill
-            </p>
-
           </div>
 
-          {/* Bottom Apply */}
-          <div className="mt-10 border-t border-white/10 pt-8 flex flex-col items-center">
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm text-gray-500">
+              Moderate
+            </p>
 
-            {applied ? (
-              <>
-                <div className="text-lg font-semibold text-green-300">
-                  ✓ Application Submitted
-                </div>
+            <p className="mt-2 text-4xl font-bold">
+              {moderateSkills.length}
+            </p>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Your application has been sent
-                  successfully.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="mb-4 text-sm text-gray-500">
-                  Think this opportunity matches
-                  your Skill DNA?
-                </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Skills that need improvement
+            </p>
+          </div>
 
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  disabled={applying}
-                  className="rounded-xl bg-purple-600 px-8 py-3 font-semibold hover:bg-purple-500 transition disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {applying
-                    ? "Submitting Application..."
-                    : "Apply Now"}
-                </button>
-              </>
-            )}
+          <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <p className="text-sm text-gray-500">
+              Skill Gaps
+            </p>
 
+            <p className="mt-2 text-4xl font-bold">
+              {gapSkills.length}
+            </p>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Requirements currently below target
+            </p>
           </div>
 
         </section>
+
+        {/* Strong Skills */}
+        {strongSkills.length > 0 && (
+          <SkillSection
+            title="Strong Skills"
+            description="You currently meet or exceed the required proficiency."
+            skills={strongSkills}
+          />
+        )}
+
+        {/* Moderate Skills */}
+        {moderateSkills.length > 0 && (
+          <SkillSection
+            title="Skills to Strengthen"
+            description="You have some capability here, but additional improvement would increase your readiness."
+            skills={moderateSkills}
+          />
+        )}
+
+        {/* Gaps */}
+        {gapSkills.length > 0 && (
+          <SkillSection
+            title="Skill Gaps"
+            description="These are the biggest differences between your current Skill DNA and this opportunity."
+            skills={gapSkills}
+          />
+        )}
+
       </div>
     </main>
+  );
+}
+
+function SkillSection({
+  title,
+  description,
+  skills,
+}: {
+  title: string;
+  description: string;
+  skills: GapSkill[];
+}) {
+  return (
+    <section className="rounded-2xl bg-white p-6 shadow-sm">
+
+      <div>
+        <h2 className="text-xl font-bold">
+          {title}
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          {description}
+        </p>
+      </div>
+
+      <div className="mt-6 space-y-5">
+
+        {skills.map((skill) => (
+          <div
+            key={skill.skillId}
+            className="rounded-xl border p-5"
+          >
+
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
+              <div>
+                <h3 className="font-semibold">
+                  {skill.skillName}
+                </h3>
+
+                {skill.category && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {skill.category}
+                  </p>
+                )}
+              </div>
+
+              <div className="text-sm">
+                <span className="font-semibold">
+                  {skill.studentProficiency}%
+                </span>
+
+                <span className="mx-2 text-gray-400">
+                  /
+                </span>
+
+                <span className="text-gray-500">
+                  {skill.requiredProficiency}%
+                  required
+                </span>
+              </div>
+
+            </div>
+
+            {/* Progress */}
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
+
+              <div
+                className="h-full rounded-full bg-black"
+                style={{
+                  width: `${Math.min(
+                    skill.studentProficiency,
+                    100
+                  )}%`,
+                }}
+              />
+
+            </div>
+
+            {/* Gap information */}
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">
+                Weight: {skill.weight}
+              </span>
+
+              {skill.required && (
+                <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-700">
+                  Required
+                </span>
+              )}
+
+              {skill.gap > 0 && (
+                <span className="rounded-full bg-red-50 px-3 py-1 text-red-600">
+                  {skill.gap}% gap
+                </span>
+              )}
+
+              {skill.gap === 0 && (
+                <span className="rounded-full bg-green-50 px-3 py-1 text-green-600">
+                  Requirement met
+                </span>
+              )}
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+    </section>
   );
 }
