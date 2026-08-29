@@ -1,9 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-
 import { prisma } from "@/lib/prisma";
-import { calculateTrustedProficiency } from "@/lib/skills/calculate-trusted-proficiency";
 
 export default async function SkillDNAPage() {
   // -----------------------------------------
@@ -24,7 +22,6 @@ export default async function SkillDNAPage() {
     where: {
       clerkId: userId,
     },
-
     include: {
       studentProfile: {
         include: {
@@ -32,9 +29,10 @@ export default async function SkillDNAPage() {
             include: {
               skill: true,
             },
-
             orderBy: {
-              proficiency: "desc",
+              skill: {
+                name: "asc",
+              },
             },
           },
 
@@ -42,7 +40,6 @@ export default async function SkillDNAPage() {
             include: {
               skill: true,
             },
-
             orderBy: {
               createdAt: "desc",
             },
@@ -84,118 +81,27 @@ export default async function SkillDNAPage() {
   const assessments = profile.assessments;
 
   // -----------------------------------------
-  // 4. Calculate trusted proficiency
-  // -----------------------------------------
-
-  const trustedSkills = skills.map((studentSkill) => {
-    const skillEvidence = evidence.filter(
-      (item) => item.skillId === studentSkill.skillId
-    );
-
-    const result = calculateTrustedProficiency({
-      claimedProficiency: studentSkill.proficiency,
-
-      evidence: skillEvidence.map((item) => ({
-        score: item.score,
-        verified: item.verified,
-        verificationStrength:
-          item.verificationStrength,
-      })),
-    });
-
-    return {
-      ...studentSkill,
-
-      claimedProficiency:
-        result.claimedProficiency,
-
-      evidenceScore:
-        result.evidenceScore,
-
-      trustedProficiency:
-        result.trustedProficiency,
-
-      confidence:
-        result.confidence,
-
-      evidenceCount:
-        skillEvidence.length,
-
-      verifiedEvidenceCount:
-        skillEvidence.filter(
-          (item) => item.verified
-        ).length,
-    };
-  });
-
-  // -----------------------------------------
-  // 5. Skill statistics
-  // -----------------------------------------
-
-  const averageSkill =
-    skills.length > 0
-      ? Math.round(
-          skills.reduce(
-            (sum, skill) =>
-              sum + skill.proficiency,
-            0
-          ) / skills.length
-        )
-      : 0;
-
-  const averageTrustedSkill =
-    trustedSkills.length > 0
-      ? Math.round(
-          trustedSkills.reduce(
-            (sum, skill) =>
-              sum + skill.trustedProficiency,
-            0
-          ) / trustedSkills.length
-        )
-      : 0;
-
-  const strongSkills = trustedSkills.filter(
-    (skill) =>
-      skill.trustedProficiency >= 75
-  );
-
-  const developingSkills = trustedSkills.filter(
-    (skill) =>
-      skill.trustedProficiency >= 60 &&
-      skill.trustedProficiency < 75
-  );
-
-  const improvementSkills = trustedSkills.filter(
-    (skill) =>
-      skill.trustedProficiency < 60
-  );
-
-  // -----------------------------------------
-  // 6. Verification statistics
+  // 4. Evidence statistics
   // -----------------------------------------
 
   const highVerification = skills.filter(
-    (skill) =>
-      skill.verificationStrength === "HIGH"
+    (skill) => skill.verificationStrength === "HIGH"
   ).length;
 
   const mediumVerification = skills.filter(
-    (skill) =>
-      skill.verificationStrength === "MEDIUM"
+    (skill) => skill.verificationStrength === "MEDIUM"
   ).length;
 
   const lowVerification = skills.filter(
-    (skill) =>
-      skill.verificationStrength === "LOW"
+    (skill) => skill.verificationStrength === "LOW"
   ).length;
 
   const unverifiedSkills = skills.filter(
     (skill) =>
-      skill.verificationStrength ===
-      "UNVERIFIED"
+      skill.verificationStrength === "UNVERIFIED"
   ).length;
 
-  const verifiedCount =
+  const verifiedSkills =
     highVerification +
     mediumVerification +
     lowVerification;
@@ -203,39 +109,82 @@ export default async function SkillDNAPage() {
   const verificationPercentage =
     skills.length > 0
       ? Math.round(
-          (verifiedCount / skills.length) * 100
+          (verifiedSkills / skills.length) * 100
         )
       : 0;
 
   // -----------------------------------------
-  // 7. Categories
+  // 5. Categories
   // -----------------------------------------
 
   const categories = Array.from(
     new Set(
       skills
-        .map(
-          (skill) =>
-            skill.skill.category
+        .map((skill) => skill.skill.category)
+        .filter(
+          (category): category is string =>
+            Boolean(category)
         )
-        .filter(Boolean)
     )
   );
 
   // -----------------------------------------
-  // 8. Page
+  // 6. Evidence-backed skills
+  // -----------------------------------------
+
+  const skillsWithEvidence = skills.filter((skill) =>
+    evidence.some(
+      (item) => item.skillId === skill.skillId
+    )
+  ).length;
+
+  const skillsWithVerifiedEvidence =
+    skills.filter((skill) =>
+      evidence.some(
+        (item) =>
+          item.skillId === skill.skillId &&
+          item.verified
+      )
+    ).length;
+
+  // -----------------------------------------
+  // 7. Evidence type statistics
+  // -----------------------------------------
+
+  const assessmentEvidence = evidence.filter(
+    (item) => item.type === "ASSESSMENT"
+  ).length;
+
+  const projectEvidence = evidence.filter(
+    (item) => item.type === "PROJECT"
+  ).length;
+
+  const internshipEvidence = evidence.filter(
+    (item) => item.type === "INTERNSHIP"
+  ).length;
+
+  const certificationEvidence = evidence.filter(
+    (item) => item.type === "CERTIFICATION"
+  ).length;
+
+  const academicEvidence = evidence.filter(
+    (item) =>
+      item.type === "ACADEMIC_CREDENTIAL" ||
+      item.type === "NPTEL"
+  ).length;
+
+  const selfReportedEvidence = evidence.filter(
+    (item) => item.type === "SELF_REPORTED"
+  ).length;
+
+  // -----------------------------------------
+  // 8. Page palette
   // -----------------------------------------
 
   const TEAL = "#2BA792";
   const MARIGOLD = "#F4A93B";
   const ROSE = "#E8598B";
   const MUTED = "#9AA3C0";
-
-  const confidenceColor: Record<string, string> = {
-    HIGH: TEAL,
-    MEDIUM: MARIGOLD,
-    LOW: ROSE,
-  };
 
   return (
     <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
@@ -248,7 +197,7 @@ export default async function SkillDNAPage() {
         <section>
           <Link
             href="/student/dashboard"
-            className="text-sm text-[#9AA3C0] hover:text-[#C7CCE0]"
+            className="text-sm text-[#9AA3C0] transition hover:text-[#C7CCE0]"
           >
             ← Back to Dashboard
           </Link>
@@ -262,79 +211,66 @@ export default async function SkillDNAPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-[#9AA3C0]">
-            What you claim, and what your evidence actually
-            supports.
+            A structured view of your skills, the evidence
+            behind them, and how strongly that evidence has
+            been verified.
           </p>
         </section>
 
         {/* -------------------------------- */}
-        {/* PRIMARY STATS */}
+        {/* PRIMARY OVERVIEW */}
         {/* -------------------------------- */}
 
         <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
-          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+          <div className="grid gap-6 md:grid-cols-4">
 
-            <div className="flex gap-10">
-              <div>
-                <p className="text-sm text-[#9AA3C0]">
-                  Trusted Proficiency
-                </p>
-                <p className="mt-2 text-5xl font-bold text-[#F4A93B]">
-                  {averageTrustedSkill}%
-                </p>
-                <p className="mt-2 text-xs text-[#9AA3C0]">
-                  Evidence-adjusted capability
-                </p>
-              </div>
-
-              <div className="border-l border-[#232B47] pl-10">
-                <p className="text-sm text-[#9AA3C0]">
-                  Claimed Proficiency
-                </p>
-                <p className="mt-2 text-5xl font-bold text-[#5B6488]">
-                  {averageSkill}%
-                </p>
-                <p className="mt-2 text-xs text-[#9AA3C0]">
-                  What you reported yourself
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-6 border-t border-[#232B47] pt-5 md:border-t-0 md:border-l md:pl-8 md:pt-0">
-              <MiniStat label="Skills" value={skills.length} />
-              <MiniStat label="Categories" value={categories.length} />
-              <MiniStat label="Evidence" value={evidence.length} />
-              <MiniStat label="Verified" value={`${verificationPercentage}%`} />
-            </div>
-
-          </div>
-
-          {/* Proficiency distribution */}
-          <div className="mt-8">
-            <SegmentedBar
-              label="Proficiency tier"
-              segments={[
-                { label: "Strong (≥75%)", count: strongSkills.length, color: TEAL },
-                { label: "Developing (60–74%)", count: developingSkills.length, color: MARIGOLD },
-                { label: "Needs work (<60%)", count: improvementSkills.length, color: ROSE },
-              ]}
+            <OverviewCard
+              label="Skills"
+              value={skills.length}
+              description="Skills currently listed"
+              accent={MARIGOLD}
             />
-          </div>
 
-          {/* Evidence strength distribution */}
-          <div className="mt-6">
-            <SegmentedBar
-              label="Evidence strength"
-              segments={[
-                { label: "High", count: highVerification, color: TEAL },
-                { label: "Medium", count: mediumVerification, color: MARIGOLD },
-                { label: "Low", count: lowVerification, color: ROSE },
-                { label: "Unverified", count: unverifiedSkills, color: MUTED },
-              ]}
+            <OverviewCard
+              label="Evidence"
+              value={evidence.length}
+              description="Supporting evidence items"
+              accent={TEAL}
             />
+
+            <OverviewCard
+              label="Verified Skills"
+              value={verifiedSkills}
+              description="Skills with verification"
+              accent={TEAL}
+            />
+
+            <OverviewCard
+              label="Verification"
+              value={`${verificationPercentage}%`}
+              description="Of listed skills verified"
+              accent={MARIGOLD}
+            />
+
           </div>
 
+          {/* Important explanation */}
+
+          <div className="mt-8 rounded-xl border border-[#F4A93B]/20 bg-[#F4A93B]/5 p-5">
+            <p className="text-sm font-medium text-[#F4A93B]">
+              HOW SKILL DNA WORKS
+            </p>
+
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-[#C7CCE0]">
+              SkillSetu does not treat a percentage as a universal
+              measure of how skilled someone is. A skill level is
+              contextual and depends on the role, task, and evidence
+              available. Instead, Skill DNA combines your declared
+              skills with supporting evidence and its verification
+              strength.
+            </p>
+          </div>
         </section>
 
         {/* -------------------------------- */}
@@ -356,13 +292,13 @@ export default async function SkillDNAPage() {
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-[#9AA3C0]">
-              Your current career direction helps
-              SkillSetu personalize future
-              recommendations.
+              Your career direction helps SkillSetu
+              personalize opportunity recommendations
+              and identify relevant skill gaps.
             </p>
           </div>
 
-          {/* Skill Categories */}
+          {/* Categories */}
 
           <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
             <p className="text-sm font-medium text-[#F4A93B]">
@@ -387,10 +323,145 @@ export default async function SkillDNAPage() {
             </div>
 
             <p className="mt-4 text-xs text-[#9AA3C0]">
-              {credentials.length} credentials · {assessments.length} assessments
+              {credentials.length} credentials ·{" "}
+              {assessments.length} assessments
             </p>
           </div>
+        </section>
 
+        {/* -------------------------------- */}
+        {/* EVIDENCE OVERVIEW */}
+        {/* -------------------------------- */}
+
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+
+          <p className="text-sm font-medium text-[#F4A93B]">
+            EVIDENCE PROFILE
+          </p>
+
+          <h2 className="mt-1 text-2xl font-bold">
+            How well supported are your skills?
+          </h2>
+
+          <p className="mt-2 max-w-2xl text-sm text-[#9AA3C0]">
+            Evidence strengthens confidence in a skill.
+            Different evidence sources carry different
+            levels of credibility and verification.
+          </p>
+
+          {/* Verification distribution */}
+
+          <div className="mt-8">
+            <SegmentedBar
+              label="Verification strength"
+              segments={[
+                {
+                  label: "High",
+                  count: highVerification,
+                  color: TEAL,
+                },
+                {
+                  label: "Medium",
+                  count: mediumVerification,
+                  color: MARIGOLD,
+                },
+                {
+                  label: "Low",
+                  count: lowVerification,
+                  color: ROSE,
+                },
+                {
+                  label: "Unverified",
+                  count: unverifiedSkills,
+                  color: MUTED,
+                },
+              ]}
+            />
+          </div>
+
+          {/* Evidence coverage */}
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+
+            <MiniEvidenceCard
+              label="Skills with evidence"
+              value={skillsWithEvidence}
+              total={skills.length}
+            />
+
+            <MiniEvidenceCard
+              label="Verified evidence"
+              value={skillsWithVerifiedEvidence}
+              total={skills.length}
+            />
+
+            <MiniEvidenceCard
+              label="Total evidence items"
+              value={evidence.length}
+            />
+
+          </div>
+        </section>
+
+        {/* -------------------------------- */}
+        {/* EVIDENCE SOURCES */}
+        {/* -------------------------------- */}
+
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+
+          <p className="text-sm font-medium text-[#F4A93B]">
+            EVIDENCE SOURCES
+          </p>
+
+          <h2 className="mt-1 text-2xl font-bold">
+            What supports your profile?
+          </h2>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            <EvidenceTypeCard
+              label="Assessments"
+              count={assessmentEvidence}
+              description="Structured assessments or tests"
+              accent={TEAL}
+            />
+
+            <EvidenceTypeCard
+              label="Projects"
+              count={projectEvidence}
+              description="Demonstrable or evaluated work"
+              accent={MARIGOLD}
+            />
+
+            <EvidenceTypeCard
+              label="Internships"
+              count={internshipEvidence}
+              description="Professional experience"
+              accent={TEAL}
+            />
+
+            <EvidenceTypeCard
+              label="Certifications"
+              count={certificationEvidence}
+              description="Industry or professional credentials"
+              accent={MARIGOLD}
+            />
+
+            <EvidenceTypeCard
+              label="Academic"
+              count={academicEvidence}
+              description="Academic credentials and NPTEL"
+              accent={TEAL}
+            />
+
+            <EvidenceTypeCard
+              label="Self Reported"
+              count={selfReportedEvidence}
+              description="Information declared by you"
+              accent={MUTED}
+            />
+
+          </div>
         </section>
 
         {/* -------------------------------- */}
@@ -399,17 +470,21 @@ export default async function SkillDNAPage() {
 
         <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
-          <div>
-            <p className="text-sm font-medium text-[#F4A93B]">
-              CAPABILITY PROFILE
-            </p>
+          <p className="text-sm font-medium text-[#F4A93B]">
+            CAPABILITY PROFILE
+          </p>
 
-            <h2 className="mt-1 text-2xl font-bold">
-              Your Skills
-            </h2>
-          </div>
+          <h2 className="mt-1 text-2xl font-bold">
+            Your Skills
+          </h2>
 
-          {trustedSkills.length === 0 ? (
+          <p className="mt-2 max-w-2xl text-sm text-[#9AA3C0]">
+            Your reported skills are shown together with
+            the evidence and verification supporting them.
+            These are not universal skill percentages.
+          </p>
+
+          {skills.length === 0 ? (
 
             <div className="mt-8 rounded-xl border border-dashed border-[#232B47] p-10 text-center">
               <p className="text-[#9AA3C0]">
@@ -417,8 +492,8 @@ export default async function SkillDNAPage() {
               </p>
 
               <p className="mt-2 text-sm text-[#5B6488]">
-                Skills will appear here once they
-                are added to your profile.
+                Skills will appear here once they are
+                added to your profile.
               </p>
             </div>
 
@@ -426,29 +501,29 @@ export default async function SkillDNAPage() {
 
             <div className="mt-8 space-y-4">
 
-              {trustedSkills.map((studentSkill) => {
+              {skills.map((studentSkill) => {
 
-                const claimedProficiency =
-                  Math.min(
-                    Math.max(
-                      studentSkill.claimedProficiency,
-                      0
-                    ),
-                    100
+                const skillEvidence =
+                  evidence.filter(
+                    (item) =>
+                      item.skillId ===
+                      studentSkill.skillId
                   );
 
-                const trustedProficiency =
-                  Math.min(
-                    Math.max(
-                      studentSkill.trustedProficiency,
-                      0
-                    ),
-                    100
+                const verifiedEvidence =
+                  skillEvidence.filter(
+                    (item) => item.verified
                   );
 
-                const gap = claimedProficiency - trustedProficiency;
-                const badgeColor =
-                  confidenceColor[studentSkill.confidence] ?? MUTED;
+                const verificationColor =
+                  getVerificationColor(
+                    studentSkill.verificationStrength
+                  );
+
+                const verificationLabel =
+                  getVerificationLabel(
+                    studentSkill.verificationStrength
+                  );
 
                 return (
                   <div
@@ -456,12 +531,12 @@ export default async function SkillDNAPage() {
                     className="rounded-xl border border-[#232B47] p-5"
                   >
 
-                    {/* Skill Header */}
+                    {/* Skill header */}
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
                       <div>
-                        <h3 className="font-semibold">
+                        <h3 className="text-lg font-semibold">
                           {studentSkill.skill.name}
                         </h3>
 
@@ -474,65 +549,160 @@ export default async function SkillDNAPage() {
 
                       <span
                         className="w-fit rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide"
-                        style={{ borderColor: `${badgeColor}40`, color: badgeColor }}
+                        style={{
+                          borderColor: `${verificationColor}40`,
+                          color: verificationColor,
+                          backgroundColor: `${verificationColor}10`,
+                        }}
                       >
-                        {studentSkill.confidence} confidence
+                        {verificationLabel}
                       </span>
 
                     </div>
 
-                    {/* Trusted proficiency — the primary number */}
+                    {/* Self reported value */}
+
+                    <div className="mt-5 rounded-lg border border-[#232B47] bg-[#0F1526]/50 p-4">
+
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
+                            Self-reported
+                          </p>
+
+                          <p className="mt-1 text-sm text-[#C7CCE0]">
+                            This value represents what you
+                            reported about yourself, not an
+                            objectively measured skill level.
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-2xl font-bold text-[#5B6488]">
+                            {Math.round(
+                              studentSkill.proficiency
+                            )}
+                          </span>
+
+                          <span className="ml-1 text-xs text-[#9AA3C0]">
+                            / 100
+                          </span>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Evidence */}
 
                     <div className="mt-4">
 
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-[#C7CCE0]">
-                          Trusted Proficiency
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
 
-                        <span className="text-sm font-bold text-[#F4A93B]">
-                          {trustedProficiency}%
-                          {Math.abs(gap) >= 10 && (
-                            <span className="ml-2 text-xs font-normal text-[#9AA3C0]">
-                              ({gap > 0 ? "−" : "+"}{Math.abs(gap)} vs claimed)
-                            </span>
+                        <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
+                          Supporting Evidence
+                        </p>
+
+                        <p className="text-xs text-[#C7CCE0]">
+                          {skillEvidence.length} item
+                          {skillEvidence.length === 1
+                            ? ""
+                            : "s"}
+                          {" · "}
+                          {verifiedEvidence.length} verified
+                        </p>
+
+                      </div>
+
+                      {skillEvidence.length === 0 ? (
+
+                        <div className="mt-3 rounded-lg border border-dashed border-[#232B47] p-4">
+                          <p className="text-sm text-[#9AA3C0]">
+                            No supporting evidence yet.
+                          </p>
+
+                          <p className="mt-1 text-xs text-[#5B6488]">
+                            Add projects, assessments,
+                            certifications, internships,
+                            or other credible evidence to
+                            strengthen this skill.
+                          </p>
+                        </div>
+
+                      ) : (
+
+                        <div className="mt-3 space-y-2">
+
+                          {skillEvidence
+                            .slice(0, 4)
+                            .map((item) => (
+
+                              <div
+                                key={item.id}
+                                className="flex flex-col gap-2 rounded-lg border border-[#232B47] bg-[#0F1526]/40 p-3 sm:flex-row sm:items-center sm:justify-between"
+                              >
+
+                                <div>
+                                  <p className="text-sm text-[#C7CCE0]">
+                                    {item.title}
+                                  </p>
+
+                                  <p className="mt-1 text-[11px] uppercase tracking-wide text-[#9AA3C0]">
+                                    {item.type.replaceAll(
+                                      "_",
+                                      " "
+                                    )}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+
+                                  {item.score !== null && (
+                                    <span className="text-xs text-[#9AA3C0]">
+                                      Score:{" "}
+                                      <span className="text-[#C7CCE0]">
+                                        {item.score}
+                                      </span>
+                                    </span>
+                                  )}
+
+                                  <span
+                                    className={
+                                      item.verified
+                                        ? "rounded-full border border-[#2BA792]/30 bg-[#2BA792]/10 px-2.5 py-1 text-[10px] uppercase tracking-wide text-[#2BA792]"
+                                        : "rounded-full border border-[#3A4266] bg-[#0F1526]/60 px-2.5 py-1 text-[10px] uppercase tracking-wide text-[#9AA3C0]"
+                                    }
+                                  >
+                                    {item.verified
+                                      ? "Verified"
+                                      : "Unverified"}
+                                  </span>
+
+                                </div>
+
+                              </div>
+
+                            ))}
+
+                          {skillEvidence.length > 4 && (
+                            <p className="pt-1 text-xs text-[#7A82A6]">
+                              +
+                              {skillEvidence.length - 4}{" "}
+                              more evidence items
+                            </p>
                           )}
-                        </span>
-                      </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-[#F4A93B] transition-all"
-                          style={{
-                            width: `${trustedProficiency}%`,
-                          }}
-                        />
-                      </div>
+                        </div>
+
+                      )}
 
                     </div>
-
-                    {/* Evidence — one compact row instead of three boxes */}
-
-                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#9AA3C0]">
-                      <span>Evidence score: <span className="text-[#C7CCE0]">{studentSkill.evidenceScore}%</span></span>
-                      <span>{studentSkill.evidenceCount} evidence items</span>
-                      <span>{studentSkill.verifiedEvidenceCount} verified</span>
-                      <span>
-                        Verification:{" "}
-                        <span style={{ color: confidenceColor[studentSkill.verificationStrength] ?? MUTED }}>
-                          {studentSkill.verificationStrength}
-                        </span>
-                      </span>
-                    </div>
-
                   </div>
                 );
               })}
 
             </div>
-
           )}
-
         </section>
 
         {/* -------------------------------- */}
@@ -554,8 +724,8 @@ export default async function SkillDNAPage() {
             </h3>
 
             <p className="mt-1 text-sm text-[#9AA3C0]">
-              Explore opportunities ranked using
-              your current Skill DNA.
+              Explore opportunities using your skills,
+              evidence, interests, and eligibility.
             </p>
           </Link>
 
@@ -572,8 +742,8 @@ export default async function SkillDNAPage() {
             </h3>
 
             <p className="mt-1 text-sm text-[#9AA3C0]">
-              Identify skills where your proficiency
-              is below opportunity requirements.
+              Identify missing or weakly evidenced skills
+              relative to specific opportunities.
             </p>
           </Link>
 
@@ -590,39 +760,146 @@ export default async function SkillDNAPage() {
             </h3>
 
             <p className="mt-1 text-sm text-[#9AA3C0]">
-              Showcase projects and evidence
-              supporting your skills.
+              Add projects, certifications, assessments,
+              and professional experience.
             </p>
           </Link>
 
         </section>
-
       </div>
     </main>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: string | number }) {
+/* --------------------------------------------- */
+/* OVERVIEW CARD */
+/* --------------------------------------------- */
+
+function OverviewCard({
+  label,
+  value,
+  description,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  description: string;
+  accent: string;
+}) {
   return (
-    <div>
-      <p className="text-2xl font-bold text-[#F5F1E8]">{value}</p>
-      <p className="mt-1 text-xs text-[#9AA3C0]">{label}</p>
+    <div className="rounded-xl border border-[#232B47] p-5">
+      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
+        {label}
+      </p>
+
+      <p
+        className="mt-2 text-3xl font-bold"
+        style={{ color: accent }}
+      >
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs text-[#9AA3C0]">
+        {description}
+      </p>
     </div>
   );
 }
+
+/* --------------------------------------------- */
+/* MINI EVIDENCE CARD */
+/* --------------------------------------------- */
+
+function MiniEvidenceCard({
+  label,
+  value,
+  total,
+}: {
+  label: string;
+  value: number;
+  total?: number;
+}) {
+  return (
+    <div className="rounded-xl border border-[#232B47] p-4">
+      <p className="text-xs text-[#9AA3C0]">
+        {label}
+      </p>
+
+      <p className="mt-2 text-2xl font-bold text-[#F5F1E8]">
+        {value}
+        {total !== undefined && (
+          <span className="ml-1 text-sm font-normal text-[#5B6488]">
+            / {total}
+          </span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/* --------------------------------------------- */
+/* EVIDENCE TYPE CARD */
+/* --------------------------------------------- */
+
+function EvidenceTypeCard({
+  label,
+  count,
+  description,
+  accent,
+}: {
+  label: string;
+  count: number;
+  description: string;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[#232B47] p-4">
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-[#C7CCE0]">
+          {label}
+        </p>
+
+        <span
+          className="text-xl font-bold"
+          style={{ color: accent }}
+        >
+          {count}
+        </span>
+      </div>
+
+      <p className="mt-2 text-xs leading-5 text-[#9AA3C0]">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+/* --------------------------------------------- */
+/* SEGMENTED BAR */
+/* --------------------------------------------- */
 
 function SegmentedBar({
   label,
   segments,
 }: {
   label: string;
-  segments: { label: string; count: number; color: string }[];
+  segments: {
+    label: string;
+    count: number;
+    color: string;
+  }[];
 }) {
-  const total = segments.reduce((sum, s) => sum + s.count, 0);
+  const total = segments.reduce(
+    (sum, segment) => sum + segment.count,
+    0
+  );
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
+        {label}
+      </p>
 
       <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-white/5">
         {total === 0 ? (
@@ -631,11 +908,11 @@ function SegmentedBar({
           segments.map((segment) => (
             <div
               key={segment.label}
+              className="h-full first:rounded-l-full last:rounded-r-full"
               style={{
                 width: `${(segment.count / total) * 100}%`,
                 backgroundColor: segment.color,
               }}
-              className="h-full first:rounded-l-full last:rounded-r-full"
             />
           ))
         )}
@@ -643,15 +920,65 @@ function SegmentedBar({
 
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {segments.map((segment) => (
-          <span key={segment.label} className="flex items-center gap-1.5 text-xs text-[#9AA3C0]">
+          <span
+            key={segment.label}
+            className="flex items-center gap-1.5 text-xs text-[#9AA3C0]"
+          >
             <span
               className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: segment.color }}
+              style={{
+                backgroundColor: segment.color,
+              }}
             />
-            {segment.label}: <span className="text-[#C7CCE0]">{segment.count}</span>
+
+            {segment.label}:
+
+            <span className="text-[#C7CCE0]">
+              {segment.count}
+            </span>
           </span>
         ))}
       </div>
     </div>
   );
+}
+
+/* --------------------------------------------- */
+/* VERIFICATION HELPERS */
+/* --------------------------------------------- */
+
+function getVerificationColor(
+  strength: string
+) {
+  switch (strength) {
+    case "HIGH":
+      return "#2BA792";
+
+    case "MEDIUM":
+      return "#F4A93B";
+
+    case "LOW":
+      return "#E8598B";
+
+    default:
+      return "#9AA3C0";
+  }
+}
+
+function getVerificationLabel(
+  strength: string
+) {
+  switch (strength) {
+    case "HIGH":
+      return "High confidence";
+
+    case "MEDIUM":
+      return "Moderate confidence";
+
+    case "LOW":
+      return "Low confidence";
+
+    default:
+      return "Not yet verified";
+  }
 }

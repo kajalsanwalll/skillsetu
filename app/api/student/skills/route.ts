@@ -2,8 +2,17 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const VALID_LEVELS = [
+  "EXPOSURE",
+  "FOUNDATIONAL",
+  "INTERMEDIATE",
+  "ADVANCED",
+  "EXPERT",
+] as const;
+
 export async function GET() {
   try {
+    // 1. Authenticate
     const { isAuthenticated, userId } = await auth();
 
     if (!isAuthenticated || !userId) {
@@ -13,6 +22,7 @@ export async function GET() {
       );
     }
 
+    // 2. Find SkillSetu user + student skills
     const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
@@ -42,6 +52,7 @@ export async function GET() {
       );
     }
 
+    // 3. Student-only access
     if (user.role !== "STUDENT") {
       return NextResponse.json(
         {
@@ -52,9 +63,12 @@ export async function GET() {
       );
     }
 
+    // 4. Student profile must exist
     if (!user.studentProfile) {
       return NextResponse.json(
-        { error: "Student profile not found." },
+        {
+          error: "Student profile not found.",
+        },
         { status: 404 }
       );
     }
@@ -79,6 +93,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // 1. Authenticate
     const { isAuthenticated, userId } = await auth();
 
     if (!isAuthenticated || !userId) {
@@ -88,6 +103,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 2. Find SkillSetu user + student profile
     const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
@@ -104,6 +120,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3. Student-only access
     if (user.role !== "STUDENT") {
       return NextResponse.json(
         {
@@ -114,6 +131,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 4. Student profile must exist
     if (!user.studentProfile) {
       return NextResponse.json(
         {
@@ -124,6 +142,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 5. Read request body
     const body = await request.json();
 
     const skillName =
@@ -131,10 +150,12 @@ export async function POST(request: Request) {
         ? body.skillName.trim()
         : "";
 
-    const proficiency = Number(
-      body.proficiency
-    );
+    const competencyLevel =
+      typeof body.competencyLevel === "string"
+        ? body.competencyLevel.toUpperCase()
+        : "";
 
+    // 6. Validate skill name
     if (!skillName) {
       return NextResponse.json(
         {
@@ -144,26 +165,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // 7. Validate competency level
     if (
-      !Number.isFinite(proficiency) ||
-      proficiency < 0 ||
-      proficiency > 100
+      !VALID_LEVELS.includes(
+        competencyLevel as (typeof VALID_LEVELS)[number]
+      )
     ) {
       return NextResponse.json(
         {
           error:
-            "Proficiency must be between 0 and 100.",
+            "Invalid competency level. Choose EXPOSURE, FOUNDATIONAL, INTERMEDIATE, ADVANCED, or EXPERT.",
         },
         { status: 400 }
       );
     }
 
-    // Normalize skill name for lookup.
+    // 8. Normalize skill name
     const normalizedSkillName = skillName
       .replace(/\s+/g, " ")
       .trim();
 
-    // Reuse existing skill or create it.
+    // 9. Reuse existing skill or create it
     const skill = await prisma.skill.upsert({
       where: {
         name: normalizedSkillName,
@@ -174,7 +196,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create or update student's skill.
+    // 10. Create or update student's skill
     const studentSkill =
       await prisma.studentSkill.upsert({
         where: {
@@ -184,17 +206,35 @@ export async function POST(request: Request) {
             skillId: skill.id,
           },
         },
+
         update: {
-          proficiency,
+          competencyLevel:
+            competencyLevel as
+              | "EXPOSURE"
+              | "FOUNDATIONAL"
+              | "INTERMEDIATE"
+              | "ADVANCED"
+              | "EXPERT",
         },
+
         create: {
           studentProfileId:
             user.studentProfile.id,
+
           skillId: skill.id,
-          proficiency,
+
+          competencyLevel:
+            competencyLevel as
+              | "EXPOSURE"
+              | "FOUNDATIONAL"
+              | "INTERMEDIATE"
+              | "ADVANCED"
+              | "EXPERT",
+
           verificationStrength:
             "UNVERIFIED",
         },
+
         include: {
           skill: true,
         },
