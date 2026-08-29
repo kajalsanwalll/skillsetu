@@ -127,31 +127,32 @@ export default function FacultyEvidencePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="mx-auto max-w-7xl">
-          <p className="text-gray-500">
-            Loading evidence for review...
+          <p className="text-[#9AA3C0]">
+            Loading evidence for review…
           </p>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
       <div className="mx-auto max-w-7xl space-y-8">
 
         {/* Header */}
         <section>
-          <p className="text-sm font-medium text-purple-600">
-            EVIDENCE REVIEW
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#F4A93B]">
+            Evidence review
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold">
+          <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-normal tracking-tight">
             Verify Student Skills
           </h1>
 
-          <p className="mt-2 max-w-2xl text-gray-500">
+          <p className="mt-3 max-w-2xl text-[#C7CCE0]">
             Review submitted evidence and determine
             how strongly it supports the skills claimed by the student.
           </p>
@@ -159,19 +160,19 @@ export default function FacultyEvidencePage() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#F3AFC6]">
             {error}
           </div>
         )}
 
         {/* Empty state */}
         {evidence.length === 0 ? (
-          <section className="rounded-2xl bg-white p-12 text-center shadow-sm">
-            <h2 className="text-xl font-semibold">
+          <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-12 text-center">
+            <h2 className="font-serif text-2xl">
               No pending evidence
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[#9AA3C0]">
               All submitted evidence has been reviewed.
             </p>
           </section>
@@ -180,7 +181,7 @@ export default function FacultyEvidencePage() {
             {evidence.map((item) => (
               <article
                 key={item.id}
-                className="rounded-2xl bg-white p-6 shadow-sm"
+                className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6"
               >
                 {/* Student + Skill */}
                 <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -188,34 +189,34 @@ export default function FacultyEvidencePage() {
                   <div className="flex-1">
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
+                      <span className="rounded-full border border-[#F4A93B]/30 bg-[#F4A93B]/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-[#F4A93B]">
                         {item.type.replaceAll(
                           "_",
                           " "
                         )}
                       </span>
 
-                      <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+                      <span className="rounded-full border border-[#232B47] bg-[#0F1526]/60 px-3 py-1 text-xs text-[#C7CCE0]">
                         {item.skill.name}
                       </span>
                     </div>
 
-                    <h2 className="mt-4 text-xl font-bold">
+                    <h2 className="mt-4 font-serif text-2xl">
                       {item.title}
                     </h2>
 
-                    <div className="mt-2">
-                      <p className="font-medium">
+                    <div className="mt-3">
+                      <p className="font-medium text-[#F5F1E8]">
                         {item.student.name}
                       </p>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-[#9AA3C0]">
                         {item.student.email}
                       </p>
                     </div>
 
                     {item.description && (
-                      <p className="mt-5 leading-7 text-gray-600">
+                      <p className="mt-5 leading-7 text-[#C7CCE0]">
                         {item.description}
                       </p>
                     )}
@@ -225,7 +226,7 @@ export default function FacultyEvidencePage() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-block text-sm font-medium text-blue-600 underline"
+                        className="mt-4 inline-block text-sm font-medium text-[#E8598B] underline underline-offset-4 hover:text-[#F3AFC6] transition"
                       >
                         Open Evidence →
                       </a>
@@ -234,12 +235,12 @@ export default function FacultyEvidencePage() {
 
                   {/* Score */}
                   {item.score !== null && (
-                    <div className="shrink-0 rounded-xl bg-gray-50 px-5 py-4 text-center">
-                      <p className="text-2xl font-bold">
+                    <div className="shrink-0 rounded-xl border border-[#F4A93B]/25 bg-[#F4A93B]/10 px-5 py-4 text-center">
+                      <p className="font-serif text-2xl text-[#F4A93B]">
                         {item.score}%
                       </p>
 
-                      <p className="text-xs text-gray-500">
+                      <p className="font-mono text-[11px] uppercase tracking-wide text-[#9AA3C0]">
                         Submitted Score
                       </p>
                     </div>
@@ -247,13 +248,13 @@ export default function FacultyEvidencePage() {
                 </div>
 
                 {/* Review controls */}
-                <div className="mt-6 border-t border-gray-100 pt-5">
+                <div className="mt-6 border-t border-[#232B47] pt-5">
 
-                  <p className="text-sm font-semibold">
+                  <p className="text-sm font-semibold text-[#F5F1E8]">
                     Verification Decision
                   </p>
 
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-[#9AA3C0]">
                     Select how strongly this evidence
                     supports the skills claimed by the student.
                   </p>
@@ -272,10 +273,10 @@ export default function FacultyEvidencePage() {
                           "HIGH"
                         )
                       }
-                      className="rounded-xl border border-green-200 bg-green-50 px-5 py-3 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl border border-[#2BA792]/40 bg-[#2BA792]/10 px-5 py-3 text-sm font-semibold text-[#2BA792] transition hover:bg-[#2BA792]/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {reviewingId === item.id
-                        ? "Updating..."
+                        ? "Updating…"
                         : "✓ Verify — High"}
                     </button>
 
@@ -291,7 +292,7 @@ export default function FacultyEvidencePage() {
                           "MEDIUM"
                         )
                       }
-                      className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl border border-[#F4A93B]/40 bg-[#F4A93B]/10 px-5 py-3 text-sm font-semibold text-[#F4A93B] transition hover:bg-[#F4A93B]/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Verify — Medium
                     </button>
@@ -308,7 +309,7 @@ export default function FacultyEvidencePage() {
                           "LOW"
                         )
                       }
-                      className="rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-3 text-sm font-semibold text-yellow-700 transition hover:bg-yellow-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl border border-[#3A4266] bg-[#0F1526]/60 px-5 py-3 text-sm font-semibold text-[#9AA3C0] transition hover:bg-[#171E33] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Verify — Low
                     </button>
@@ -325,7 +326,7 @@ export default function FacultyEvidencePage() {
                           "UNVERIFIED"
                         )
                       }
-                      className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl border border-[#E8598B]/40 bg-[#E8598B]/10 px-5 py-3 text-sm font-semibold text-[#E8598B] transition hover:bg-[#E8598B]/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Reject
                     </button>
@@ -338,6 +339,30 @@ export default function FacultyEvidencePage() {
         )}
 
       </div>
+
+      <ThemeStyles />
     </main>
+  );
+}
+
+/* ---------------------------------------------
+   THEME FONTS
+--------------------------------------------- */
+
+function ThemeStyles() {
+  return (
+    <style>{`
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz@0,9..144;1,9..144&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      .font-serif {
+        font-family: "Fraunces", serif;
+      }
+      .font-sans {
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+    `}</style>
   );
 }

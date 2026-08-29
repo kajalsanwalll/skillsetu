@@ -52,6 +52,14 @@ const opportunityTypes: {
   },
 ];
 
+// Shared field styling — matches the SkillSetu input language
+const fieldClass = `
+  mt-2 w-full rounded-lg border border-[#232B47] bg-[#0F1526]
+  px-4 py-3 text-[#F5F1E8] placeholder:text-[#5B6386]
+  outline-none transition
+  focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
+`;
+
 export default function NewOpportunityPage() {
   const router = useRouter();
 
@@ -240,37 +248,37 @@ export default function NewOpportunityPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="mb-10">
           <button
             onClick={() => router.push("/industry")}
-            className="text-sm text-gray-400 hover:text-white mb-5"
+            className="font-mono text-xs uppercase tracking-[0.15em] text-[#9AA3C0] hover:text-[#F5F1E8] transition mb-6"
           >
             ← Back to Industry
           </button>
 
-          <p className="text-sm text-purple-400 mb-2">
-            INDUSTRY
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#F4A93B] mb-2">
+            Industry · setu
           </p>
 
-          <h1 className="text-4xl font-bold">
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal tracking-tight">
             Create Opportunity
           </h1>
 
-          <p className="text-gray-400 mt-2">
-            Paste a job or opportunity description and
-            let SkillSetu extract the required skills.
+          <p className="text-[#C7CCE0] mt-3 max-w-xl">
+            Paste a job or opportunity description and let
+            SkillSetu extract the required skills for you.
           </p>
         </div>
 
         {/* JD Input */}
         {!opportunity && (
-          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
-            <label className="block text-sm font-medium mb-3">
+            <label className="block font-mono text-xs uppercase tracking-wide text-[#9AA3C0] mb-3">
               Job / Opportunity Description
             </label>
 
@@ -280,23 +288,17 @@ export default function NewOpportunityPage() {
                 setJobDescription(e.target.value)
               }
               placeholder="Paste the complete job description here..."
-              className="
-                w-full
-                min-h-[350px]
-                rounded-xl
-                border border-white/10
-                bg-black/30
-                p-5
-                text-white
-                placeholder:text-gray-600
-                outline-none
-                focus:border-purple-500
-                resize-y
-              "
+              className={`
+                w-full min-h-[350px] rounded-xl
+                border border-[#232B47] bg-[#0F1526]
+                p-5 text-[#F5F1E8] placeholder:text-[#5B6386]
+                outline-none transition resize-y
+                focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
+              `}
             />
 
             {error && (
-              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+              <div className="mt-4 rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#F3AFC6]">
                 {error}
               </div>
             )}
@@ -308,22 +310,16 @@ export default function NewOpportunityPage() {
                 !jobDescription.trim()
               }
               className="
-                mt-5
-                w-full
-                rounded-xl
-                bg-purple-600
-                px-6
-                py-4
-                font-semibold
-                hover:bg-purple-500
-                transition
-                disabled:opacity-40
-                disabled:cursor-not-allowed
+                mt-5 w-full rounded-xl
+                bg-[#F4A93B] px-6 py-4
+                font-medium text-[#0F1526]
+                transition hover:bg-[#f7b85e]
+                disabled:opacity-30 disabled:cursor-not-allowed
               "
             >
               {extracting
-                ? "✨ Extracting requirements..."
-                : "✨ Extract Requirements"}
+                ? "Extracting requirements…"
+                : "Extract requirements"}
             </button>
           </section>
         )}
@@ -333,17 +329,17 @@ export default function NewOpportunityPage() {
           <div className="space-y-8">
 
             {/* Opportunity details */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">
-                    Review Opportunity
+                  <h2 className="font-serif text-2xl">
+                    Review opportunity
                   </h2>
 
-                  <p className="text-sm text-gray-400 mt-1">
-                    AI extracted the following information.
-                    Edit anything before publishing.
+                  <p className="text-sm text-[#9AA3C0] mt-1">
+                    SkillSetu extracted the following. Edit
+                    anything before publishing.
                   </p>
                 </div>
 
@@ -352,7 +348,7 @@ export default function NewOpportunityPage() {
                     setOpportunity(null);
                     setError("");
                   }}
-                  className="text-sm text-gray-400 hover:text-white"
+                  className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0] hover:text-[#F5F1E8] transition"
                 >
                   ← Re-extract
                 </button>
@@ -362,7 +358,7 @@ export default function NewOpportunityPage() {
 
                 {/* Title */}
                 <div>
-                  <label className="text-sm text-gray-400">
+                  <label className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                     Title
                   </label>
 
@@ -374,23 +370,13 @@ export default function NewOpportunityPage() {
                         title: e.target.value,
                       })
                     }
-                    className="
-                      mt-2
-                      w-full
-                      rounded-xl
-                      border border-white/10
-                      bg-black/30
-                      px-4
-                      py-3
-                      outline-none
-                      focus:border-purple-500
-                    "
+                    className={fieldClass}
                   />
                 </div>
 
                 {/* Company */}
                 <div>
-                  <label className="text-sm text-gray-400">
+                  <label className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                     Company
                   </label>
 
@@ -402,23 +388,13 @@ export default function NewOpportunityPage() {
                         company: e.target.value,
                       })
                     }
-                    className="
-                      mt-2
-                      w-full
-                      rounded-xl
-                      border border-white/10
-                      bg-black/30
-                      px-4
-                      py-3
-                      outline-none
-                      focus:border-purple-500
-                    "
+                    className={fieldClass}
                   />
                 </div>
 
                 {/* Location */}
                 <div>
-                  <label className="text-sm text-gray-400">
+                  <label className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                     Location
                   </label>
 
@@ -432,24 +408,14 @@ export default function NewOpportunityPage() {
                       })
                     }
                     placeholder="Remote / Bangalore / Chennai..."
-                    className="
-                      mt-2
-                      w-full
-                      rounded-xl
-                      border border-white/10
-                      bg-black/30
-                      px-4
-                      py-3
-                      outline-none
-                      focus:border-purple-500
-                    "
+                    className={fieldClass}
                   />
                 </div>
 
                 {/* Type */}
                 <div>
-                  <label className="text-sm text-gray-400">
-                    Opportunity Type
+                  <label className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
+                    Opportunity type
                   </label>
 
                   <select
@@ -461,23 +427,13 @@ export default function NewOpportunityPage() {
                           .value as OpportunityType,
                       })
                     }
-                    className="
-                      mt-2
-                      w-full
-                      rounded-xl
-                      border border-white/10
-                      bg-black/30
-                      px-4
-                      py-3
-                      outline-none
-                      focus:border-purple-500
-                    "
+                    className={fieldClass}
                   >
                     {opportunityTypes.map((type) => (
                       <option
                         key={type.value}
                         value={type.value}
-                        className="bg-[#0b0b0f]"
+                        className="bg-[#0F1526]"
                       >
                         {type.label}
                       </option>
@@ -489,7 +445,7 @@ export default function NewOpportunityPage() {
 
               {/* Description */}
               <div className="mt-5">
-                <label className="text-sm text-gray-400">
+                <label className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                   Description
                 </label>
 
@@ -501,32 +457,21 @@ export default function NewOpportunityPage() {
                       description: e.target.value,
                     })
                   }
-                  className="
-                    mt-2
-                    w-full
-                    min-h-[200px]
-                    rounded-xl
-                    border border-white/10
-                    bg-black/30
-                    p-4
-                    outline-none
-                    focus:border-purple-500
-                    resize-y
-                  "
+                  className={`${fieldClass} min-h-[200px] resize-y`}
                 />
               </div>
             </section>
 
             {/* Skills */}
-            <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+            <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold">
-                    Required Skills
+                  <h2 className="font-serif text-2xl">
+                    Required skills
                   </h2>
 
-                  <p className="text-sm text-gray-400 mt-1">
+                  <p className="text-sm text-[#9AA3C0] mt-1">
                     Review and adjust the AI-generated
                     requirements.
                   </p>
@@ -535,15 +480,12 @@ export default function NewOpportunityPage() {
                 <button
                   onClick={addSkill}
                   className="
-                    rounded-xl
-                    border border-white/10
-                    px-4
-                    py-2
-                    text-sm
-                    hover:bg-white/5
+                    rounded-xl border border-[#3A4266]
+                    px-4 py-2 text-sm text-[#F5F1E8]
+                    transition hover:border-[#F4A93B] hover:text-[#F4A93B]
                   "
                 >
-                  + Add Skill
+                  + Add skill
                 </button>
               </div>
 
@@ -554,10 +496,8 @@ export default function NewOpportunityPage() {
                     <div
                       key={`${skill.name}-${index}`}
                       className="
-                        rounded-xl
-                        border border-white/10
-                        bg-black/20
-                        p-5
+                        rounded-xl border border-[#232B47]
+                        bg-[#0F1526]/60 p-5
                       "
                     >
 
@@ -565,7 +505,7 @@ export default function NewOpportunityPage() {
 
                         {/* Skill name */}
                         <div>
-                          <label className="text-xs text-gray-500">
+                          <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
                             Skill
                           </label>
 
@@ -577,22 +517,18 @@ export default function NewOpportunityPage() {
                               })
                             }
                             className="
-                              mt-1
-                              w-full
-                              rounded-lg
-                              border border-white/10
-                              bg-black/30
-                              px-3
-                              py-2
-                              outline-none
-                              focus:border-purple-500
+                              mt-1 w-full rounded-lg
+                              border border-[#232B47] bg-[#171E33]/60
+                              px-3 py-2 text-[#F5F1E8]
+                              outline-none transition
+                              focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
                             "
                           />
                         </div>
 
                         {/* Category */}
                         <div>
-                          <label className="text-xs text-gray-500">
+                          <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
                             Category
                           </label>
 
@@ -605,24 +541,22 @@ export default function NewOpportunityPage() {
                               })
                             }
                             className="
-                              mt-1
-                              w-full
-                              rounded-lg
-                              border border-white/10
-                              bg-black/30
-                              px-3
-                              py-2
-                              outline-none
-                              focus:border-purple-500
+                              mt-1 w-full rounded-lg
+                              border border-[#232B47] bg-[#171E33]/60
+                              px-3 py-2 text-[#F5F1E8]
+                              outline-none transition
+                              focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
                             "
                           />
                         </div>
 
                         {/* Proficiency */}
                         <div>
-                          <label className="text-xs text-gray-500">
-                            Minimum Proficiency:{" "}
-                            {skill.minimumProficiency}
+                          <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
+                            Minimum proficiency ·{" "}
+                            <span className="text-[#2BA792]">
+                              {skill.minimumProficiency}
+                            </span>
                           </label>
 
                           <input
@@ -640,15 +574,17 @@ export default function NewOpportunityPage() {
                                   ),
                               })
                             }
-                            className="mt-3 w-full"
+                            className="mt-3 w-full accent-[#2BA792]"
                           />
                         </div>
 
                         {/* Weight */}
                         <div>
-                          <label className="text-xs text-gray-500">
-                            Weight:{" "}
-                            {skill.weight.toFixed(2)}
+                          <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
+                            Weight ·{" "}
+                            <span className="text-[#E8598B]">
+                              {skill.weight.toFixed(2)}
+                            </span>
                           </label>
 
                           <input
@@ -664,7 +600,7 @@ export default function NewOpportunityPage() {
                                 ),
                               })
                             }
-                            className="mt-3 w-full"
+                            className="mt-3 w-full accent-[#E8598B]"
                           />
                         </div>
 
@@ -673,7 +609,7 @@ export default function NewOpportunityPage() {
                       {/* Required + delete */}
                       <div className="flex items-center justify-between mt-5">
 
-                        <label className="flex items-center gap-2 text-sm text-gray-300">
+                        <label className="flex items-center gap-2 text-sm text-[#C7CCE0]">
                           <input
                             type="checkbox"
                             checked={skill.required}
@@ -683,6 +619,7 @@ export default function NewOpportunityPage() {
                                   e.target.checked,
                               })
                             }
+                            className="accent-[#F4A93B]"
                           />
 
                           Required skill
@@ -692,7 +629,7 @@ export default function NewOpportunityPage() {
                           onClick={() =>
                             removeSkill(index)
                           }
-                          className="text-sm text-red-400 hover:text-red-300"
+                          className="text-sm text-[#E8598B] hover:text-[#F3AFC6] transition"
                         >
                           Remove
                         </button>
@@ -708,7 +645,7 @@ export default function NewOpportunityPage() {
 
             {/* Error */}
             {error && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+              <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#F3AFC6]">
                 {error}
               </div>
             )}
@@ -718,28 +655,35 @@ export default function NewOpportunityPage() {
               onClick={handleSave}
               disabled={saving}
               className="
-                w-full
-                rounded-xl
-                bg-purple-600
-                px-6
-                py-4
-                font-semibold
-                text-lg
-                hover:bg-purple-500
-                transition
-                disabled:opacity-40
-                disabled:cursor-not-allowed
+                w-full rounded-xl bg-[#F4A93B]
+                px-6 py-4 text-lg font-medium text-[#0F1526]
+                transition hover:bg-[#f7b85e]
+                disabled:opacity-30 disabled:cursor-not-allowed
               "
             >
               {saving
-                ? "Creating Opportunity..."
-                : "Create Opportunity"}
+                ? "Creating opportunity…"
+                : "Create opportunity"}
             </button>
 
           </div>
         )}
 
       </div>
+
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz@0,9..144;1,9..144&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+        .font-serif {
+          font-family: "Fraunces", serif;
+        }
+        main {
+          font-family: "IBM Plex Sans", sans-serif;
+        }
+        .font-mono {
+          font-family: "IBM Plex Mono", monospace;
+        }
+      `}</style>
     </main>
   );
 }

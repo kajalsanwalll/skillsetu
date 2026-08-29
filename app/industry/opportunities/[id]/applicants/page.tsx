@@ -30,6 +30,13 @@ type Opportunity = {
   company: string;
 };
 
+// Shared select styling — matches the SkillSetu input language
+const selectClass = `
+  rounded-lg border border-[#232B47] bg-[#171E33]/60
+  px-4 py-3 text-sm text-[#F5F1E8] outline-none transition
+  focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
+`;
+
 export default function ApplicantsPage() {
   const params = useParams();
   const router = useRouter();
@@ -130,30 +137,32 @@ export default function ApplicantsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="max-w-7xl mx-auto">
-          <p className="text-gray-400">
-            Loading applicants...
+          <p className="text-[#9AA3C0]">
+            Loading applicants…
           </p>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="max-w-7xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#F3AFC6]">
             {error}
           </div>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
       <div className="max-w-7xl mx-auto">
 
         {/* Back */}
@@ -164,7 +173,7 @@ export default function ApplicantsPage() {
               "/industry/opportunities"
             )
           }
-          className="text-sm text-gray-500 hover:text-white transition mb-6"
+          className="font-mono text-xs uppercase tracking-[0.15em] text-[#9AA3C0] hover:text-[#F5F1E8] transition mb-6"
         >
           ← Back to Opportunities
         </button>
@@ -172,19 +181,19 @@ export default function ApplicantsPage() {
         {/* Header */}
         <section className="mb-8">
 
-          <p className="text-sm text-purple-400 mb-2">
-            APPLICANT MANAGEMENT
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#F4A93B] mb-2">
+            Applicant management
           </p>
 
-          <h1 className="text-4xl font-bold">
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal tracking-tight">
             {opportunity?.title}
           </h1>
 
-          <p className="text-purple-300 mt-1">
+          <p className="text-[#E8598B] mt-2">
             {opportunity?.company}
           </p>
 
-          <p className="text-gray-500 mt-3">
+          <p className="text-[#9AA3C0] mt-3 max-w-xl">
             Review and manage candidates based
             on their verified Skill DNA.
           </p>
@@ -197,6 +206,7 @@ export default function ApplicantsPage() {
           <SummaryCard
             label="Total Applicants"
             value={applicants.length}
+            accent="#F4A93B"
           />
 
           <SummaryCard
@@ -207,6 +217,7 @@ export default function ApplicantsPage() {
                   a.status === "SHORTLISTED"
               ).length
             }
+            accent="#2BA792"
           />
 
           <SummaryCard
@@ -217,6 +228,7 @@ export default function ApplicantsPage() {
                   a.status === "SELECTED"
               ).length
             }
+            accent="#E8598B"
           />
 
         </div>
@@ -229,46 +241,46 @@ export default function ApplicantsPage() {
             onChange={(e) =>
               setStatusFilter(e.target.value)
             }
-            className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none"
+            className={selectClass}
           >
             <option
               value="ALL"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               All Statuses
             </option>
 
             <option
               value="APPLIED"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Applied
             </option>
 
             <option
               value="UNDER_REVIEW"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Under Review
             </option>
 
             <option
               value="SHORTLISTED"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Shortlisted
             </option>
 
             <option
               value="SELECTED"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Selected
             </option>
 
             <option
               value="REJECTED"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Rejected
             </option>
@@ -279,25 +291,25 @@ export default function ApplicantsPage() {
             onChange={(e) =>
               setSortOrder(e.target.value)
             }
-            className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white outline-none"
+            className={selectClass}
           >
             <option
               value="MATCH"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Highest Match
             </option>
 
             <option
               value="LATEST"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Most Recent
             </option>
 
             <option
               value="NAME"
-              className="bg-[#0b0b0f]"
+              className="bg-[#0F1526]"
             >
               Name
             </option>
@@ -307,17 +319,17 @@ export default function ApplicantsPage() {
 
         {/* Empty */}
         {filteredApplicants.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
 
             <div className="text-4xl mb-4">
               👥
             </div>
 
-            <h2 className="text-xl font-semibold">
+            <h2 className="font-serif text-xl">
               No applicants found
             </h2>
 
-            <p className="text-gray-500 mt-2">
+            <p className="text-[#9AA3C0] mt-2">
               No candidates match the current
               filter.
             </p>
@@ -339,7 +351,31 @@ export default function ApplicantsPage() {
         )}
 
       </div>
+
+      <ThemeStyles />
     </main>
+  );
+}
+
+/* ---------------------------------------------
+   THEME FONTS
+--------------------------------------------- */
+
+function ThemeStyles() {
+  return (
+    <style>{`
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz@0,9..144;1,9..144&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      .font-serif {
+        font-family: "Fraunces", serif;
+      }
+      .font-sans {
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+    `}</style>
   );
 }
 
@@ -350,18 +386,29 @@ export default function ApplicantsPage() {
 function SummaryCard({
   label,
   value,
+  accent,
 }: {
   label: string;
   value: number;
+  accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-5">
 
-      <p className="text-sm text-gray-500">
-        {label}
-      </p>
+      <div className="flex items-center gap-2">
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: accent }}
+        />
+        <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
+          {label}
+        </p>
+      </div>
 
-      <p className="text-3xl font-bold mt-2">
+      <p
+        className="font-serif text-3xl mt-2"
+        style={{ color: accent }}
+      >
         {value}
       </p>
 
@@ -394,7 +441,7 @@ function ApplicantCard({
   });
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-purple-500/30 transition">
+    <article className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 transition hover:border-[#F4A93B]/30">
 
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
@@ -403,7 +450,7 @@ function ApplicantCard({
 
           <div className="flex flex-wrap items-center gap-3">
 
-            <div className="h-11 w-11 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 font-semibold">
+            <div className="h-11 w-11 rounded-full bg-[#F4A93B]/10 border border-[#F4A93B]/25 flex items-center justify-center font-serif text-[#F4A93B]">
               {applicant.student.name
                 .charAt(0)
                 .toUpperCase()}
@@ -411,11 +458,11 @@ function ApplicantCard({
 
             <div>
 
-              <h2 className="text-xl font-semibold">
+              <h2 className="font-serif text-xl">
                 {applicant.student.name}
               </h2>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#9AA3C0]">
                 {applicant.student.email}
               </p>
 
@@ -430,7 +477,7 @@ function ApplicantCard({
           {/* Skills */}
           <div className="mt-5">
 
-            <p className="text-sm font-medium text-gray-300 mb-3">
+            <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0] mb-3">
               Candidate Skills
             </p>
 
@@ -441,11 +488,11 @@ function ApplicantCard({
                 .map((skill) => (
                   <span
                     key={skill.id}
-                    className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-gray-300"
+                    className="rounded-lg border border-[#232B47] bg-[#0F1526]/60 px-3 py-2 text-xs text-[#C7CCE0]"
                   >
                     {skill.name}
 
-                    <span className="ml-2 text-purple-300">
+                    <span className="ml-2 text-[#2BA792]">
                       {Math.round(
                         skill.proficiency
                       )}
@@ -455,7 +502,7 @@ function ApplicantCard({
                 ))}
 
               {applicant.skills.length > 8 && (
-                <span className="rounded-lg border border-white/10 px-3 py-2 text-xs text-gray-500">
+                <span className="rounded-lg border border-[#232B47] px-3 py-2 text-xs text-[#7A82A6]">
                   +
                   {applicant.skills.length -
                     8}{" "}
@@ -467,7 +514,7 @@ function ApplicantCard({
 
           </div>
 
-          <p className="text-xs text-gray-600 mt-4">
+          <p className="font-mono text-[11px] text-[#5B6386] mt-4">
             Applied {appliedDate}
           </p>
 
@@ -476,15 +523,15 @@ function ApplicantCard({
         {/* Match */}
         <div className="shrink-0 flex flex-col items-center gap-3">
 
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 px-6 py-4 text-center min-w-[120px]">
+          <div className="rounded-2xl border border-[#F4A93B]/25 bg-[#F4A93B]/10 px-6 py-4 text-center min-w-[120px]">
 
-            <p className="text-3xl font-bold text-purple-300">
+            <p className="font-serif text-3xl text-[#F4A93B]">
               {matchScore !== null
                 ? `${matchScore}%`
                 : "—"}
             </p>
 
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-[#9AA3C0] mt-1">
               Skill Match
             </p>
 
@@ -497,7 +544,7 @@ function ApplicantCard({
                 `/industry/applications/${applicant.applicationId}`
               )
             }
-            className="rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-300 hover:bg-white/5 transition"
+            className="rounded-xl border border-[#3A4266] px-4 py-2 text-sm text-[#F5F1E8] transition hover:border-[#F4A93B] hover:text-[#F4A93B]"
           >
             View Candidate
           </button>
@@ -522,37 +569,33 @@ function StatusBadge({
   const normalized =
     status.toUpperCase();
 
+  // Palette-native status colors — no red/blue/yellow/green defaults
   let className =
-    "border-white/10 bg-white/5 text-gray-300";
-
-  if (normalized === "APPLIED") {
-    className =
-      "border-blue-500/20 bg-blue-500/10 text-blue-300";
-  }
+    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]"; // APPLIED (neutral)
 
   if (normalized === "UNDER_REVIEW") {
     className =
-      "border-yellow-500/20 bg-yellow-500/10 text-yellow-300";
+      "border-[#F4A93B]/30 bg-[#F4A93B]/10 text-[#F4A93B]";
   }
 
   if (normalized === "SHORTLISTED") {
     className =
-      "border-green-500/20 bg-green-500/10 text-green-300";
+      "border-[#2BA792]/30 bg-[#2BA792]/10 text-[#2BA792]";
   }
 
   if (normalized === "SELECTED") {
     className =
-      "border-purple-500/20 bg-purple-500/10 text-purple-300";
+      "border-[#2BA792]/50 bg-[#2BA792]/20 text-[#5FD6BE]";
   }
 
   if (normalized === "REJECTED") {
     className =
-      "border-red-500/20 bg-red-500/10 text-red-300";
+      "border-[#E8598B]/30 bg-[#E8598B]/10 text-[#E8598B]";
   }
 
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-xs font-medium ${className}`}
+      className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wide ${className}`}
     >
       {normalized.replaceAll(
         "_",
