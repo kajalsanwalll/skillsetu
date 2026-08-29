@@ -35,53 +35,52 @@ type Application = {
 export default function StudentApplicationsPage() {
   const router = useRouter();
 
-  const [applications, setApplications] =
-    useState<Application[]>([]);
-
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-  async function loadApplications() {
-    try {
-      const response = await fetch(
-        "/api/student/applications",
-        {
-          cache: "no-store",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-            "Failed to load applications."
+    async function loadApplications() {
+      try {
+        const response = await fetch(
+          "/api/student/applications",
+          {
+            cache: "no-store",
+          }
         );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error ||
+              "Failed to load applications."
+          );
+        }
+
+        setApplications(data.applications || []);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load applications."
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setApplications(data.applications || []);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to load applications."
-      );
-    } finally {
-      setLoading(false);
     }
-  }
 
-  loadApplications();
+    // Initial load
+    loadApplications();
 
-  // Refresh every 10 seconds
-  const interval = setInterval(
-    loadApplications,
-    10000
-  );
+    // Check for status changes every 10 seconds
+    const interval = setInterval(
+      loadApplications,
+      10000
+    );
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return (
@@ -91,6 +90,7 @@ export default function StudentApplicationsPage() {
             Loading your applications…
           </p>
         </div>
+
         <ThemeStyles />
       </main>
     );
@@ -104,10 +104,26 @@ export default function StudentApplicationsPage() {
             {error}
           </div>
         </div>
+
         <ThemeStyles />
       </main>
     );
   }
+
+  const appliedCount = applications.filter(
+    (application) =>
+      application.status === "APPLIED"
+  ).length;
+
+  const shortlistedCount = applications.filter(
+    (application) =>
+      application.status === "SHORTLISTED"
+  ).length;
+
+  const selectedCount = applications.filter(
+    (application) =>
+      application.status === "SELECTED"
+  ).length;
 
   return (
     <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
@@ -130,7 +146,7 @@ export default function StudentApplicationsPage() {
         </section>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
           <StatCard
             label="Total Applications"
@@ -140,25 +156,20 @@ export default function StudentApplicationsPage() {
 
           <StatCard
             label="Applied"
-            value={
-              applications.filter(
-                (application) =>
-                  application.status === "APPLIED"
-              ).length
-            }
+            value={appliedCount}
             accent="#9AA3C0"
           />
 
           <StatCard
             label="Shortlisted"
-            value={
-              applications.filter(
-                (application) =>
-                  application.status ===
-                  "SHORTLISTED"
-              ).length
-            }
+            value={shortlistedCount}
             accent="#2BA792"
+          />
+
+          <StatCard
+            label="Selected"
+            value={selectedCount}
+            accent="#5FD6BE"
           />
 
         </div>
@@ -166,7 +177,6 @@ export default function StudentApplicationsPage() {
         {/* Empty State */}
         {applications.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
-
             <div className="text-4xl mb-4">
               📋
             </div>
@@ -193,18 +203,15 @@ export default function StudentApplicationsPage() {
             >
               Explore Opportunities
             </button>
-
           </div>
         ) : (
           <div className="space-y-5">
-
             {applications.map((application) => (
               <ApplicationCard
                 key={application.id}
                 application={application}
               />
             ))}
-
           </div>
         )}
 
@@ -227,9 +234,11 @@ function ThemeStyles() {
       .font-serif {
         font-family: "Fraunces", serif;
       }
+
       .font-sans {
         font-family: "IBM Plex Sans", sans-serif;
       }
+
       .font-mono {
         font-family: "IBM Plex Mono", monospace;
       }
@@ -252,12 +261,12 @@ function StatCard({
 }) {
   return (
     <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-5">
-
       <div className="flex items-center gap-2">
         <span
           className="h-1.5 w-1.5 rounded-full"
           style={{ backgroundColor: accent }}
         />
+
         <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
           {label}
         </p>
@@ -269,7 +278,6 @@ function StatCard({
       >
         {value}
       </p>
-
     </div>
   );
 }
@@ -404,8 +412,8 @@ function ApplicationCard({
                 5 && (
                 <span className="rounded-lg border border-[#232B47] px-3 py-1.5 text-xs text-[#7A82A6]">
                   +
-                  {application.opportunity.skills
-                    .length - 5}{" "}
+                  {application.opportunity.skills.length -
+                    5}{" "}
                   more
                 </span>
               )}
@@ -447,21 +455,30 @@ function StatusBadge({
   const normalizedStatus =
     status.toUpperCase();
 
-  // Palette-native status colors, kept consistent with the industry-side applicants view
+  // Default = APPLIED
   let className =
-    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]"; // APPLIED (neutral)
+    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]";
 
+  // Shortlisted
   if (normalizedStatus === "SHORTLISTED") {
     className =
       "border-[#2BA792]/30 bg-[#2BA792]/10 text-[#2BA792]";
   }
 
+  // Rejected
   if (normalizedStatus === "REJECTED") {
     className =
       "border-[#E8598B]/30 bg-[#E8598B]/10 text-[#E8598B]";
   }
 
+  // Selected
   if (normalizedStatus === "SELECTED") {
+    className =
+      "border-[#2BA792]/50 bg-[#2BA792]/20 text-[#5FD6BE]";
+  }
+
+  // Completed
+  if (normalizedStatus === "COMPLETED") {
     className =
       "border-[#2BA792]/50 bg-[#2BA792]/20 text-[#5FD6BE]";
   }
