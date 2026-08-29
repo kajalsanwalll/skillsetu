@@ -74,43 +74,45 @@ export default function StudentApplicationsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="max-w-6xl mx-auto">
-          <p className="text-gray-400">
-            Loading your applications...
+          <p className="text-[#9AA3C0]">
+            Loading your applications…
           </p>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#F3AFC6]">
             {error}
           </div>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <section className="mb-10">
-          <p className="text-sm text-purple-400 mb-2">
-            APPLICATION TRACKING
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#E8598B] mb-2">
+            Application tracking
           </p>
 
-          <h1 className="text-4xl font-bold">
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal tracking-tight">
             My Applications
           </h1>
 
-          <p className="text-gray-400 mt-2 max-w-2xl">
+          <p className="text-[#C7CCE0] mt-3 max-w-2xl">
             Track the opportunities you have applied
             to and monitor your application status.
           </p>
@@ -122,6 +124,7 @@ export default function StudentApplicationsPage() {
           <StatCard
             label="Total Applications"
             value={applications.length}
+            accent="#E8598B"
           />
 
           <StatCard
@@ -132,6 +135,7 @@ export default function StudentApplicationsPage() {
                   application.status === "APPLIED"
               ).length
             }
+            accent="#9AA3C0"
           />
 
           <StatCard
@@ -143,23 +147,24 @@ export default function StudentApplicationsPage() {
                   "SHORTLISTED"
               ).length
             }
+            accent="#2BA792"
           />
 
         </div>
 
         {/* Empty State */}
         {applications.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
 
             <div className="text-4xl mb-4">
               📋
             </div>
 
-            <h2 className="text-xl font-semibold">
+            <h2 className="font-serif text-xl">
               No applications yet
             </h2>
 
-            <p className="text-gray-500 mt-2 max-w-md mx-auto">
+            <p className="text-[#9AA3C0] mt-2 max-w-md mx-auto">
               You have not applied to any
               opportunities yet. Explore available
               opportunities and find your next
@@ -173,7 +178,7 @@ export default function StudentApplicationsPage() {
                   "/student/opportunities"
                 )
               }
-              className="mt-6 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold hover:bg-purple-500 transition"
+              className="mt-6 rounded-xl bg-[#E8598B] px-5 py-3 text-sm font-medium text-[#0F1526] transition hover:bg-[#f082ab]"
             >
               Explore Opportunities
             </button>
@@ -193,7 +198,31 @@ export default function StudentApplicationsPage() {
         )}
 
       </div>
+
+      <ThemeStyles />
     </main>
+  );
+}
+
+/* ---------------------------------------------
+   THEME FONTS
+--------------------------------------------- */
+
+function ThemeStyles() {
+  return (
+    <style>{`
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz@0,9..144;1,9..144&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      .font-serif {
+        font-family: "Fraunces", serif;
+      }
+      .font-sans {
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+    `}</style>
   );
 }
 
@@ -204,18 +233,29 @@ export default function StudentApplicationsPage() {
 function StatCard({
   label,
   value,
+  accent,
 }: {
   label: string;
   value: number;
+  accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-5">
 
-      <p className="text-sm text-gray-500">
-        {label}
-      </p>
+      <div className="flex items-center gap-2">
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: accent }}
+        />
+        <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
+          {label}
+        </p>
+      </div>
 
-      <p className="text-3xl font-bold text-white mt-2">
+      <p
+        className="font-serif text-3xl mt-2"
+        style={{ color: accent }}
+      >
         {value}
       </p>
 
@@ -248,7 +288,7 @@ function ApplicationCard({
   });
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-purple-500/30 transition">
+    <article className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 transition hover:border-[#E8598B]/30">
 
       {/* Top Section */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
@@ -258,7 +298,7 @@ function ApplicationCard({
 
           <div className="flex flex-wrap items-center gap-3 mb-3">
 
-            <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
+            <span className="rounded-full border border-[#E8598B]/25 bg-[#E8598B]/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-[#E8598B]">
               {application.opportunity.type.replaceAll(
                 "_",
                 " "
@@ -271,19 +311,19 @@ function ApplicationCard({
 
           </div>
 
-          <h2 className="text-2xl font-semibold">
+          <h2 className="font-serif text-2xl">
             {application.opportunity.title}
           </h2>
 
-          <p className="text-purple-300 mt-1">
+          <p className="text-[#F4A93B] mt-1">
             {application.opportunity.company}
           </p>
 
-          <p className="text-gray-400 mt-4 leading-relaxed line-clamp-2">
+          <p className="text-[#C7CCE0] mt-4 leading-relaxed line-clamp-2">
             {application.opportunity.description}
           </p>
 
-          <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-500">
+          <div className="flex flex-wrap gap-4 mt-4 text-sm text-[#9AA3C0]">
 
             {application.opportunity.location && (
               <span>
@@ -302,15 +342,15 @@ function ApplicationCard({
         {/* Match Score */}
         <div className="shrink-0 md:w-32 text-center">
 
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4">
+          <div className="rounded-2xl border border-[#F4A93B]/25 bg-[#F4A93B]/10 p-4">
 
-            <p className="text-3xl font-bold text-purple-300">
+            <p className="font-serif text-3xl text-[#F4A93B]">
               {matchScore !== null
                 ? `${matchScore}%`
                 : "—"}
             </p>
 
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-[#9AA3C0] mt-1">
               Skill Match
             </p>
 
@@ -321,14 +361,14 @@ function ApplicationCard({
       </div>
 
       {/* Divider */}
-      <div className="mt-6 pt-5 border-t border-white/10">
+      <div className="mt-6 pt-5 border-t border-[#232B47]">
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
           {/* Skills */}
           <div>
 
-            <p className="text-sm font-medium text-gray-300 mb-3">
+            <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0] mb-3">
               Key Skills
             </p>
 
@@ -341,8 +381,8 @@ function ApplicationCard({
                     key={skill.id}
                     className={`rounded-lg border px-3 py-1.5 text-xs ${
                       skill.required
-                        ? "border-purple-500/20 bg-purple-500/10 text-purple-200"
-                        : "border-white/10 bg-white/[0.03] text-gray-400"
+                        ? "border-[#2BA792]/25 bg-[#2BA792]/10 text-[#2BA792]"
+                        : "border-[#232B47] bg-[#0F1526]/60 text-[#9AA3C0]"
                     }`}
                   >
                     {skill.name}
@@ -351,7 +391,7 @@ function ApplicationCard({
 
               {application.opportunity.skills.length >
                 5 && (
-                <span className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-500">
+                <span className="rounded-lg border border-[#232B47] px-3 py-1.5 text-xs text-[#7A82A6]">
                   +
                   {application.opportunity.skills
                     .length - 5}{" "}
@@ -371,7 +411,7 @@ function ApplicationCard({
                 `/student/opportunities/${application.opportunity.id}`
               )
             }
-            className="shrink-0 rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-gray-300 hover:bg-white/5 transition"
+            className="shrink-0 rounded-xl border border-[#3A4266] px-5 py-3 text-sm text-[#F5F1E8] transition hover:border-[#E8598B] hover:text-[#E8598B]"
           >
             View Opportunity
           </button>
@@ -396,32 +436,28 @@ function StatusBadge({
   const normalizedStatus =
     status.toUpperCase();
 
+  // Palette-native status colors, kept consistent with the industry-side applicants view
   let className =
-    "border-white/10 bg-white/5 text-gray-300";
-
-  if (normalizedStatus === "APPLIED") {
-    className =
-      "border-blue-500/20 bg-blue-500/10 text-blue-300";
-  }
+    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]"; // APPLIED (neutral)
 
   if (normalizedStatus === "SHORTLISTED") {
     className =
-      "border-green-500/20 bg-green-500/10 text-green-300";
+      "border-[#2BA792]/30 bg-[#2BA792]/10 text-[#2BA792]";
   }
 
   if (normalizedStatus === "REJECTED") {
     className =
-      "border-red-500/20 bg-red-500/10 text-red-300";
+      "border-[#E8598B]/30 bg-[#E8598B]/10 text-[#E8598B]";
   }
 
   if (normalizedStatus === "SELECTED") {
     className =
-      "border-purple-500/20 bg-purple-500/10 text-purple-300";
+      "border-[#2BA792]/50 bg-[#2BA792]/20 text-[#5FD6BE]";
   }
 
   return (
     <span
-      className={`rounded-full border px-3 py-1 text-xs font-medium ${className}`}
+      className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wide ${className}`}
     >
       {normalizedStatus.replaceAll(
         "_",

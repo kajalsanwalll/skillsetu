@@ -59,6 +59,14 @@ const evidenceTypes = [
   },
 ];
 
+// Shared field styling — matches the SkillSetu input language
+const fieldClass = `
+  w-full rounded-xl border border-[#232B47] bg-[#0F1526]
+  px-4 py-3 text-sm text-[#F5F1E8] placeholder:text-[#5B6386]
+  outline-none transition
+  focus:border-[#E8598B] focus:ring-1 focus:ring-[#E8598B]/30
+`;
+
 export default function StudentEvidencePage() {
   const [evidence, setEvidence] = useState<Evidence[]>(
     []
@@ -218,31 +226,32 @@ export default function StudentEvidencePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
         <div className="mx-auto max-w-6xl">
-          <p className="text-gray-500">
-            Loading your skill evidence...
+          <p className="text-[#9AA3C0]">
+            Loading your skill evidence…
           </p>
         </div>
+        <ThemeStyles />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
       <div className="mx-auto max-w-6xl space-y-8">
 
         {/* Header */}
         <section>
-          <p className="text-sm font-medium text-purple-600">
-            SKILL EVIDENCE
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#E8598B]">
+            Skill evidence
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold">
+          <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-normal tracking-tight">
             Prove Your Skills
           </h1>
 
-          <p className="mt-2 max-w-2xl text-gray-500">
+          <p className="mt-3 max-w-2xl text-[#C7CCE0]">
             Add projects, assessments, certifications,
             internships and other evidence that supports
             your Skill DNA.
@@ -251,25 +260,25 @@ export default function StudentEvidencePage() {
 
         {/* Messages */}
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#F3AFC6]">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-600">
+          <div className="rounded-xl border border-[#2BA792]/30 bg-[#2BA792]/10 p-4 text-sm text-[#5FD6BE]">
             {success}
           </div>
         )}
 
         {/* Add evidence */}
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
-          <h2 className="text-xl font-bold">
+          <h2 className="font-serif text-2xl">
             Add Evidence
           </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-[#9AA3C0]">
             Connect evidence to one of your existing
             skills.
           </p>
@@ -281,7 +290,7 @@ export default function StudentEvidencePage() {
 
             {/* Skill */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Skill
               </label>
 
@@ -290,9 +299,9 @@ export default function StudentEvidencePage() {
                 onChange={(event) =>
                   setSkillId(event.target.value)
                 }
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={fieldClass}
               >
-                <option value="">
+                <option value="" className="bg-[#0F1526]">
                   Select a skill
                 </option>
 
@@ -300,6 +309,7 @@ export default function StudentEvidencePage() {
                   <option
                     key={studentSkill.skillId}
                     value={studentSkill.skillId}
+                    className="bg-[#0F1526]"
                   >
                     {studentSkill.skill.name} (
                     {studentSkill.proficiency}%)
@@ -310,7 +320,7 @@ export default function StudentEvidencePage() {
 
             {/* Type */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Evidence Type
               </label>
 
@@ -319,13 +329,14 @@ export default function StudentEvidencePage() {
                 onChange={(event) =>
                   setType(event.target.value)
                 }
-                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={fieldClass}
               >
                 {evidenceTypes.map(
                   (evidenceType) => (
                     <option
                       key={evidenceType.value}
                       value={evidenceType.value}
+                      className="bg-[#0F1526]"
                     >
                       {evidenceType.label}
                     </option>
@@ -336,7 +347,7 @@ export default function StudentEvidencePage() {
 
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Title
               </label>
 
@@ -347,13 +358,13 @@ export default function StudentEvidencePage() {
                   setTitle(event.target.value)
                 }
                 placeholder="e.g. E-commerce Backend Project"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={fieldClass}
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Description
               </label>
 
@@ -366,15 +377,15 @@ export default function StudentEvidencePage() {
                 }
                 placeholder="Describe how this evidence demonstrates the skill..."
                 rows={4}
-                className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={`${fieldClass} resize-none`}
               />
             </div>
 
             {/* URL */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Evidence URL
-                <span className="ml-2 text-xs text-gray-400">
+                <span className="ml-2 text-[11px] normal-case tracking-normal text-[#5B6386]">
                   Optional
                 </span>
               </label>
@@ -386,15 +397,15 @@ export default function StudentEvidencePage() {
                   setUrl(event.target.value)
                 }
                 placeholder="https://github.com/..."
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={fieldClass}
               />
             </div>
 
             {/* Score */}
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
                 Score
-                <span className="ml-2 text-xs text-gray-400">
+                <span className="ml-2 text-[11px] normal-case tracking-normal text-[#5B6386]">
                   Optional
                 </span>
               </label>
@@ -408,17 +419,17 @@ export default function StudentEvidencePage() {
                   setScore(event.target.value)
                 }
                 placeholder="e.g. 92"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-purple-500"
+                className={fieldClass}
               />
             </div>
 
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-[#E8598B] px-6 py-3 text-sm font-medium text-[#0F1526] transition hover:bg-[#f082ab] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {saving
-                ? "Adding..."
+                ? "Adding…"
                 : "Add Evidence"}
             </button>
 
@@ -426,26 +437,26 @@ export default function StudentEvidencePage() {
         </section>
 
         {/* Existing evidence */}
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
           <div>
-            <h2 className="text-xl font-bold">
+            <h2 className="font-serif text-2xl">
               Your Evidence
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#9AA3C0]">
               Evidence currently associated with your
               Skill DNA.
             </p>
           </div>
 
           {evidence.length === 0 ? (
-            <div className="mt-6 rounded-xl border border-dashed border-gray-200 p-8 text-center">
-              <p className="font-medium">
+            <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-8 text-center">
+              <p className="font-medium text-[#F5F1E8]">
                 No evidence added yet
               </p>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-[#9AA3C0]">
                 Add a project, assessment or
                 certification above.
               </p>
@@ -455,7 +466,7 @@ export default function StudentEvidencePage() {
               {evidence.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-xl border border-gray-100 p-5"
+                  className="rounded-xl border border-[#232B47] bg-[#0F1526]/60 p-5"
                 >
 
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -463,11 +474,11 @@ export default function StudentEvidencePage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
 
-                        <h3 className="font-semibold">
+                        <h3 className="font-semibold text-[#F5F1E8]">
                           {item.title}
                         </h3>
 
-                        <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs text-purple-700">
+                        <span className="rounded-full border border-[#E8598B]/25 bg-[#E8598B]/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-[#E8598B]">
                           {item.type.replaceAll(
                             "_",
                             " "
@@ -476,12 +487,12 @@ export default function StudentEvidencePage() {
 
                       </div>
 
-                      <p className="mt-1 text-sm font-medium text-purple-600">
+                      <p className="mt-1 text-sm font-medium text-[#F4A93B]">
                         {item.skill.name}
                       </p>
 
                       {item.description && (
-                        <p className="mt-3 text-sm leading-6 text-gray-500">
+                        <p className="mt-3 text-sm leading-6 text-[#C7CCE0]">
                           {item.description}
                         </p>
                       )}
@@ -491,7 +502,7 @@ export default function StudentEvidencePage() {
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-3 inline-block text-sm font-medium text-blue-600 underline"
+                          className="mt-3 inline-block text-sm font-medium text-[#E8598B] underline underline-offset-4 hover:text-[#F3AFC6] transition"
                         >
                           View Evidence →
                         </a>
@@ -501,18 +512,24 @@ export default function StudentEvidencePage() {
                     <div className="shrink-0 text-left md:text-right">
 
                       {item.score !== null && (
-                        <p className="text-lg font-bold">
+                        <p className="font-serif text-lg text-[#F4A93B]">
                           {item.score}%
                         </p>
                       )}
 
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p
+                        className={`mt-1 font-mono text-[11px] uppercase tracking-wide ${
+                          item.verified
+                            ? "text-[#2BA792]"
+                            : "text-[#F4A93B]"
+                        }`}
+                      >
                         {item.verified
                           ? "Verified"
                           : "Pending verification"}
                       </p>
 
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1 text-xs text-[#5B6386]">
                         {item.verificationStrength}
                       </p>
 
@@ -528,6 +545,30 @@ export default function StudentEvidencePage() {
         </section>
 
       </div>
+
+      <ThemeStyles />
     </main>
+  );
+}
+
+/* ---------------------------------------------
+   THEME FONTS
+--------------------------------------------- */
+
+function ThemeStyles() {
+  return (
+    <style>{`
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz@0,9..144;1,9..144&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+      .font-serif {
+        font-family: "Fraunces", serif;
+      }
+      .font-sans {
+        font-family: "IBM Plex Sans", sans-serif;
+      }
+      .font-mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+    `}</style>
   );
 }
