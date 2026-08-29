@@ -55,41 +55,106 @@ export default function OpportunityDetailPage() {
   const [error, setError] =
     useState("");
 
+  const [applied, setApplied] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [applicationError, setApplicationError] = useState("");  
+
   useEffect(() => {
-    async function loadOpportunity() {
-      try {
-        const response = await fetch(
-          `/api/student/opportunities/${id}`
-        );
+  async function loadOpportunity() {
+    try {
+      const response = await fetch(
+        `/api/student/opportunities/${id}`
+      );
 
-        const data =
-          await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(
-            data.error ||
-              "Failed to load opportunity."
-          );
-        }
-
-        setOpportunity(
-          data.opportunity
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to load opportunity."
         );
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load opportunity."
-        );
-      } finally {
-        setLoading(false);
       }
+
+      const loadedOpportunity = data.opportunity;
+
+      setOpportunity(loadedOpportunity);
+
+      // Check whether the student has already applied
+      const applicationsResponse = await fetch(
+        "/api/student/applications"
+      );
+
+      const applicationsData =
+        await applicationsResponse.json();
+
+      if (applicationsResponse.ok) {
+        const alreadyApplied =
+          applicationsData.applications?.some(
+            (application: {
+              opportunity: {
+                id: string;
+              };
+            }) =>
+              application.opportunity.id ===
+              loadedOpportunity.id
+          );
+
+        setApplied(alreadyApplied);
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load opportunity."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (id) {
+    loadOpportunity();
+  }
+ }, [id]);
+
+  async function handleApply() {
+  if (!opportunity) return;
+
+  setApplying(true);
+  setApplicationError("");
+
+  try {
+    const response = await fetch(
+      "/api/student/applications",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          opportunityId: opportunity.id,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Failed to submit application."
+      );
     }
 
-    if (id) {
-      loadOpportunity();
-    }
-  }, [id]);
+    setApplied(true);
+  } catch (error) {
+    setApplicationError(
+      error instanceof Error
+        ? error.message
+        : "Failed to submit application."
+    );
+  } finally {
+    setApplying(false);
+  }
+ } 
 
   if (loading) {
     return (
@@ -182,7 +247,8 @@ export default function OpportunityDetailPage() {
             </div>
 
             {/* Readiness */}
-            <div className="shrink-0 rounded-2xl border border-purple-200 bg-purple-50 p-6 text-center">
+            <div className="shrink-0 flex flex-col gap-3">
+             <div className="rounded-2xl border border-purple-200 bg-purple-50 p-6 text-center">
               <p className="text-4xl font-bold text-purple-700">
                 {opportunity.readinessScore}%
               </p>
@@ -190,6 +256,22 @@ export default function OpportunityDetailPage() {
               <p className="mt-1 text-sm text-gray-500">
                 Readiness
               </p>
+             </div>
+
+              {applied ? (
+             <div className="rounded-xl bg-green-50 px-5 py-3 text-center text-sm font-semibold text-green-700">
+              ✓ Applied
+             </div>
+              ) : (
+              <button
+               type="button"
+               onClick={handleApply}
+               disabled={applying}
+               className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+               {applying ? "Applying..." : "Apply Now"}
+              </button>
+              )}
             </div>
           </div>
 
@@ -199,6 +281,12 @@ export default function OpportunityDetailPage() {
             </p>
           </div>
         </section>
+
+        {applicationError && (
+  <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+    {applicationError}
+  </div>
+)}
 
         {/* Explanation */}
         <section>

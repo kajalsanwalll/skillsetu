@@ -152,3 +152,184 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    // 1. Authenticate
+    const { isAuthenticated, userId } = await auth();
+
+    if (!isAuthenticated || !userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // 2. Find SkillSetu user + student profile
+    const user = await prisma.user.findUnique({
+      where: {
+        clerkId: userId,
+      },
+      include: {
+        studentProfile: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found." },
+        { status: 404 }
+      );
+    }
+
+    // 3. Student-only access
+    if (user.role !== "STUDENT") {
+      return NextResponse.json(
+        { error: "Only students can apply." },
+        { status: 403 }
+      );
+    }
+
+    // 4. Student profile must exist
+    if (!user.studentProfile) {
+      return NextResponse.json(
+        { error: "Student profile not found." },
+        { status: 404 }
+      );
+    }
+
+    // 5. Read opportunity ID
+    const body = await request.json();
+
+    const opportunityId = body.opportunityId;
+
+    if (!opportunityId) {
+      return NextResponse.json(
+        { error: "Opportunity ID is required." },
+        { status: 400 }
+      );
+    }
+
+    // 6. Check opportunity exists
+    const opportunity =
+      await prisma.opportunity.findUnique({
+        where: {
+          id: opportunityId,
+        },
+        include: {
+          skills: true,
+        },
+      });
+
+    if (!opportunity) {
+      return NextResponse.json(
+        { error: "Opportunity not found." },
+        { status: 404 }
+      );
+    }
+
+    // 7. Prevent duplicate application
+    const existingApplication =
+      await prisma.application.findFirst({
+        where: {
+          studentProfileId: user.studentProfile.id,
+          opportunityId,
+        },
+      });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        {
+          error: "You have already applied to this opportunity.",
+          application: existingApplication,
+        },
+        { status: 409 }
+      );
+    }
+
+    // 8. Get student's skills
+    const studentSkills =
+      await prisma.studentSkill.findMany({
+        where: {
+          studentProfileId: user.studentProfile.id,
+        },
+      });
+
+    // 9. Calculate match score
+    const studentSkillMap = new Map(
+      studentSkills.map((skill) => [
+        skill.skillId,
+        skill.proficiency,
+      ])
+    );
+
+    let totalWeight = 0;
+    let achievedWeight = 0;
+
+    for (const requirement of opportunity.skills) {
+      const weight =
+        requirement.weight > 0
+          ? requirement.weight
+          : 1;
+
+      totalWeight += weight;
+
+      const studentProficiency =
+        studentSkillMap.get(
+          requirement.skillId
+        ) ?? 0;
+
+      const proficiencyRatio = Math.min(
+        studentProficiency /
+          Math.max(
+            requirement.minimumProficiency,
+            1
+          ),
+        1
+      );
+
+      achievedWeight +=
+        proficiencyRatio * weight;
+    }
+
+    const matchScore =
+      totalWeight > 0
+        ? Math.round(
+            (achievedWeight / totalWeight) * 100
+          )
+        : 0;
+
+    // 10. Create application
+    const application =
+      await prisma.application.create({
+        data: {
+          studentProfileId:
+            user.studentProfile.id,
+          opportunityId,
+          matchScore,
+        },
+      });
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Application submitted successfully.",
+        application,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error(
+      "STUDENT_APPLY_ERROR:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Failed to submit application.",
+      },
+      { status: 500 }
+    );
+  }
+}
