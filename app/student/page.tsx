@@ -474,9 +474,9 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          <p className="text-gray-400">
+          <p className="text-[#9AA3C0]">
             Loading your Skill DNA...
           </p>
         </div>
@@ -490,9 +490,9 @@ export default function StudentDashboard() {
 
   if (error || !profile || !user) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#f083a8]">
             {error ||
               "Student profile unavailable."}
           </div>
@@ -506,13 +506,13 @@ export default function StudentDashboard() {
   // =========================
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* HEADER */}
 
-        <section className="mb-10">
-          <p className="text-sm text-purple-400 mb-2">
+        <section className="mb-8">
+          <p className="text-sm text-[#F4A93B] mb-2">
             STUDENT
           </p>
 
@@ -520,61 +520,24 @@ export default function StudentDashboard() {
             Welcome, {user.name}
           </h1>
 
-          <p className="text-gray-400 mt-2">
+          <p className="text-[#9AA3C0] mt-2">
             Build your Skill DNA and discover
             opportunities that match your strengths.
           </p>
         </section>
 
-        {/* STATS */}
+        {/* STATS — one row instead of four boxes */}
 
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-10">
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Skills
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {profile.skills.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Evidence
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {profile.evidence.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Credentials
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {credentials.length}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-400">
-              Assessments
-            </p>
-
-            <p className="text-3xl font-bold mt-2">
-              {profile.assessments.length}
-            </p>
-          </div>
-
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 mb-6 flex flex-wrap gap-8">
+          <Stat label="Skills" value={profile.skills.length} />
+          <Stat label="Evidence" value={profile.evidence.length} />
+          <Stat label="Credentials" value={credentials.length} />
+          <Stat label="Assessments" value={profile.assessments.length} />
         </section>
 
         {/* CAREER PROFILE */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7 mb-6">
 
           <h2 className="text-xl font-semibold mb-4">
             Career Profile
@@ -583,22 +546,22 @@ export default function StudentDashboard() {
           <div className="grid md:grid-cols-2 gap-6">
 
             <div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9AA3C0]">
                 Career interest
               </p>
 
-              <p className="mt-2 text-gray-200">
+              <p className="mt-2 text-[#C7CCE0]">
                 {profile.careerInterest ||
                   "Not set yet"}
               </p>
             </div>
 
             <div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#9AA3C0]">
                 About you
               </p>
 
-              <p className="mt-2 text-gray-200">
+              <p className="mt-2 text-[#C7CCE0]">
                 {profile.bio ||
                   "Tell SkillSetu about yourself."}
               </p>
@@ -610,7 +573,7 @@ export default function StudentDashboard() {
 
         {/* SKILL DNA */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7 mb-6">
 
           <div className="flex items-center justify-between mb-6">
 
@@ -619,7 +582,7 @@ export default function StudentDashboard() {
                 Your Skill DNA
               </h2>
 
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[#9AA3C0] mt-1">
                 Skills you currently have and how
                 strongly they are verified.
               </p>
@@ -630,7 +593,7 @@ export default function StudentDashboard() {
                 setSkillError("");
                 setShowAddSkill(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className="rounded-xl bg-[#F4A93B] px-4 py-2 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
             >
               + Add Skill
             </button>
@@ -638,13 +601,13 @@ export default function StudentDashboard() {
           </div>
 
           {profile.skills.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-10 text-center">
 
-              <p className="text-gray-400">
+              <p className="text-[#9AA3C0]">
                 Your Skill DNA is empty.
               </p>
 
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-[#5B6488] mt-2">
                 Add your first skill to start building
                 your profile.
               </p>
@@ -658,7 +621,7 @@ export default function StudentDashboard() {
 
                   <div
                     key={studentSkill.id}
-                    className="rounded-xl border border-white/10 p-5"
+                    className="rounded-xl border border-[#232B47] p-5"
                   >
 
                     <div className="flex justify-between gap-4">
@@ -668,13 +631,13 @@ export default function StudentDashboard() {
                           {studentSkill.skill.name}
                         </h3>
 
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-[#9AA3C0] mt-1">
                           {studentSkill.skill.category ||
                             "General"}
                         </p>
                       </div>
 
-                      <span className="text-purple-300 font-semibold">
+                      <span className="text-[#F4A93B] font-semibold">
                         {studentSkill.proficiency}%
                       </span>
 
@@ -683,7 +646,7 @@ export default function StudentDashboard() {
                     <div className="h-2 rounded-full bg-white/10 mt-4 overflow-hidden">
 
                       <div
-                        className="h-full bg-purple-500 rounded-full"
+                        className="h-full bg-[#F4A93B] rounded-full"
                         style={{
                           width: `${Math.min(
                             studentSkill.proficiency,
@@ -694,7 +657,7 @@ export default function StudentDashboard() {
 
                     </div>
 
-                    <p className="text-xs text-gray-500 mt-3">
+                    <p className="text-xs text-[#9AA3C0] mt-3">
                       Verification:{" "}
                       {studentSkill.verificationStrength}
                     </p>
@@ -714,16 +677,16 @@ export default function StudentDashboard() {
         {showAddSkill && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-[#232B47] bg-[#171E33] p-6 shadow-2xl">
 
               <div className="flex items-start justify-between">
 
                 <div>
-                  <h2 className="text-2xl font-semibold text-white">
+                  <h2 className="text-2xl font-semibold text-[#F5F1E8]">
                     Add a Skill
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-[#9AA3C0]">
                     Tell SkillSetu what you are good at.
                   </p>
                 </div>
@@ -733,7 +696,7 @@ export default function StudentDashboard() {
                   onClick={() =>
                     setShowAddSkill(false)
                   }
-                  className="text-2xl text-gray-500 hover:text-white"
+                  className="text-2xl text-[#9AA3C0] hover:text-[#F5F1E8]"
                 >
                   ×
                 </button>
@@ -745,7 +708,7 @@ export default function StudentDashboard() {
                 <div>
                   <label
                     htmlFor="skill-name"
-                    className="mb-2 block text-sm font-medium text-gray-300"
+                    className="mb-2 block text-sm font-medium text-[#C7CCE0]"
                   >
                     Skill
                   </label>
@@ -758,7 +721,7 @@ export default function StudentDashboard() {
                       setSkillName(e.target.value)
                     }
                     placeholder="e.g. React, Python, SQL"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
                 </div>
 
@@ -766,11 +729,11 @@ export default function StudentDashboard() {
 
                   <div className="mb-2 flex items-center justify-between">
 
-                    <label className="text-sm font-medium text-gray-300">
+                    <label className="text-sm font-medium text-[#C7CCE0]">
                       Proficiency
                     </label>
 
-                    <span className="font-semibold text-purple-400">
+                    <span className="font-semibold text-[#F4A93B]">
                       {proficiency}%
                     </span>
 
@@ -789,7 +752,7 @@ export default function StudentDashboard() {
                     className="w-full"
                   />
 
-                  <div className="mt-2 flex justify-between text-xs text-gray-500">
+                  <div className="mt-2 flex justify-between text-xs text-[#9AA3C0]">
                     <span>Beginner</span>
                     <span>Intermediate</span>
                     <span>Advanced</span>
@@ -798,7 +761,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {skillError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-3 text-sm text-[#f083a8]">
                     {skillError}
                   </div>
                 )}
@@ -810,7 +773,7 @@ export default function StudentDashboard() {
                     onClick={() =>
                       setShowAddSkill(false)
                     }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                    className="flex-1 rounded-xl border border-[#232B47] px-4 py-3 text-sm text-[#C7CCE0] hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -822,7 +785,7 @@ export default function StudentDashboard() {
                       savingSkill ||
                       !skillName.trim()
                     }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-xl bg-[#F4A93B] px-4 py-3 font-semibold text-[#0F1526] hover:bg-[#f6bd6a] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {savingSkill
                       ? "Adding..."
@@ -840,7 +803,7 @@ export default function StudentDashboard() {
 
         {/* EVIDENCE */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7 mb-6">
 
           <div className="flex items-center justify-between mb-6">
 
@@ -849,7 +812,7 @@ export default function StudentDashboard() {
                 Evidence
               </h2>
 
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[#9AA3C0] mt-1">
                 Proof supporting your skills.
               </p>
             </div>
@@ -860,7 +823,7 @@ export default function StudentDashboard() {
                 setEvidenceError("");
                 setShowEvidenceModal(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className="rounded-xl bg-[#F4A93B] px-4 py-2 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
             >
               + Add Evidence
             </button>
@@ -869,13 +832,13 @@ export default function StudentDashboard() {
 
           {profile.evidence.length === 0 ? (
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-8 text-center">
 
-              <p className="text-gray-500">
+              <p className="text-[#9AA3C0]">
                 No evidence added yet.
               </p>
 
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-[#5B6488] mt-2">
                 Add projects, certifications,
                 internships or assessments.
               </p>
@@ -891,7 +854,7 @@ export default function StudentDashboard() {
 
                   <div
                     key={item.id}
-                    className="rounded-xl border border-white/10 p-5"
+                    className="rounded-xl border border-[#232B47] p-5"
                   >
 
                     <div className="flex justify-between gap-4">
@@ -902,7 +865,7 @@ export default function StudentDashboard() {
                           {item.title}
                         </p>
 
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-[#9AA3C0] mt-1">
                           {item.skill.name} •{" "}
                           {item.type}
                         </p>
@@ -912,8 +875,8 @@ export default function StudentDashboard() {
                       <span
                         className={`text-xs ${
                           item.verified
-                            ? "text-green-400"
-                            : "text-gray-400"
+                            ? "text-[#6fd6c4]"
+                            : "text-[#9AA3C0]"
                         }`}
                       >
                         {item.verified
@@ -924,16 +887,16 @@ export default function StudentDashboard() {
                     </div>
 
                     {item.description && (
-                      <p className="mt-3 text-sm text-gray-400">
+                      <p className="mt-3 text-sm text-[#9AA3C0]">
                         {item.description}
                       </p>
                     )}
 
                     {item.score !== null &&
                       item.score !== undefined && (
-                        <p className="mt-3 text-sm text-gray-300">
+                        <p className="mt-3 text-sm text-[#C7CCE0]">
                           Score:{" "}
-                          <span className="text-white font-semibold">
+                          <span className="text-[#F5F1E8] font-semibold">
                             {item.score}
                           </span>
                         </p>
@@ -944,7 +907,7 @@ export default function StudentDashboard() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 inline-block text-sm text-purple-400 hover:text-purple-300"
+                        className="mt-3 inline-block text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
                       >
                         View Evidence →
                       </a>
@@ -966,7 +929,7 @@ export default function StudentDashboard() {
         {showEvidenceModal && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#232B47] bg-[#171E33] p-6 shadow-2xl">
 
               <div className="flex items-start justify-between">
 
@@ -975,7 +938,7 @@ export default function StudentDashboard() {
                     Add Evidence
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-[#9AA3C0]">
                     Add proof supporting one of your skills.
                   </p>
                 </div>
@@ -985,7 +948,7 @@ export default function StudentDashboard() {
                   onClick={() =>
                     setShowEvidenceModal(false)
                   }
-                  className="text-2xl text-gray-500 hover:text-white"
+                  className="text-2xl text-[#9AA3C0] hover:text-[#F5F1E8]"
                 >
                   ×
                 </button>
@@ -998,7 +961,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Skill
                   </label>
 
@@ -1009,7 +972,7 @@ export default function StudentDashboard() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white outline-none"
+                    className="w-full rounded-xl border border-[#232B47] bg-[#0F1526] px-4 py-3 text-[#F5F1E8] outline-none"
                   >
 
                     <option value="">
@@ -1042,7 +1005,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Evidence Type
                   </label>
 
@@ -1053,7 +1016,7 @@ export default function StudentDashboard() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
+                    className="w-full rounded-xl border border-[#232B47] bg-[#0F1526] px-4 py-3 text-[#F5F1E8]"
                   >
 
                     <option value="PROJECT">
@@ -1084,7 +1047,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Title
                   </label>
 
@@ -1097,7 +1060,7 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="e.g. Full-stack Portfolio"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1106,7 +1069,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Description
                   </label>
 
@@ -1119,7 +1082,7 @@ export default function StudentDashboard() {
                     }
                     rows={4}
                     placeholder="Describe what you built or achieved..."
-                    className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full resize-none rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1128,7 +1091,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Evidence URL
                   </label>
 
@@ -1141,7 +1104,7 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="https://github.com/..."
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1150,9 +1113,9 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Score{" "}
-                    <span className="text-gray-500">
+                    <span className="text-[#9AA3C0]">
                       (optional)
                     </span>
                   </label>
@@ -1168,13 +1131,13 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="e.g. 85"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
 
                 {evidenceError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-3 text-sm text-[#f083a8]">
                     {evidenceError}
                   </div>
                 )}
@@ -1186,7 +1149,7 @@ export default function StudentDashboard() {
                     onClick={() =>
                       setShowEvidenceModal(false)
                     }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                    className="flex-1 rounded-xl border border-[#232B47] px-4 py-3 text-sm text-[#C7CCE0] hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -1199,7 +1162,7 @@ export default function StudentDashboard() {
                       !selectedSkillId ||
                       !evidenceTitle.trim()
                     }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-xl bg-[#F4A93B] px-4 py-3 font-semibold text-[#0F1526] hover:bg-[#f6bd6a] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {savingEvidence
                       ? "Adding..."
@@ -1217,7 +1180,7 @@ export default function StudentDashboard() {
 
         {/* ACADEMIC CREDENTIALS */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7 mb-6">
 
           <div className="flex items-center justify-between mb-6">
 
@@ -1227,7 +1190,7 @@ export default function StudentDashboard() {
                 Academic Credentials
               </h2>
 
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[#9AA3C0] mt-1">
                 NPTEL and other recognized academic achievements.
               </p>
 
@@ -1239,7 +1202,7 @@ export default function StudentDashboard() {
                 setCredentialError("");
                 setShowCredentialModal(true);
               }}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-500 transition"
+              className="rounded-xl bg-[#F4A93B] px-4 py-2 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
             >
               + Add Credential
             </button>
@@ -1248,13 +1211,13 @@ export default function StudentDashboard() {
 
           {credentials.length === 0 ? (
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-8 text-center">
 
-              <p className="text-gray-500">
+              <p className="text-[#9AA3C0]">
                 No academic credentials added yet.
               </p>
 
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-[#5B6488] mt-2">
                 Add your NPTEL certifications and academic achievements.
               </p>
 
@@ -1269,14 +1232,14 @@ export default function StudentDashboard() {
 
                   <div
                     key={credential.id}
-                    className="rounded-xl border border-white/10 p-5"
+                    className="rounded-xl border border-[#232B47] p-5"
                   >
 
                     <div className="flex items-start justify-between gap-4">
 
                       <div>
 
-                        <p className="text-xs uppercase tracking-wider text-purple-400">
+                        <p className="text-xs uppercase tracking-wider text-[#F4A93B]">
                           {credential.source}
                         </p>
 
@@ -1285,7 +1248,7 @@ export default function StudentDashboard() {
                         </h3>
 
                         {credential.institution && (
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p className="mt-1 text-sm text-[#9AA3C0]">
                             {credential.institution}
                           </p>
                         )}
@@ -1295,8 +1258,8 @@ export default function StudentDashboard() {
                       <span
                         className={`rounded-full px-3 py-1 text-xs ${
                           credential.verified
-                            ? "bg-green-500/10 text-green-400"
-                            : "bg-white/5 text-gray-400"
+                            ? "bg-[#2BA792]/10 text-[#6fd6c4]"
+                            : "bg-white/5 text-[#9AA3C0]"
                         }`}
                       >
                         {credential.verified
@@ -1306,13 +1269,13 @@ export default function StudentDashboard() {
 
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-300">
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-[#C7CCE0]">
 
                       {credential.score !== null &&
                         credential.score !== undefined && (
                           <span>
                             Score:{" "}
-                            <strong className="text-white">
+                            <strong className="text-[#F5F1E8]">
                               {credential.score}%
                             </strong>
                           </span>
@@ -1322,7 +1285,7 @@ export default function StudentDashboard() {
                         credential.credits !== undefined && (
                           <span>
                             Credits:{" "}
-                            <strong className="text-white">
+                            <strong className="text-[#F5F1E8]">
                               {credential.credits}
                             </strong>
                           </span>
@@ -1331,14 +1294,14 @@ export default function StudentDashboard() {
                     </div>
 
                     {credential.credentialId && (
-                      <p className="mt-3 text-xs text-gray-500">
+                      <p className="mt-3 text-xs text-[#9AA3C0]">
                         Credential ID:{" "}
                         {credential.credentialId}
                       </p>
                     )}
 
                     {credential.issueDate && (
-                      <p className="mt-2 text-xs text-gray-500">
+                      <p className="mt-2 text-xs text-[#9AA3C0]">
                         Issued:{" "}
                         {new Date(
                           credential.issueDate
@@ -1353,7 +1316,7 @@ export default function StudentDashboard() {
                         }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-block text-sm text-purple-400 hover:text-purple-300"
+                        className="mt-4 inline-block text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
                       >
                         Verify Credential →
                       </a>
@@ -1375,7 +1338,7 @@ export default function StudentDashboard() {
         {showCredentialModal && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-6 shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[#232B47] bg-[#171E33] p-6 shadow-2xl">
 
               <div className="flex items-start justify-between">
 
@@ -1385,7 +1348,7 @@ export default function StudentDashboard() {
                     Add Academic Credential
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-400">
+                  <p className="mt-1 text-sm text-[#9AA3C0]">
                     Add an NPTEL certification or academic achievement.
                   </p>
 
@@ -1396,7 +1359,7 @@ export default function StudentDashboard() {
                   onClick={() =>
                     setShowCredentialModal(false)
                   }
-                  className="text-2xl text-gray-500 hover:text-white"
+                  className="text-2xl text-[#9AA3C0] hover:text-[#F5F1E8]"
                 >
                   ×
                 </button>
@@ -1409,7 +1372,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Source
                   </label>
 
@@ -1420,7 +1383,7 @@ export default function StudentDashboard() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 text-white"
+                    className="w-full rounded-xl border border-[#232B47] bg-[#0F1526] px-4 py-3 text-[#F5F1E8]"
                   >
 
                     <option value="NPTEL">
@@ -1439,7 +1402,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Course / Credential Title
                   </label>
 
@@ -1452,7 +1415,7 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="e.g. Programming in Python"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1461,7 +1424,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Institution
                   </label>
 
@@ -1474,7 +1437,7 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="e.g. NPTEL / IIT Madras"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1483,7 +1446,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Credential ID
                   </label>
 
@@ -1496,7 +1459,7 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="Certificate / credential ID"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1507,7 +1470,7 @@ export default function StudentDashboard() {
 
                   <div>
 
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                    <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                       Score (%)
                     </label>
 
@@ -1522,14 +1485,14 @@ export default function StudentDashboard() {
                         )
                       }
                       placeholder="82"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                      className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                     />
 
                   </div>
 
                   <div>
 
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                    <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                       Credits
                     </label>
 
@@ -1544,7 +1507,7 @@ export default function StudentDashboard() {
                         )
                       }
                       placeholder="3"
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                      className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                     />
 
                   </div>
@@ -1555,7 +1518,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Issue Date
                   </label>
 
@@ -1567,7 +1530,7 @@ export default function StudentDashboard() {
                         e.target.value
                       )
                     }
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
@@ -1576,7 +1539,7 @@ export default function StudentDashboard() {
 
                 <div>
 
-                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                  <label className="mb-2 block text-sm font-medium text-[#C7CCE0]">
                     Verification URL
                   </label>
 
@@ -1589,13 +1552,13 @@ export default function StudentDashboard() {
                       )
                     }
                     placeholder="Certificate verification URL"
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-purple-500"
+                    className="w-full rounded-xl border border-[#232B47] bg-white/5 px-4 py-3 text-[#F5F1E8] placeholder-[#5B6488] outline-none focus:border-[#F4A93B]"
                   />
 
                 </div>
 
                 {credentialError && (
-                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                  <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-3 text-sm text-[#f083a8]">
                     {credentialError}
                   </div>
                 )}
@@ -1607,7 +1570,7 @@ export default function StudentDashboard() {
                     onClick={() =>
                       setShowCredentialModal(false)
                     }
-                    className="flex-1 rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                    className="flex-1 rounded-xl border border-[#232B47] px-4 py-3 text-sm text-[#C7CCE0] hover:bg-white/5"
                   >
                     Cancel
                   </button>
@@ -1621,7 +1584,7 @@ export default function StudentDashboard() {
                       savingCredential ||
                       !credentialTitle.trim()
                     }
-                    className="flex-1 rounded-xl bg-purple-600 px-4 py-3 font-semibold hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-xl bg-[#F4A93B] px-4 py-3 font-semibold text-[#0F1526] hover:bg-[#f6bd6a] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {savingCredential
                       ? "Adding..."
@@ -1639,21 +1602,21 @@ export default function StudentDashboard() {
 
         {/* ASSESSMENTS */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7">
 
           <h2 className="text-xl font-semibold">
             Assessments
           </h2>
 
-          <p className="text-sm text-gray-400 mt-1 mb-6">
+          <p className="text-sm text-[#9AA3C0] mt-1 mb-6">
             Your assessment performance.
           </p>
 
           {profile.assessments.length === 0 ? (
 
-            <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-8 text-center">
 
-              <p className="text-gray-500">
+              <p className="text-[#9AA3C0]">
                 No assessments yet.
               </p>
 
@@ -1668,14 +1631,14 @@ export default function StudentDashboard() {
 
                   <div
                     key={assessment.id}
-                    className="rounded-xl border border-white/10 p-4 flex justify-between"
+                    className="rounded-xl border border-[#232B47] p-4 flex justify-between"
                   >
 
                     <span>
                       {assessment.title}
                     </span>
 
-                    <span className="font-semibold text-purple-300">
+                    <span className="font-semibold text-[#F4A93B]">
                       {assessment.score}%
                     </span>
 
@@ -1692,5 +1655,14 @@ export default function StudentDashboard() {
 
       </div>
     </main>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <p className="text-3xl font-bold text-[#F5F1E8]">{value}</p>
+      <p className="text-sm text-[#9AA3C0] mt-1">{label}</p>
+    </div>
   );
 }

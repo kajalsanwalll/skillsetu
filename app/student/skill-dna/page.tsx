@@ -226,9 +226,20 @@ export default async function SkillDNAPage() {
   // 8. Page
   // -----------------------------------------
 
+  const TEAL = "#2BA792";
+  const MARIGOLD = "#F4A93B";
+  const ROSE = "#E8598B";
+  const MUTED = "#9AA3C0";
+
+  const confidenceColor: Record<string, string> = {
+    HIGH: TEAL,
+    MEDIUM: MARIGOLD,
+    LOW: ROSE,
+  };
+
   return (
-    <main className="min-h-screen bg-[#0b0b0f] px-6 py-10 text-white">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
+      <div className="mx-auto max-w-6xl space-y-10">
 
         {/* -------------------------------- */}
         {/* HEADER */}
@@ -237,12 +248,12 @@ export default async function SkillDNAPage() {
         <section>
           <Link
             href="/student/dashboard"
-            className="text-sm text-gray-500 hover:text-gray-300"
+            className="text-sm text-[#9AA3C0] hover:text-[#C7CCE0]"
           >
             ← Back to Dashboard
           </Link>
 
-          <p className="mt-6 text-sm font-medium tracking-wide text-purple-400">
+          <p className="mt-6 text-sm font-medium tracking-wide text-[#F4A93B]">
             SKILL INTELLIGENCE
           </p>
 
@@ -250,88 +261,78 @@ export default async function SkillDNAPage() {
             Your Skill DNA
           </h1>
 
-          <p className="mt-3 max-w-2xl text-gray-400">
-            Your Skill DNA represents the skills you
-            have developed, your current proficiency
-            levels, and the strength of evidence
-            supporting those skills.
+          <p className="mt-3 max-w-2xl text-[#9AA3C0]">
+            What you claim, and what your evidence actually
+            supports.
           </p>
         </section>
 
         {/* -------------------------------- */}
-        {/* OVERVIEW */}
+        {/* PRIMARY STATS */}
         {/* -------------------------------- */}
 
-        <section className="grid gap-5 md:grid-cols-5">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Total Skills
-            </p>
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
 
-            <p className="mt-3 text-4xl font-bold">
-              {skills.length}
-            </p>
+            <div className="flex gap-10">
+              <div>
+                <p className="text-sm text-[#9AA3C0]">
+                  Trusted Proficiency
+                </p>
+                <p className="mt-2 text-5xl font-bold text-[#F4A93B]">
+                  {averageTrustedSkill}%
+                </p>
+                <p className="mt-2 text-xs text-[#9AA3C0]">
+                  Evidence-adjusted capability
+                </p>
+              </div>
 
-            <p className="mt-2 text-xs text-gray-500">
-              Skills currently recorded
-            </p>
+              <div className="border-l border-[#232B47] pl-10">
+                <p className="text-sm text-[#9AA3C0]">
+                  Claimed Proficiency
+                </p>
+                <p className="mt-2 text-5xl font-bold text-[#5B6488]">
+                  {averageSkill}%
+                </p>
+                <p className="mt-2 text-xs text-[#9AA3C0]">
+                  What you reported yourself
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-6 border-t border-[#232B47] pt-5 md:border-t-0 md:border-l md:pl-8 md:pt-0">
+              <MiniStat label="Skills" value={skills.length} />
+              <MiniStat label="Categories" value={categories.length} />
+              <MiniStat label="Evidence" value={evidence.length} />
+              <MiniStat label="Verified" value={`${verificationPercentage}%`} />
+            </div>
+
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Average Proficiency
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {averageSkill}%
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Your claimed proficiency
-            </p>
+          {/* Proficiency distribution */}
+          <div className="mt-8">
+            <SegmentedBar
+              label="Proficiency tier"
+              segments={[
+                { label: "Strong (≥75%)", count: strongSkills.length, color: TEAL },
+                { label: "Developing (60–74%)", count: developingSkills.length, color: MARIGOLD },
+                { label: "Needs work (<60%)", count: improvementSkills.length, color: ROSE },
+              ]}
+            />
           </div>
 
-          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.05] p-6">
-            <p className="text-sm text-purple-300">
-              Trusted Proficiency
-            </p>
-
-            <p className="mt-3 text-4xl font-bold text-purple-300">
-              {averageTrustedSkill}%
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Evidence-adjusted capability
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Strong Skills
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {strongSkills.length}
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Trusted proficiency ≥ 75%
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Verified Skills
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {verificationPercentage}%
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Supported by evidence
-            </p>
+          {/* Evidence strength distribution */}
+          <div className="mt-6">
+            <SegmentedBar
+              label="Evidence strength"
+              segments={[
+                { label: "High", count: highVerification, color: TEAL },
+                { label: "Medium", count: mediumVerification, color: MARIGOLD },
+                { label: "Low", count: lowVerification, color: ROSE },
+                { label: "Unverified", count: unverifiedSkills, color: MUTED },
+              ]}
+            />
           </div>
 
         </section>
@@ -340,12 +341,12 @@ export default async function SkillDNAPage() {
         {/* PROFILE SUMMARY */}
         {/* -------------------------------- */}
 
-        <section className="grid gap-6 lg:grid-cols-3">
+        <section className="grid gap-6 lg:grid-cols-2">
 
           {/* Career Interest */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm font-medium text-purple-400">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+            <p className="text-sm font-medium text-[#F4A93B]">
               CAREER INTEREST
             </p>
 
@@ -354,7 +355,7 @@ export default async function SkillDNAPage() {
                 "Not specified"}
             </h2>
 
-            <p className="mt-2 text-sm leading-6 text-gray-500">
+            <p className="mt-2 text-sm leading-6 text-[#9AA3C0]">
               Your current career direction helps
               SkillSetu personalize future
               recommendations.
@@ -363,113 +364,30 @@ export default async function SkillDNAPage() {
 
           {/* Skill Categories */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm font-medium text-purple-400">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+            <p className="text-sm font-medium text-[#F4A93B]">
               SKILL CATEGORIES
             </p>
 
-            <p className="mt-3 text-3xl font-bold">
-              {categories.length}
-            </p>
-
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {categories.length === 0 ? (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-[#9AA3C0]">
                   No categories yet
                 </span>
               ) : (
                 categories.map((category) => (
                   <span
                     key={category}
-                    className="rounded-full border border-white/10 px-3 py-1 text-xs text-gray-400"
+                    className="rounded-full border border-[#232B47] px-3 py-1 text-xs text-[#C7CCE0]"
                   >
                     {category}
                   </span>
                 ))
               )}
             </div>
-          </div>
 
-          {/* Evidence */}
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm font-medium text-purple-400">
-              SKILL EVIDENCE
-            </p>
-
-            <p className="mt-3 text-3xl font-bold">
-              {evidence.length}
-            </p>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Evidence items connected to your
-              skills.
-            </p>
-
-            <div className="mt-4 flex gap-2 text-xs">
-              <span className="rounded-full border border-white/10 px-3 py-1 text-gray-400">
-                {credentials.length} credentials
-              </span>
-
-              <span className="rounded-full border border-white/10 px-3 py-1 text-gray-400">
-                {assessments.length} assessments
-              </span>
-            </div>
-          </div>
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* SKILL BREAKDOWN */}
-        {/* -------------------------------- */}
-
-        <section className="grid gap-6 md:grid-cols-3">
-
-          {/* Strong */}
-
-          <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              STRONG
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-green-300">
-              {strongSkills.length}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Trusted proficiency ≥ 75%
-            </p>
-          </div>
-
-          {/* Developing */}
-
-          <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              DEVELOPING
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-yellow-300">
-              {developingSkills.length}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Trusted proficiency 60% – 74%
-            </p>
-          </div>
-
-          {/* Improvement */}
-
-          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              NEEDS IMPROVEMENT
-            </p>
-
-            <p className="mt-2 text-3xl font-bold text-orange-300">
-              {improvementSkills.length}
-            </p>
-
-            <p className="mt-1 text-xs text-gray-500">
-              Trusted proficiency below 60%
+            <p className="mt-4 text-xs text-[#9AA3C0]">
+              {credentials.length} credentials · {assessments.length} assessments
             </p>
           </div>
 
@@ -479,31 +397,26 @@ export default async function SkillDNAPage() {
         {/* SKILL LIST */}
         {/* -------------------------------- */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
           <div>
-            <p className="text-sm font-medium text-purple-400">
+            <p className="text-sm font-medium text-[#F4A93B]">
               CAPABILITY PROFILE
             </p>
 
             <h2 className="mt-1 text-2xl font-bold">
               Your Skills
             </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Your claimed proficiency compared with
-              evidence-supported trusted proficiency.
-            </p>
           </div>
 
           {trustedSkills.length === 0 ? (
 
-            <div className="mt-8 rounded-xl border border-dashed border-white/10 p-10 text-center">
-              <p className="text-gray-400">
+            <div className="mt-8 rounded-xl border border-dashed border-[#232B47] p-10 text-center">
+              <p className="text-[#9AA3C0]">
                 Your Skill DNA is empty.
               </p>
 
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-[#5B6488]">
                 Skills will appear here once they
                 are added to your profile.
               </p>
@@ -511,7 +424,7 @@ export default async function SkillDNAPage() {
 
           ) : (
 
-            <div className="mt-8 space-y-6">
+            <div className="mt-8 space-y-4">
 
               {trustedSkills.map((studentSkill) => {
 
@@ -533,15 +446,19 @@ export default async function SkillDNAPage() {
                     100
                   );
 
+                const gap = claimedProficiency - trustedProficiency;
+                const badgeColor =
+                  confidenceColor[studentSkill.confidence] ?? MUTED;
+
                 return (
                   <div
                     key={studentSkill.id}
-                    className="rounded-xl border border-white/10 p-5"
+                    className="rounded-xl border border-[#232B47] p-5"
                   >
 
                     {/* Skill Header */}
 
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
                       <div>
                         <h3 className="font-semibold">
@@ -549,52 +466,43 @@ export default async function SkillDNAPage() {
                         </h3>
 
                         {studentSkill.skill.category && (
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-[#9AA3C0]">
                             {studentSkill.skill.category}
                           </p>
                         )}
                       </div>
 
-                      {/* Confidence */}
-
                       <span
-                        className={`w-fit rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
-                          studentSkill.confidence ===
-                          "HIGH"
-                            ? "border-green-500/20 text-green-300"
-                            : studentSkill.confidence ===
-                              "MEDIUM"
-                            ? "border-yellow-500/20 text-yellow-300"
-                            : studentSkill.confidence ===
-                              "LOW"
-                            ? "border-orange-500/20 text-orange-300"
-                            : "border-white/10 text-gray-500"
-                        }`}
+                        className="w-fit rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide"
+                        style={{ borderColor: `${badgeColor}40`, color: badgeColor }}
                       >
-                        {studentSkill.confidence}
+                        {studentSkill.confidence} confidence
                       </span>
 
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* Trusted Proficiency */}
-                    {/* -------------------------------- */}
+                    {/* Trusted proficiency — the primary number */}
 
-                    <div className="mt-5">
+                    <div className="mt-4">
 
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-300">
+                        <span className="text-sm font-medium text-[#C7CCE0]">
                           Trusted Proficiency
                         </span>
 
-                        <span className="text-sm font-bold text-purple-300">
+                        <span className="text-sm font-bold text-[#F4A93B]">
                           {trustedProficiency}%
+                          {Math.abs(gap) >= 10 && (
+                            <span className="ml-2 text-xs font-normal text-[#9AA3C0]">
+                              ({gap > 0 ? "−" : "+"}{Math.abs(gap)} vs claimed)
+                            </span>
+                          )}
                         </span>
                       </div>
 
                       <div className="h-2 overflow-hidden rounded-full bg-white/10">
                         <div
-                          className="h-full rounded-full bg-purple-500 transition-all"
+                          className="h-full rounded-full bg-[#F4A93B] transition-all"
                           style={{
                             width: `${trustedProficiency}%`,
                           }}
@@ -603,100 +511,18 @@ export default async function SkillDNAPage() {
 
                     </div>
 
-                    {/* -------------------------------- */}
-                    {/* Claimed Proficiency */}
-                    {/* -------------------------------- */}
+                    {/* Evidence — one compact row instead of three boxes */}
 
-                    <div className="mt-5">
-
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs text-gray-500">
-                          Claimed Proficiency
+                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#9AA3C0]">
+                      <span>Evidence score: <span className="text-[#C7CCE0]">{studentSkill.evidenceScore}%</span></span>
+                      <span>{studentSkill.evidenceCount} evidence items</span>
+                      <span>{studentSkill.verifiedEvidenceCount} verified</span>
+                      <span>
+                        Verification:{" "}
+                        <span style={{ color: confidenceColor[studentSkill.verificationStrength] ?? MUTED }}>
+                          {studentSkill.verificationStrength}
                         </span>
-
-                        <span className="text-xs text-gray-400">
-                          {claimedProficiency}%
-                        </span>
-                      </div>
-
-                      <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-                        <div
-                          className="h-full rounded-full bg-gray-500"
-                          style={{
-                            width: `${claimedProficiency}%`,
-                          }}
-                        />
-                      </div>
-
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* Evidence Information */}
-                    {/* -------------------------------- */}
-
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
-
-                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                          Evidence Score
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-gray-300">
-                          {studentSkill.evidenceScore}%
-                        </p>
-                      </div>
-
-                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                          Evidence
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-gray-300">
-                          {studentSkill.evidenceCount}
-                        </p>
-                      </div>
-
-                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
-                          Verified Evidence
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-gray-300">
-                          {studentSkill.verifiedEvidenceCount}
-                        </p>
-                      </div>
-
-                    </div>
-
-                    {/* -------------------------------- */}
-                    {/* Verification Strength */}
-                    {/* -------------------------------- */}
-
-                    <div className="mt-4 flex items-center justify-between">
-
-                      <span className="text-xs text-gray-600">
-                        Verification Strength
                       </span>
-
-                      <span
-                        className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
-                          studentSkill.verificationStrength ===
-                          "HIGH"
-                            ? "border-green-500/20 text-green-300"
-                            : studentSkill.verificationStrength ===
-                              "MEDIUM"
-                            ? "border-yellow-500/20 text-yellow-300"
-                            : studentSkill.verificationStrength ===
-                              "LOW"
-                            ? "border-orange-500/20 text-orange-300"
-                            : "border-white/10 text-gray-500"
-                        }`}
-                      >
-                        {
-                          studentSkill.verificationStrength
-                        }
-                      </span>
-
                     </div>
 
                   </div>
@@ -710,109 +536,16 @@ export default async function SkillDNAPage() {
         </section>
 
         {/* -------------------------------- */}
-        {/* VERIFICATION */}
-        {/* -------------------------------- */}
-
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
-          <div>
-            <p className="text-sm font-medium text-purple-400">
-              VERIFICATION
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold">
-              Evidence Strength
-            </h2>
-
-            <p className="mt-2 max-w-2xl text-sm text-gray-500">
-              SkillSetu distinguishes between a skill
-              claim and the evidence supporting that
-              claim. Stronger evidence increases
-              verification strength.
-            </p>
-          </div>
-
-          <div className="mt-7 grid gap-4 md:grid-cols-4">
-
-            {/* HIGH */}
-
-            <div className="rounded-xl border border-green-500/20 bg-green-500/[0.05] p-5">
-              <p className="text-xs text-gray-500">
-                HIGH
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-green-300">
-                {highVerification}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-500">
-                Strong evidence
-              </p>
-            </div>
-
-            {/* MEDIUM */}
-
-            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/[0.05] p-5">
-              <p className="text-xs text-gray-500">
-                MEDIUM
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-yellow-300">
-                {mediumVerification}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-500">
-                Moderate evidence
-              </p>
-            </div>
-
-            {/* LOW */}
-
-            <div className="rounded-xl border border-orange-500/20 bg-orange-500/[0.05] p-5">
-              <p className="text-xs text-gray-500">
-                LOW
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-orange-300">
-                {lowVerification}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-500">
-                Limited evidence
-              </p>
-            </div>
-
-            {/* UNVERIFIED */}
-
-            <div className="rounded-xl border border-white/10 p-5">
-              <p className="text-xs text-gray-500">
-                UNVERIFIED
-              </p>
-
-              <p className="mt-2 text-3xl font-bold text-gray-300">
-                {unverifiedSkills}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-500">
-                No verification yet
-              </p>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* NAVIGATION */}
+        {/* NEXT STEPS */}
         {/* -------------------------------- */}
 
         <section className="grid gap-4 md:grid-cols-3">
 
           <Link
             href="/student/opportunities"
-            className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/30"
+            className="rounded-xl border border-[#232B47] bg-[#171E33]/60 p-5 transition hover:border-[#F4A93B]/40"
           >
-            <p className="text-sm font-medium text-purple-400">
+            <p className="text-sm font-medium text-[#F4A93B]">
               OPPORTUNITIES
             </p>
 
@@ -820,7 +553,7 @@ export default async function SkillDNAPage() {
               See where your skills fit →
             </h3>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#9AA3C0]">
               Explore opportunities ranked using
               your current Skill DNA.
             </p>
@@ -828,9 +561,9 @@ export default async function SkillDNAPage() {
 
           <Link
             href="/student/gaps"
-            className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/30"
+            className="rounded-xl border border-[#232B47] bg-[#171E33]/60 p-5 transition hover:border-[#F4A93B]/40"
           >
-            <p className="text-sm font-medium text-purple-400">
+            <p className="text-sm font-medium text-[#F4A93B]">
               SKILL GAPS
             </p>
 
@@ -838,7 +571,7 @@ export default async function SkillDNAPage() {
               Find areas to improve →
             </h3>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#9AA3C0]">
               Identify skills where your proficiency
               is below opportunity requirements.
             </p>
@@ -846,9 +579,9 @@ export default async function SkillDNAPage() {
 
           <Link
             href="/student/portfolio"
-            className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/30"
+            className="rounded-xl border border-[#232B47] bg-[#171E33]/60 p-5 transition hover:border-[#F4A93B]/40"
           >
-            <p className="text-sm font-medium text-purple-400">
+            <p className="text-sm font-medium text-[#F4A93B]">
               PORTFOLIO
             </p>
 
@@ -856,7 +589,7 @@ export default async function SkillDNAPage() {
               Build your evidence →
             </h3>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#9AA3C0]">
               Showcase projects and evidence
               supporting your skills.
             </p>
@@ -866,5 +599,59 @@ export default async function SkillDNAPage() {
 
       </div>
     </main>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <p className="text-2xl font-bold text-[#F5F1E8]">{value}</p>
+      <p className="mt-1 text-xs text-[#9AA3C0]">{label}</p>
+    </div>
+  );
+}
+
+function SegmentedBar({
+  label,
+  segments,
+}: {
+  label: string;
+  segments: { label: string; count: number; color: string }[];
+}) {
+  const total = segments.reduce((sum, s) => sum + s.count, 0);
+
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">{label}</p>
+
+      <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-white/5">
+        {total === 0 ? (
+          <div className="h-full w-full bg-white/5" />
+        ) : (
+          segments.map((segment) => (
+            <div
+              key={segment.label}
+              style={{
+                width: `${(segment.count / total) * 100}%`,
+                backgroundColor: segment.color,
+              }}
+              className="h-full first:rounded-l-full last:rounded-r-full"
+            />
+          ))
+        )}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        {segments.map((segment) => (
+          <span key={segment.label} className="flex items-center gap-1.5 text-xs text-[#9AA3C0]">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: segment.color }}
+            />
+            {segment.label}: <span className="text-[#C7CCE0]">{segment.count}</span>
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -83,6 +83,16 @@ type Applicant = {
   };
 };
 
+const TEAL = "#2BA792";
+const MARIGOLD = "#F4A93B";
+const ROSE = "#E8598B";
+
+function matchScoreColor(score: number) {
+  if (score >= 75) return TEAL;
+  if (score >= 50) return MARIGOLD;
+  return ROSE;
+}
+
 export default function IndustryOpportunityDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -172,9 +182,9 @@ export default function IndustryOpportunityDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          <p className="text-gray-400">
+          <p className="text-[#9AA3C0]">
             Loading opportunity...
           </p>
         </div>
@@ -184,9 +194,9 @@ export default function IndustryOpportunityDetailPage() {
 
   if (error || !opportunity) {
     return (
-      <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="max-w-6xl mx-auto">
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#f083a8]">
             {error ||
               "Opportunity not found."}
           </div>
@@ -196,7 +206,7 @@ export default function IndustryOpportunityDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Back */}
@@ -207,13 +217,13 @@ export default function IndustryOpportunityDetailPage() {
               "/industry/opportunities"
             )
           }
-          className="mb-6 text-sm text-gray-400 hover:text-white transition"
+          className="mb-6 text-sm text-[#9AA3C0] hover:text-[#F5F1E8] transition"
         >
           ← Back to Opportunities
         </button>
 
         {/* Opportunity */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7 mb-8">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7 mb-8">
 
           <div className="flex flex-col md:flex-row md:justify-between gap-6">
 
@@ -221,7 +231,7 @@ export default function IndustryOpportunityDetailPage() {
 
               <div className="flex flex-wrap items-center gap-3 mb-4">
 
-                <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
+                <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs font-medium text-[#C7CCE0]">
                   {opportunity.type.replaceAll(
                     "_",
                     " "
@@ -229,7 +239,7 @@ export default function IndustryOpportunityDetailPage() {
                 </span>
 
                 {opportunity.location && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-[#9AA3C0]">
                     📍 {opportunity.location}
                   </span>
                 )}
@@ -240,11 +250,11 @@ export default function IndustryOpportunityDetailPage() {
                 {opportunity.title}
               </h1>
 
-              <p className="text-purple-300 mt-2">
+              <p className="text-[#F4A93B] mt-2">
                 {opportunity.company}
               </p>
 
-              <p className="text-gray-400 mt-5 leading-relaxed">
+              <p className="text-[#9AA3C0] mt-5 leading-relaxed">
                 {opportunity.description}
               </p>
 
@@ -254,7 +264,7 @@ export default function IndustryOpportunityDetailPage() {
 
           {/* Required skills */}
 
-          <div className="mt-7 pt-6 border-t border-white/10">
+          <div className="mt-7 pt-6 border-t border-[#232B47]">
 
             <h2 className="text-lg font-semibold mb-4">
               Required Skills
@@ -268,21 +278,21 @@ export default function IndustryOpportunityDetailPage() {
                     key={skill.id}
                     className={`rounded-xl border px-4 py-3 ${
                       skill.required
-                        ? "border-purple-500/20 bg-purple-500/10"
-                        : "border-white/10 bg-white/[0.03]"
+                        ? "border-[#F4A93B]/30 bg-[#F4A93B]/10"
+                        : "border-[#232B47] bg-[#171E33]/60"
                     }`}
                   >
                     <p className="font-medium">
                       {skill.name}
                     </p>
 
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-[#9AA3C0] mt-1">
                       Minimum:{" "}
                       {skill.minimumProficiency}%
                     </p>
 
                     {skill.required && (
-                      <p className="text-xs text-purple-400 mt-1">
+                      <p className="text-xs text-[#F4A93B] mt-1">
                         Required
                       </p>
                     )}
@@ -297,7 +307,7 @@ export default function IndustryOpportunityDetailPage() {
 
         {/* Applicants */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-7">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7">
 
           <div className="flex items-center justify-between mb-6">
 
@@ -306,18 +316,18 @@ export default function IndustryOpportunityDetailPage() {
                 Applicants
               </h2>
 
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[#9AA3C0] mt-1">
                 Students who applied to this
                 opportunity.
               </p>
             </div>
 
-            <div className="rounded-xl bg-purple-500/10 px-4 py-2">
-              <span className="text-purple-300 font-semibold">
+            <div className="rounded-xl border border-[#232B47] px-4 py-2">
+              <span className="text-[#F4A93B] font-semibold">
                 {applicants.length}
               </span>
 
-              <span className="text-gray-400 text-sm ml-1">
+              <span className="text-[#9AA3C0] text-sm ml-1">
                 applicants
               </span>
             </div>
@@ -325,22 +335,22 @@ export default function IndustryOpportunityDetailPage() {
           </div>
 
           {applicantsLoading ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
-              <p className="text-gray-400">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-10 text-center">
+              <p className="text-[#9AA3C0]">
                 Loading applicants...
               </p>
             </div>
           ) : applicantsError ? (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+            <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#f083a8]">
               {applicantsError}
             </div>
           ) : applicants.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
-              <p className="text-gray-400">
+            <div className="rounded-xl border border-dashed border-[#232B47] p-10 text-center">
+              <p className="text-[#9AA3C0]">
                 No applications yet.
               </p>
 
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-[#5B6488] mt-2">
                 Applicants will appear here when
                 students apply.
               </p>
@@ -356,12 +366,14 @@ export default function IndustryOpportunityDetailPage() {
                       application.matchScore ?? 0
                     );
 
+                  const scoreColor = matchScoreColor(matchScore);
+
                   return (
                     <div
                       key={
                         application.applicationId
                       }
-                      className="rounded-xl border border-white/10 bg-black/10 p-5"
+                      className="rounded-xl border border-[#232B47] bg-black/10 p-5"
                     >
 
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
@@ -377,7 +389,7 @@ export default function IndustryOpportunityDetailPage() {
                             }
                           </h3>
 
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className="text-sm text-[#9AA3C0] mt-1">
                             {
                               application.student
                                 .email
@@ -386,7 +398,7 @@ export default function IndustryOpportunityDetailPage() {
 
                           {application.student
                             .careerInterest && (
-                            <p className="text-sm text-gray-400 mt-2">
+                            <p className="text-sm text-[#9AA3C0] mt-2">
                               {
                                 application.student
                                   .careerInterest
@@ -400,13 +412,19 @@ export default function IndustryOpportunityDetailPage() {
 
                         <div className="shrink-0 text-center">
 
-                          <div className="rounded-xl border border-purple-500/20 bg-purple-500/10 px-5 py-3">
+                          <div
+                            className="rounded-xl border px-5 py-3"
+                            style={{
+                              borderColor: `${scoreColor}40`,
+                              backgroundColor: `${scoreColor}1A`,
+                            }}
+                          >
 
-                            <p className="text-2xl font-bold text-purple-300">
+                            <p className="text-2xl font-bold" style={{ color: scoreColor }}>
                               {matchScore}%
                             </p>
 
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-[#9AA3C0]">
                               Skill Match
                             </p>
 
@@ -418,7 +436,7 @@ export default function IndustryOpportunityDetailPage() {
 
                         <div className="shrink-0">
 
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300">
+                          <span className="rounded-full border border-[#232B47] bg-white/5 px-3 py-2 text-xs text-[#C7CCE0]">
                             {application.status}
                           </span>
 
@@ -433,7 +451,7 @@ export default function IndustryOpportunityDetailPage() {
                               application
                             )
                           }
-                          className="rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold hover:bg-purple-500 transition"
+                          className="rounded-xl bg-[#F4A93B] px-4 py-3 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
                         >
                           View Profile
                         </button>
@@ -442,9 +460,9 @@ export default function IndustryOpportunityDetailPage() {
 
                       {/* Top skills */}
 
-                      <div className="mt-5 pt-4 border-t border-white/10">
+                      <div className="mt-5 pt-4 border-t border-[#232B47]">
 
-                        <p className="text-xs text-gray-500 mb-2">
+                        <p className="text-xs text-[#9AA3C0] mb-2">
                           Skills
                         </p>
 
@@ -455,10 +473,10 @@ export default function IndustryOpportunityDetailPage() {
                             .map((skill) => (
                               <span
                                 key={skill.id}
-                                className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-gray-300"
+                                className="rounded-lg bg-white/5 border border-[#232B47] px-3 py-1.5 text-xs text-[#C7CCE0]"
                               >
                                 {skill.name}{" "}
-                                <span className="text-purple-400">
+                                <span className="text-[#F4A93B]">
                                   {
                                     skill.proficiency
                                   }
@@ -488,7 +506,7 @@ export default function IndustryOpportunityDetailPage() {
       {selectedApplicant && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-6">
 
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#111116] p-7 shadow-2xl">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[#232B47] bg-[#171E33] p-7 shadow-2xl">
 
             {/* Header */}
 
@@ -496,7 +514,7 @@ export default function IndustryOpportunityDetailPage() {
 
               <div>
 
-                <p className="text-sm text-purple-400">
+                <p className="text-sm text-[#F4A93B]">
                   STUDENT PROFILE
                 </p>
 
@@ -507,7 +525,7 @@ export default function IndustryOpportunityDetailPage() {
                   }
                 </h2>
 
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[#9AA3C0] mt-1">
                   {
                     selectedApplicant.student
                       .email
@@ -521,7 +539,7 @@ export default function IndustryOpportunityDetailPage() {
                 onClick={() =>
                   setSelectedApplicant(null)
                 }
-                className="text-2xl text-gray-500 hover:text-white"
+                className="text-2xl text-[#9AA3C0] hover:text-[#F5F1E8]"
               >
                 ×
               </button>
@@ -532,25 +550,34 @@ export default function IndustryOpportunityDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 mt-6">
 
-              <div className="rounded-xl border border-purple-500/20 bg-purple-500/10 p-4">
+              {(() => {
+                const modalScore = Math.round(
+                  selectedApplicant.matchScore ?? 0
+                );
+                const modalScoreColor = matchScoreColor(modalScore);
 
-                <p className="text-xs text-gray-500">
-                  Skill Match
-                </p>
+                return (
+                  <div
+                    className="rounded-xl border p-4"
+                    style={{
+                      borderColor: `${modalScoreColor}40`,
+                      backgroundColor: `${modalScoreColor}1A`,
+                    }}
+                  >
+                    <p className="text-xs text-[#9AA3C0]">
+                      Skill Match
+                    </p>
 
-                <p className="text-2xl font-bold text-purple-300 mt-1">
-                  {Math.round(
-                    selectedApplicant.matchScore ??
-                      0
-                  )}
-                  %
-                </p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: modalScoreColor }}>
+                      {modalScore}%
+                    </p>
+                  </div>
+                );
+              })()}
 
-              </div>
+              <div className="rounded-xl border border-[#232B47] bg-white/5 p-4">
 
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#9AA3C0]">
                   Application Status
                 </p>
 
@@ -573,7 +600,7 @@ export default function IndustryOpportunityDetailPage() {
                   About
                 </h3>
 
-                <p className="text-gray-400 mt-2 leading-relaxed">
+                <p className="text-[#9AA3C0] mt-2 leading-relaxed">
                   {
                     selectedApplicant.student
                       .bio
@@ -597,7 +624,7 @@ export default function IndustryOpportunityDetailPage() {
                   (skill) => (
                     <div
                       key={skill.id}
-                      className="rounded-xl border border-white/10 p-4"
+                      className="rounded-xl border border-[#232B47] p-4"
                     >
 
                       <div className="flex justify-between">
@@ -607,13 +634,13 @@ export default function IndustryOpportunityDetailPage() {
                             {skill.name}
                           </p>
 
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-[#9AA3C0] mt-1">
                             {skill.category ||
                               "General"}
                           </p>
                         </div>
 
-                        <span className="text-purple-300 font-semibold">
+                        <span className="text-[#F4A93B] font-semibold">
                           {skill.proficiency}%
                         </span>
 
@@ -622,7 +649,7 @@ export default function IndustryOpportunityDetailPage() {
                       <div className="h-1.5 rounded-full bg-white/10 mt-3 overflow-hidden">
 
                         <div
-                          className="h-full bg-purple-500 rounded-full"
+                          className="h-full bg-[#F4A93B] rounded-full"
                           style={{
                             width: `${Math.min(
                               skill.proficiency,
@@ -633,7 +660,7 @@ export default function IndustryOpportunityDetailPage() {
 
                       </div>
 
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-[#9AA3C0] mt-2">
                         Verification:{" "}
                         {
                           skill.verificationStrength
@@ -658,7 +685,7 @@ export default function IndustryOpportunityDetailPage() {
 
               {selectedApplicant.student
                 .evidence.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-3">
+                <p className="text-sm text-[#9AA3C0] mt-3">
                   No evidence submitted.
                 </p>
               ) : (
@@ -668,7 +695,7 @@ export default function IndustryOpportunityDetailPage() {
                     (evidence) => (
                       <div
                         key={evidence.id}
-                        className="rounded-xl border border-white/10 p-4"
+                        className="rounded-xl border border-[#232B47] p-4"
                       >
 
                         <div className="flex justify-between gap-4">
@@ -679,7 +706,7 @@ export default function IndustryOpportunityDetailPage() {
                               {evidence.title}
                             </p>
 
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#9AA3C0] mt-1">
                               {evidence.skill?.name ||
                                 "General"}{" "}
                               •{" "}
@@ -691,8 +718,8 @@ export default function IndustryOpportunityDetailPage() {
                           <span
                             className={`text-xs ${
                               evidence.verified
-                                ? "text-green-400"
-                                : "text-gray-500"
+                                ? "text-[#6fd6c4]"
+                                : "text-[#9AA3C0]"
                             }`}
                           >
                             {evidence.verified
@@ -721,7 +748,7 @@ export default function IndustryOpportunityDetailPage() {
 
               {selectedApplicant.student
                 .assessments.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-3">
+                <p className="text-sm text-[#9AA3C0] mt-3">
                   No assessments.
                 </p>
               ) : (
@@ -731,14 +758,14 @@ export default function IndustryOpportunityDetailPage() {
                     (assessment) => (
                       <div
                         key={assessment.id}
-                        className="flex justify-between rounded-xl border border-white/10 p-4"
+                        className="flex justify-between rounded-xl border border-[#232B47] p-4"
                       >
 
                         <span>
                           {assessment.title}
                         </span>
 
-                        <span className="text-purple-300 font-semibold">
+                        <span className="text-[#F4A93B] font-semibold">
                           {assessment.score}%
                         </span>
 
@@ -762,7 +789,7 @@ export default function IndustryOpportunityDetailPage() {
               {selectedApplicant.student
                 .academicCredentials.length ===
               0 ? (
-                <p className="text-sm text-gray-500 mt-3">
+                <p className="text-sm text-[#9AA3C0] mt-3">
                   No academic credentials.
                 </p>
               ) : (
@@ -772,7 +799,7 @@ export default function IndustryOpportunityDetailPage() {
                     (credential) => (
                       <div
                         key={credential.id}
-                        className="rounded-xl border border-white/10 p-4"
+                        className="rounded-xl border border-[#232B47] p-4"
                       >
 
                         <div className="flex justify-between gap-4">
@@ -783,7 +810,7 @@ export default function IndustryOpportunityDetailPage() {
                               {credential.title}
                             </p>
 
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#9AA3C0] mt-1">
                               {credential.source}
                               {credential.institution
                                 ? ` • ${credential.institution}`
@@ -795,8 +822,8 @@ export default function IndustryOpportunityDetailPage() {
                           <span
                             className={`text-xs ${
                               credential.verified
-                                ? "text-green-400"
-                                : "text-gray-500"
+                                ? "text-[#6fd6c4]"
+                                : "text-[#9AA3C0]"
                             }`}
                           >
                             {credential.verified
@@ -806,7 +833,7 @@ export default function IndustryOpportunityDetailPage() {
 
                         </div>
 
-                        <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                        <div className="flex gap-4 mt-3 text-xs text-[#9AA3C0]">
 
                           {credential.score !==
                             null && (
@@ -841,14 +868,14 @@ export default function IndustryOpportunityDetailPage() {
 
             {/* Close */}
 
-            <div className="mt-7 pt-5 border-t border-white/10">
+            <div className="mt-7 pt-5 border-t border-[#232B47]">
 
               <button
                 type="button"
                 onClick={() =>
                   setSelectedApplicant(null)
                 }
-                className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm text-gray-300 hover:bg-white/5"
+                className="w-full rounded-xl border border-[#232B47] px-4 py-3 text-sm text-[#C7CCE0] hover:bg-white/5"
               >
                 Close
               </button>

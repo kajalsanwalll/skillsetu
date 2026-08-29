@@ -40,6 +40,22 @@ type Opportunity = {
   gapAnalysis: GapSkill[];
 };
 
+const TEAL = "#2BA792";
+const MARIGOLD = "#F4A93B";
+const ROSE = "#E8598B";
+
+const statusColor: Record<GapSkill["status"], string> = {
+  STRONG: TEAL,
+  MODERATE: MARIGOLD,
+  GAP: ROSE,
+};
+
+function readinessColor(score: number) {
+  if (score >= 75) return TEAL;
+  if (score >= 50) return MARIGOLD;
+  return ROSE;
+}
+
 export default function OpportunityDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -158,9 +174,9 @@ export default function OpportunityDetailPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="mx-auto max-w-5xl">
-          <p className="text-gray-500">
+          <p className="text-[#9AA3C0]">
             Analyzing your Skill DNA...
           </p>
         </div>
@@ -170,9 +186,9 @@ export default function OpportunityDetailPage() {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50 px-6 py-10">
+      <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="mx-auto max-w-5xl">
-          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-600">
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-5 text-[#f083a8]">
             {error}
           </div>
         </div>
@@ -202,8 +218,10 @@ export default function OpportunityDetailPage() {
         skill.status === "GAP"
     );
 
+  const readinessTint = readinessColor(opportunity.readinessScore);
+
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="mx-auto max-w-5xl space-y-8">
 
         {/* Back */}
@@ -214,17 +232,17 @@ export default function OpportunityDetailPage() {
               "/student/opportunities"
             )
           }
-          className="text-sm text-gray-500 hover:text-black"
+          className="text-sm text-[#9AA3C0] hover:text-[#C7CCE0]"
         >
           ← Back to opportunities
         </button>
 
         {/* Header */}
-        <section className="rounded-2xl bg-white p-8 shadow-sm">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
 
             <div>
-              <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-medium text-purple-700">
+              <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs font-medium text-[#C7CCE0]">
                 {opportunity.type.replaceAll(
                   "_",
                   " "
@@ -235,12 +253,12 @@ export default function OpportunityDetailPage() {
                 {opportunity.title}
               </h1>
 
-              <p className="mt-2 text-lg text-purple-600">
+              <p className="mt-2 text-lg text-[#F4A93B]">
                 {opportunity.company}
               </p>
 
               {opportunity.location && (
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-[#9AA3C0]">
                   📍 {opportunity.location}
                 </p>
               )}
@@ -248,45 +266,51 @@ export default function OpportunityDetailPage() {
 
             {/* Readiness */}
             <div className="shrink-0 flex flex-col gap-3">
-             <div className="rounded-2xl border border-purple-200 bg-purple-50 p-6 text-center">
-              <p className="text-4xl font-bold text-purple-700">
-                {opportunity.readinessScore}%
-              </p>
+              <div
+                className="rounded-2xl border p-6 text-center"
+                style={{
+                  borderColor: `${readinessTint}40`,
+                  backgroundColor: `${readinessTint}1A`,
+                }}
+              >
+                <p className="text-4xl font-bold" style={{ color: readinessTint }}>
+                  {opportunity.readinessScore}%
+                </p>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Readiness
-              </p>
-             </div>
+                <p className="mt-1 text-sm text-[#9AA3C0]">
+                  Readiness
+                </p>
+              </div>
 
               {applied ? (
-             <div className="rounded-xl bg-green-50 px-5 py-3 text-center text-sm font-semibold text-green-700">
-              ✓ Applied
-             </div>
+                <div className="rounded-xl bg-[#2BA792]/15 border border-[#2BA792]/30 px-5 py-3 text-center text-sm font-semibold text-[#6fd6c4]">
+                  ✓ Applied
+                </div>
               ) : (
-              <button
-               type="button"
-               onClick={handleApply}
-               disabled={applying}
-               className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  disabled={applying}
+                  className="rounded-xl bg-[#F4A93B] px-5 py-3 text-sm font-semibold text-[#0F1526] transition hover:bg-[#f6bd6a] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-               {applying ? "Applying..." : "Apply Now"}
-              </button>
+                  {applying ? "Applying..." : "Apply Now"}
+                </button>
               )}
             </div>
           </div>
 
-          <div className="mt-8 border-t pt-6">
-            <p className="leading-7 text-gray-600">
+          <div className="mt-8 border-t border-[#232B47] pt-6">
+            <p className="leading-7 text-[#C7CCE0]">
               {opportunity.description}
             </p>
           </div>
         </section>
 
         {applicationError && (
-  <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-    {applicationError}
-  </div>
-)}
+          <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#f083a8]">
+            {applicationError}
+          </div>
+        )}
 
         {/* Explanation */}
         <section>
@@ -294,7 +318,7 @@ export default function OpportunityDetailPage() {
             Your Skill Match
           </h2>
 
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-[#9AA3C0]">
             Your readiness is calculated by
             comparing your current Skill DNA
             against this opportunity&apos;s
@@ -303,51 +327,16 @@ export default function OpportunityDetailPage() {
           </p>
         </section>
 
-        {/* Summary */}
-        <section className="grid gap-5 md:grid-cols-3">
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Strong Skills
-            </p>
-
-            <p className="mt-2 text-4xl font-bold">
-              {strongSkills.length}
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Requirements you currently meet
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Moderate
-            </p>
-
-            <p className="mt-2 text-4xl font-bold">
-              {moderateSkills.length}
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Skills that need improvement
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
-            <p className="text-sm text-gray-500">
-              Skill Gaps
-            </p>
-
-            <p className="mt-2 text-4xl font-bold">
-              {gapSkills.length}
-            </p>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Requirements currently below target
-            </p>
-          </div>
-
+        {/* Summary — one distribution instead of three repeating cards */}
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+          <SegmentedBar
+            label="Skill readiness breakdown"
+            segments={[
+              { label: "Strong", count: strongSkills.length, color: TEAL },
+              { label: "Moderate", count: moderateSkills.length, color: MARIGOLD },
+              { label: "Gap", count: gapSkills.length, color: ROSE },
+            ]}
+          />
         </section>
 
         {/* Strong Skills */}
@@ -382,6 +371,51 @@ export default function OpportunityDetailPage() {
   );
 }
 
+function SegmentedBar({
+  label,
+  segments,
+}: {
+  label: string;
+  segments: { label: string; count: number; color: string }[];
+}) {
+  const total = segments.reduce((sum, s) => sum + s.count, 0);
+
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">{label}</p>
+
+      <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-white/5">
+        {total === 0 ? (
+          <div className="h-full w-full bg-white/5" />
+        ) : (
+          segments.map((segment) => (
+            <div
+              key={segment.label}
+              style={{
+                width: `${(segment.count / total) * 100}%`,
+                backgroundColor: segment.color,
+              }}
+              className="h-full first:rounded-l-full last:rounded-r-full"
+            />
+          ))
+        )}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+        {segments.map((segment) => (
+          <span key={segment.label} className="flex items-center gap-1.5 text-xs text-[#9AA3C0]">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: segment.color }}
+            />
+            {segment.label}: <span className="text-[#C7CCE0]">{segment.count}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SkillSection({
   title,
   description,
@@ -392,101 +426,106 @@ function SkillSection({
   skills: GapSkill[];
 }) {
   return (
-    <section className="rounded-2xl bg-white p-6 shadow-sm">
+    <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
       <div>
         <h2 className="text-xl font-bold">
           {title}
         </h2>
 
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-[#9AA3C0]">
           {description}
         </p>
       </div>
 
       <div className="mt-6 space-y-5">
 
-        {skills.map((skill) => (
-          <div
-            key={skill.skillId}
-            className="rounded-xl border p-5"
-          >
+        {skills.map((skill) => {
+          const tint = statusColor[skill.status];
 
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          return (
+            <div
+              key={skill.skillId}
+              className="rounded-xl border border-[#232B47] p-5"
+            >
 
-              <div>
-                <h3 className="font-semibold">
-                  {skill.skillName}
-                </h3>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
-                {skill.category && (
-                  <p className="mt-1 text-xs text-gray-500">
-                    {skill.category}
-                  </p>
+                <div>
+                  <h3 className="font-semibold">
+                    {skill.skillName}
+                  </h3>
+
+                  {skill.category && (
+                    <p className="mt-1 text-xs text-[#9AA3C0]">
+                      {skill.category}
+                    </p>
+                  )}
+                </div>
+
+                <div className="text-sm">
+                  <span className="font-semibold" style={{ color: tint }}>
+                    {skill.studentProficiency}%
+                  </span>
+
+                  <span className="mx-2 text-[#5B6488]">
+                    /
+                  </span>
+
+                  <span className="text-[#9AA3C0]">
+                    {skill.requiredProficiency}%
+                    required
+                  </span>
+                </div>
+
+              </div>
+
+              {/* Progress — colored by status */}
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      skill.studentProficiency,
+                      100
+                    )}%`,
+                    backgroundColor: tint,
+                  }}
+                />
+
+              </div>
+
+              {/* Gap information */}
+              <div className="mt-3 flex flex-wrap gap-3 text-xs">
+
+                <span className="rounded-full border border-[#232B47] px-3 py-1 text-[#9AA3C0]">
+                  Weight: {skill.weight}
+                </span>
+
+                {skill.required && (
+                  <span className="rounded-full border border-[#F4A93B]/30 bg-[#F4A93B]/10 px-3 py-1 text-[#f6d09a]">
+                    Required
+                  </span>
                 )}
+
+                {skill.gap > 0 && (
+                  <span className="rounded-full border border-[#E8598B]/30 bg-[#E8598B]/10 px-3 py-1 text-[#f083a8]">
+                    {skill.gap}% gap
+                  </span>
+                )}
+
+                {skill.gap === 0 && (
+                  <span className="rounded-full border border-[#2BA792]/30 bg-[#2BA792]/10 px-3 py-1 text-[#6fd6c4]">
+                    Requirement met
+                  </span>
+                )}
+
               </div>
 
-              <div className="text-sm">
-                <span className="font-semibold">
-                  {skill.studentProficiency}%
-                </span>
-
-                <span className="mx-2 text-gray-400">
-                  /
-                </span>
-
-                <span className="text-gray-500">
-                  {skill.requiredProficiency}%
-                  required
-                </span>
-              </div>
-
             </div>
-
-            {/* Progress */}
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
-
-              <div
-                className="h-full rounded-full bg-black"
-                style={{
-                  width: `${Math.min(
-                    skill.studentProficiency,
-                    100
-                  )}%`,
-                }}
-              />
-
-            </div>
-
-            {/* Gap information */}
-            <div className="mt-3 flex flex-wrap gap-3 text-xs">
-
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-600">
-                Weight: {skill.weight}
-              </span>
-
-              {skill.required && (
-                <span className="rounded-full bg-purple-100 px-3 py-1 text-purple-700">
-                  Required
-                </span>
-              )}
-
-              {skill.gap > 0 && (
-                <span className="rounded-full bg-red-50 px-3 py-1 text-red-600">
-                  {skill.gap}% gap
-                </span>
-              )}
-
-              {skill.gap === 0 && (
-                <span className="rounded-full bg-green-50 px-3 py-1 text-green-600">
-                  Requirement met
-                </span>
-              )}
-
-            </div>
-
-          </div>
-        ))}
+          );
+        })}
 
       </div>
     </section>

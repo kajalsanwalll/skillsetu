@@ -68,13 +68,13 @@ export default function IndustryPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <div>
-            <p className="text-sm text-purple-400 mb-2">
+            <p className="text-sm text-[#F4A93B] mb-2">
               INDUSTRY
             </p>
 
@@ -82,7 +82,7 @@ export default function IndustryPage() {
               Industry Dashboard
             </h1>
 
-            <p className="text-gray-400 mt-2">
+            <p className="text-[#9AA3C0] mt-2">
               Create opportunities and discover
               skill-matched talent.
             </p>
@@ -90,7 +90,7 @@ export default function IndustryPage() {
 
           <Link
             href="/industry/opportunities/new"
-            className="rounded-xl bg-purple-600 px-5 py-3 font-semibold hover:bg-purple-500 transition"
+            className="rounded-xl bg-[#F4A93B] px-5 py-3 font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
           >
             + Create Opportunity
           </Link>
@@ -99,8 +99,8 @@ export default function IndustryPage() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-gray-400 text-sm">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+            <p className="text-[#9AA3C0] text-sm">
               Opportunities
             </p>
 
@@ -109,8 +109,8 @@ export default function IndustryPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-gray-400 text-sm">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+            <p className="text-[#9AA3C0] text-sm">
               Applications
             </p>
 
@@ -124,8 +124,8 @@ export default function IndustryPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-gray-400 text-sm">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+            <p className="text-[#9AA3C0] text-sm">
               Skills Requested
             </p>
 
@@ -142,7 +142,7 @@ export default function IndustryPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+          <div className="mb-6 rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-[#f083a8]">
             {error}
           </div>
         )}
@@ -154,11 +154,11 @@ export default function IndustryPage() {
           </h2>
 
           {loading ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center text-gray-400">
+            <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-10 text-center text-[#9AA3C0]">
               Loading opportunities...
             </div>
           ) : opportunities.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 p-12 text-center">
+            <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
 
               <div className="text-4xl mb-4">
                 🏢
@@ -168,14 +168,14 @@ export default function IndustryPage() {
                 No opportunities yet
               </h3>
 
-              <p className="text-gray-400 mb-6">
+              <p className="text-[#9AA3C0] mb-6">
                 Create your first opportunity and let
                 SkillSetu extract the required skills.
               </p>
 
               <Link
                 href="/industry/opportunities/new"
-                className="inline-block rounded-xl bg-purple-600 px-6 py-3 font-semibold hover:bg-purple-500"
+                className="inline-block rounded-xl bg-[#F4A93B] px-6 py-3 font-semibold text-[#0F1526] hover:bg-[#f6bd6a]"
               >
                 Create Opportunity
               </Link>
@@ -188,7 +188,7 @@ export default function IndustryPage() {
                   <Link
                     key={opportunity.id}
                     href={`/industry/opportunities/${opportunity.id}`}
-                    className="block rounded-2xl border border-white/10 bg-white/[0.03] p-6 hover:border-purple-500/40 hover:bg-white/[0.05] transition"
+                    className="block rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 hover:border-[#F4A93B]/40 hover:bg-[#171E33] transition"
                   >
                     <div className="flex items-start justify-between gap-5">
 
@@ -197,7 +197,7 @@ export default function IndustryPage() {
                           {opportunity.title}
                         </h3>
 
-                        <p className="text-gray-400 mt-1">
+                        <p className="text-[#9AA3C0] mt-1">
                           {opportunity.company}
                           {opportunity.location
                             ? ` • ${opportunity.location}`
@@ -205,13 +205,13 @@ export default function IndustryPage() {
                         </p>
                       </div>
 
-                      <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-300">
+                      <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs text-[#C7CCE0]">
                         {opportunity.type}
                       </span>
 
                     </div>
 
-                    <p className="text-sm text-gray-400 mt-4 line-clamp-2">
+                    <p className="text-sm text-[#9AA3C0] mt-4 line-clamp-2">
                       {opportunity.description}
                     </p>
 
@@ -222,7 +222,7 @@ export default function IndustryPage() {
                           ({ skill }) => (
                             <span
                               key={skill.id}
-                              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-gray-300"
+                              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-[#C7CCE0]"
                             >
                               {skill.name}
                             </span>
@@ -231,7 +231,7 @@ export default function IndustryPage() {
 
                       {opportunity.skills.length >
                         6 && (
-                        <span className="text-xs text-gray-500 py-1.5">
+                        <span className="text-xs text-[#9AA3C0] py-1.5">
                           +
                           {opportunity.skills.length -
                             6}{" "}
@@ -240,7 +240,7 @@ export default function IndustryPage() {
                       )}
                     </div>
 
-                    <div className="flex gap-5 mt-5 text-xs text-gray-500">
+                    <div className="flex gap-5 mt-5 text-xs text-[#9AA3C0]">
                       <span>
                         {opportunity.skills.length} skills
                       </span>

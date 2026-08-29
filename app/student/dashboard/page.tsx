@@ -137,15 +137,15 @@ export default async function StudentDashboard() {
     "there";
 
   return (
-    <main className="min-h-screen bg-[#0b0b0f] text-white px-6 py-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+    <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
+      <div className="mx-auto max-w-6xl space-y-10">
 
         {/* ---------------------------------- */}
         {/* HEADER */}
         {/* ---------------------------------- */}
 
         <section>
-          <p className="text-sm font-medium tracking-wide text-purple-400">
+          <p className="text-sm font-medium tracking-wide text-[#F4A93B]">
             STUDENT DASHBOARD
           </p>
 
@@ -153,180 +153,85 @@ export default async function StudentDashboard() {
             Welcome back, {firstName} 👋
           </h1>
 
-          <p className="mt-2 max-w-2xl text-gray-400">
-            Track your Skill DNA, discover relevant
-            opportunities, and work on the skills that
-            matter for your career goals.
+          <p className="mt-2 max-w-2xl text-[#9AA3C0]">
+            Here&apos;s where your Skill DNA stands and what to work
+            on next.
           </p>
         </section>
 
         {/* ---------------------------------- */}
-        {/* QUICK ACTIONS */}
+        {/* NAV — light-touch, not competing with content */}
         {/* ---------------------------------- */}
 
-        <section className="grid gap-4 md:grid-cols-4">
-
-          <Link
-            href="/student/skill-dna"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/40 hover:bg-white/[0.06]"
-          >
-            <p className="text-2xl">🧬</p>
-
-            <h2 className="mt-3 font-semibold">
-              Skill DNA
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              View your complete skill profile
-            </p>
-          </Link>
-
-          <Link
-            href="/student/opportunities"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/40 hover:bg-white/[0.06]"
-          >
-            <p className="text-2xl">🎯</p>
-
-            <h2 className="mt-3 font-semibold">
-              Opportunities
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Find opportunities matching your skills
-            </p>
-          </Link>
-
-          <Link
-            href="/student/gaps"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/40 hover:bg-white/[0.06]"
-          >
-            <p className="text-2xl">📈</p>
-
-            <h2 className="mt-3 font-semibold">
-              Skill Gaps
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Identify skills you should improve
-            </p>
-          </Link>
-
-          <Link
-            href="/student/roadmap"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-purple-500/40 hover:bg-white/[0.06]"
-          >
-            <p className="text-2xl">🗺️</p>
-
-            <h2 className="mt-3 font-semibold">
-              Career Roadmap
-            </h2>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Follow your personalized roadmap
-            </p>
-          </Link>
-
-        </section>
+        <nav className="flex flex-wrap gap-2">
+          {[
+            { href: "/student/skill-dna", icon: "🧬", label: "Skill DNA" },
+            { href: "/student/opportunities", icon: "🎯", label: "Opportunities" },
+            { href: "/student/gaps", icon: "📈", label: "Skill Gaps" },
+            { href: "/student/roadmap", icon: "🗺️", label: "Roadmap" },
+            { href: "/student/assessment", icon: "📝", label: "Assessments" },
+            { href: "/student/portfolio", icon: "🗂️", label: "Portfolio" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-2 rounded-full border border-[#232B47] bg-[#171E33]/60 px-4 py-2 text-sm text-[#C7CCE0] transition hover:border-[#F4A93B]/40 hover:text-[#F5F1E8]"
+            >
+              <span>{item.icon}</span>
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
         {/* ---------------------------------- */}
-        {/* OVERVIEW CARDS */}
+        {/* PRIMARY STAT — one anchor number, not four competing cards */}
         {/* ---------------------------------- */}
 
-        <section className="grid gap-5 md:grid-cols-4">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
 
-          {/* Skill DNA Strength */}
+            <div>
+              <p className="text-sm text-[#9AA3C0]">
+                Skill DNA Strength
+              </p>
+              <p className="mt-2 text-5xl font-bold text-[#F4A93B]">
+                {averageSkill}%
+              </p>
+              <p className="mt-2 text-xs text-[#9AA3C0]">
+                Average proficiency across your recorded skills
+              </p>
+            </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Skill DNA Strength
-            </p>
+            <div className="flex gap-6 border-t border-[#232B47] pt-5 md:border-t-0 md:border-l md:pl-8 md:pt-0">
+              <Stat label="Strong skills" value={strongSkills.length} />
+              <Stat label="Verified" value={`${verificationPercentage}%`} color="#2BA792" />
+              <Stat label="Applications" value={appliedCount} color="#E8598B" />
+            </div>
 
-            <p className="mt-3 text-4xl font-bold">
-              {averageSkill}%
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Average proficiency across
-              your recorded skills
-            </p>
           </div>
-
-          {/* Strong Skills */}
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Strong Skills
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {strongSkills.length}
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Skills at or above 75%
-            </p>
-          </div>
-
-          {/* Verification */}
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Skill Verification
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {verificationPercentage}%
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Skills with verification evidence
-            </p>
-          </div>
-
-          {/* Applications */}
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <p className="text-sm text-gray-500">
-              Applications
-            </p>
-
-            <p className="mt-3 text-4xl font-bold">
-              {appliedCount}
-            </p>
-
-            <p className="mt-2 text-xs text-gray-500">
-              Recent applications recorded
-            </p>
-          </div>
-
         </section>
 
         {/* ---------------------------------- */}
         {/* SKILL DNA */}
         {/* ---------------------------------- */}
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
-              <p className="text-sm font-medium text-purple-400">
-                YOUR SKILL DNA
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
-                Current Capability Profile
+              <h2 className="text-xl font-bold">
+                Capability Profile
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Your recorded skills and current
-                proficiency levels.
+              <p className="mt-1 text-sm text-[#9AA3C0]">
+                Your recorded skills and current proficiency levels.
               </p>
             </div>
 
             <Link
               href="/student/skill-dna"
-              className="text-sm font-medium text-purple-400 hover:text-purple-300"
+              className="text-sm font-medium text-[#F4A93B] hover:text-[#f6bd6a]"
             >
               View full Skill DNA →
             </Link>
@@ -335,14 +240,14 @@ export default async function StudentDashboard() {
 
           {sortedSkills.length === 0 ? (
 
-            <div className="mt-6 rounded-xl border border-dashed border-white/10 p-8 text-center">
-              <p className="text-gray-400">
+            <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-8 text-center">
+              <p className="text-[#9AA3C0]">
                 You have not added any skills yet.
               </p>
 
               <Link
                 href="/student/skill-dna"
-                className="mt-4 inline-block text-sm font-medium text-purple-400"
+                className="mt-4 inline-block text-sm font-medium text-[#F4A93B]"
               >
                 Start building your Skill DNA →
               </Link>
@@ -366,11 +271,11 @@ export default async function StudentDashboard() {
 
                       <div className="flex items-center gap-3">
 
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-[#9AA3C0]">
                           {studentSkill.proficiency}%
                         </span>
 
-                        <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-wide text-gray-500">
+                        <span className="rounded-full border border-[#232B47] px-2 py-1 text-[10px] uppercase tracking-wide text-[#9AA3C0]">
                           {studentSkill.verificationStrength}
                         </span>
 
@@ -381,7 +286,7 @@ export default async function StudentDashboard() {
                     <div className="h-2 overflow-hidden rounded-full bg-white/10">
 
                       <div
-                        className="h-full rounded-full bg-purple-500 transition-all"
+                        className="h-full rounded-full bg-[#F4A93B] transition-all"
                         style={{
                           width: `${Math.min(
                             Math.max(
@@ -413,27 +318,23 @@ export default async function StudentDashboard() {
 
           {/* Skills to Improve */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
             <div className="flex items-start justify-between">
 
               <div>
-                <p className="text-sm font-medium text-purple-400">
-                  DEVELOPMENT
-                </p>
-
-                <h2 className="mt-1 text-xl font-bold">
+                <h2 className="text-lg font-bold">
                   Skills to Improve
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Skills currently below 60%.
+                <p className="mt-1 text-sm text-[#9AA3C0]">
+                  Below 60% proficiency.
                 </p>
               </div>
 
               <Link
                 href="/student/gaps"
-                className="text-sm text-purple-400 hover:text-purple-300"
+                className="text-sm text-[#E8598B] hover:text-[#f083a8]"
               >
                 View all →
               </Link>
@@ -442,8 +343,8 @@ export default async function StudentDashboard() {
 
             {improvementSkills.length === 0 ? (
 
-              <div className="mt-6 rounded-xl border border-dashed border-white/10 p-6 text-center">
-                <p className="text-sm text-gray-400">
+              <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-6 text-center">
+                <p className="text-sm text-[#9AA3C0]">
                   No major improvement areas detected.
                 </p>
               </div>
@@ -458,7 +359,7 @@ export default async function StudentDashboard() {
 
                     <div
                       key={studentSkill.id}
-                      className="flex items-center justify-between rounded-xl border border-white/10 p-4"
+                      className="flex items-center justify-between rounded-xl border border-[#232B47] p-4"
                     >
 
                       <div>
@@ -466,12 +367,12 @@ export default async function StudentDashboard() {
                           {studentSkill.skill.name}
                         </p>
 
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-[#9AA3C0]">
                           Development area
                         </p>
                       </div>
 
-                      <span className="font-semibold text-gray-300">
+                      <span className="font-semibold text-[#C7CCE0]">
                         {studentSkill.proficiency}%
                       </span>
 
@@ -487,27 +388,23 @@ export default async function StudentDashboard() {
 
           {/* Recent Applications */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+          <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
 
             <div className="flex items-start justify-between">
 
               <div>
-                <p className="text-sm font-medium text-purple-400">
-                  APPLICATIONS
-                </p>
-
-                <h2 className="mt-1 text-xl font-bold">
+                <h2 className="text-lg font-bold">
                   Recent Applications
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Track opportunities you have applied to.
+                <p className="mt-1 text-sm text-[#9AA3C0]">
+                  Opportunities you have applied to.
                 </p>
               </div>
 
               <Link
                 href="/student/applications"
-                className="text-sm text-purple-400 hover:text-purple-300"
+                className="text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
               >
                 View all →
               </Link>
@@ -516,16 +413,15 @@ export default async function StudentDashboard() {
 
             {applications.length === 0 ? (
 
-              <div className="mt-6 rounded-xl border border-dashed border-white/10 p-6 text-center">
+              <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-6 text-center">
 
-                <p className="text-sm text-gray-400">
-                  You have not applied to any
-                  opportunities yet.
+                <p className="text-sm text-[#9AA3C0]">
+                  You have not applied to any opportunities yet.
                 </p>
 
                 <Link
                   href="/student/opportunities"
-                  className="mt-3 inline-block text-sm font-medium text-purple-400"
+                  className="mt-3 inline-block text-sm font-medium text-[#F4A93B]"
                 >
                   Explore opportunities →
                 </Link>
@@ -540,7 +436,7 @@ export default async function StudentDashboard() {
 
                   <div
                     key={application.id}
-                    className="rounded-xl border border-white/10 p-4"
+                    className="rounded-xl border border-[#232B47] p-4"
                   >
 
                     <div className="flex items-start justify-between gap-4">
@@ -550,21 +446,21 @@ export default async function StudentDashboard() {
                           {application.opportunity.title}
                         </p>
 
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-[#9AA3C0]">
                           {application.opportunity.company}
                         </p>
                       </div>
 
-                      <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase text-gray-400">
+                      <span className="rounded-full border border-[#232B47] px-2 py-1 text-[10px] uppercase text-[#9AA3C0]">
                         {application.status}
                       </span>
 
                     </div>
 
                     {application.matchScore !== null && (
-                      <p className="mt-3 text-xs text-gray-500">
+                      <p className="mt-3 text-xs text-[#9AA3C0]">
                         Match score:{" "}
-                        <span className="font-medium text-purple-300">
+                        <span className="font-medium text-[#F4A93B]">
                           {Math.round(
                             application.matchScore
                           )}
@@ -586,34 +482,27 @@ export default async function StudentDashboard() {
         </section>
 
         {/* ---------------------------------- */}
-        {/* DISCOVERY */}
+        {/* DISCOVERY — the one bold accent moment */}
         {/* ---------------------------------- */}
 
-        <section className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.05] p-6">
+        <section className="rounded-2xl border border-[#F4A93B]/20 bg-[#F4A93B]/[0.06] p-6">
 
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
             <div>
-
-              <p className="text-sm font-medium text-purple-400">
-                OPPORTUNITY DISCOVERY
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
+              <h2 className="text-xl font-bold">
                 {opportunityCount} opportunities available
               </h2>
 
-              <p className="mt-2 max-w-xl text-sm text-gray-400">
-                SkillSetu compares your Skill DNA against
-                opportunity requirements to help you discover
-                relevant opportunities.
+              <p className="mt-2 max-w-xl text-sm text-[#C7CCE0]">
+                SkillSetu compares your Skill DNA against opportunity
+                requirements to surface the ones worth your time.
               </p>
-
             </div>
 
             <Link
               href="/student/opportunities"
-              className="shrink-0 rounded-xl bg-purple-600 px-6 py-3 text-center text-sm font-semibold transition hover:bg-purple-500"
+              className="shrink-0 rounded-xl bg-[#F4A93B] px-6 py-3 text-center text-sm font-semibold text-[#0F1526] transition hover:bg-[#f6bd6a]"
             >
               Explore Opportunities
             </Link>
@@ -622,65 +511,26 @@ export default async function StudentDashboard() {
 
         </section>
 
-        {/* ---------------------------------- */}
-        {/* OTHER STUDENT TOOLS */}
-        {/* ---------------------------------- */}
-
-        <section>
-
-          <h2 className="mb-4 text-lg font-semibold">
-            Your SkillSetu Workspace
-          </h2>
-
-          <div className="grid gap-4 md:grid-cols-3">
-
-            <Link
-              href="/student/assessment"
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20"
-            >
-              <h3 className="font-semibold">
-                Assessments
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-500">
-                View your assessment performance
-                and evidence.
-              </p>
-            </Link>
-
-            <Link
-              href="/student/portfolio"
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20"
-            >
-              <h3 className="font-semibold">
-                Portfolio
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Showcase projects and verified
-                skill evidence.
-              </p>
-            </Link>
-
-            <Link
-              href="/student/roadmap"
-              className="rounded-xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/20"
-            >
-              <h3 className="font-semibold">
-                Career Roadmap
-              </h3>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Work toward your target career
-                direction.
-              </p>
-            </Link>
-
-          </div>
-
-        </section>
-
       </div>
     </main>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  color = "#F5F1E8",
+}: {
+  label: string;
+  value: string | number;
+  color?: string;
+}) {
+  return (
+    <div>
+      <p className="text-2xl font-bold" style={{ color }}>
+        {value}
+      </p>
+      <p className="mt-1 text-xs text-[#9AA3C0]">{label}</p>
+    </div>
   );
 }
