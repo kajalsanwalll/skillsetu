@@ -42,35 +42,46 @@ export default function StudentApplicationsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadApplications() {
-      try {
-        const response = await fetch(
-          "/api/student/applications"
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ||
-              "Failed to load applications."
-          );
+  async function loadApplications() {
+    try {
+      const response = await fetch(
+        "/api/student/applications",
+        {
+          cache: "no-store",
         }
+      );
 
-        setApplications(data.applications || []);
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load applications."
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Failed to load applications."
         );
-      } finally {
-        setLoading(false);
       }
-    }
 
-    loadApplications();
-  }, []);
+      setApplications(data.applications || []);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load applications."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadApplications();
+
+  // Refresh every 10 seconds
+  const interval = setInterval(
+    loadApplications,
+    10000
+  );
+
+  return () => clearInterval(interval);
+}, []);
 
   if (loading) {
     return (

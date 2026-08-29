@@ -205,6 +205,67 @@ export default function IndustryOpportunityDetailPage() {
     );
   }
 
+  async function updateApplicationStatus(
+  applicationId: string,
+  status: string
+ ) {
+  try {
+    const response = await fetch(
+      `/api/industry/applications/${applicationId}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+          "Failed to update application status."
+      );
+    }
+
+    // Update applicant in local state
+    setApplicants((currentApplicants) =>
+      currentApplicants.map((application) =>
+        application.applicationId === applicationId
+          ? {
+              ...application,
+              status: data.application.status,
+            }
+          : application
+      )
+    );
+
+    // Also update the currently opened modal
+    setSelectedApplicant((current) =>
+      current &&
+      current.applicationId === applicationId
+        ? {
+            ...current,
+            status: data.application.status,
+          }
+        : current
+    );
+  } catch (error) {
+    console.error(
+      "APPLICATION_STATUS_UPDATE_ERROR:",
+      error
+    );
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to update application status."
+    );
+  }
+ }
+
   return (
     <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-6xl mx-auto">
@@ -442,19 +503,69 @@ export default function IndustryOpportunityDetailPage() {
 
                         </div>
 
-                        {/* View */}
+                        {/* Actions */}
+<div className="flex flex-wrap gap-2">
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedApplicant(
-                              application
-                            )
-                          }
-                          className="rounded-xl bg-[#F4A93B] px-4 py-3 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
-                        >
-                          View Profile
-                        </button>
+  {/* APPLIED → SHORTLIST */}
+  {application.status === "APPLIED" && (
+    <button
+      type="button"
+      onClick={() =>
+        updateApplicationStatus(
+          application.applicationId,
+          "SHORTLISTED"
+        )
+      }
+      className="rounded-xl border border-[#F4A93B]/30 bg-[#F4A93B]/10 px-4 py-3 text-sm font-semibold text-[#F4A93B] hover:bg-[#F4A93B]/20 transition"
+    >
+      Shortlist
+    </button>
+  )}
+
+  {/* SHORTLISTED → SELECT */}
+  {application.status === "SHORTLISTED" && (
+    <button
+      type="button"
+      onClick={() =>
+        updateApplicationStatus(
+          application.applicationId,
+          "SELECTED"
+        )
+      }
+      className="rounded-xl border border-[#2BA792]/30 bg-[#2BA792]/10 px-4 py-3 text-sm font-semibold text-[#6fd6c4] hover:bg-[#2BA792]/20 transition"
+    >
+      Select
+    </button>
+  )}
+
+  {/* SELECTED → COMPLETE */}
+  {application.status === "SELECTED" && (
+    <button
+      type="button"
+      onClick={() =>
+        updateApplicationStatus(
+          application.applicationId,
+          "COMPLETED"
+        )
+      }
+      className="rounded-xl border border-[#2BA792]/30 bg-[#2BA792]/10 px-4 py-3 text-sm font-semibold text-[#6fd6c4] hover:bg-[#2BA792]/20 transition"
+    >
+      Mark Completed
+    </button>
+  )}
+
+  {/* View Profile */}
+  <button
+    type="button"
+    onClick={() =>
+      setSelectedApplicant(application)
+    }
+    className="rounded-xl bg-[#F4A93B] px-4 py-3 text-sm font-semibold text-[#0F1526] hover:bg-[#f6bd6a] transition"
+  >
+    View Profile
+  </button>
+
+</div>
 
                       </div>
 

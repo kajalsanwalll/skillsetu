@@ -84,13 +84,16 @@ export async function POST() {
       { status: 201 }
     );
   } catch (error) {
-    console.error("USER_SYNC_ERROR:", error);
+  console.error("USER_SYNC_ERROR:", error);
 
-    return NextResponse.json(
-      {
-        error: "Failed to sync user",
-      },
-      { status: 500 }
-    );
-  }
+  return NextResponse.json(
+    {
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to sync user",
+    },
+    { status: 500 }
+  );
+}
 }
