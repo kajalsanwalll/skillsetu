@@ -1,7 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+
 import { prisma } from "@/lib/prisma";
+import { calculateTrustedProficiency } from "@/lib/skills/calculate-trusted-proficiency";
 
 export default async function SkillDNAPage() {
   // -----------------------------------------
@@ -22,6 +24,7 @@ export default async function SkillDNAPage() {
     where: {
       clerkId: userId,
     },
+
     include: {
       studentProfile: {
         include: {
@@ -29,6 +32,7 @@ export default async function SkillDNAPage() {
             include: {
               skill: true,
             },
+
             orderBy: {
               proficiency: "desc",
             },
@@ -38,6 +42,7 @@ export default async function SkillDNAPage() {
             include: {
               skill: true,
             },
+
             orderBy: {
               createdAt: "desc",
             },
@@ -79,7 +84,52 @@ export default async function SkillDNAPage() {
   const assessments = profile.assessments;
 
   // -----------------------------------------
-  // 4. Skill statistics
+  // 4. Calculate trusted proficiency
+  // -----------------------------------------
+
+  const trustedSkills = skills.map((studentSkill) => {
+    const skillEvidence = evidence.filter(
+      (item) => item.skillId === studentSkill.skillId
+    );
+
+    const result = calculateTrustedProficiency({
+      claimedProficiency: studentSkill.proficiency,
+
+      evidence: skillEvidence.map((item) => ({
+        score: item.score,
+        verified: item.verified,
+        verificationStrength:
+          item.verificationStrength,
+      })),
+    });
+
+    return {
+      ...studentSkill,
+
+      claimedProficiency:
+        result.claimedProficiency,
+
+      evidenceScore:
+        result.evidenceScore,
+
+      trustedProficiency:
+        result.trustedProficiency,
+
+      confidence:
+        result.confidence,
+
+      evidenceCount:
+        skillEvidence.length,
+
+      verifiedEvidenceCount:
+        skillEvidence.filter(
+          (item) => item.verified
+        ).length,
+    };
+  });
+
+  // -----------------------------------------
+  // 5. Skill statistics
   // -----------------------------------------
 
   const averageSkill =
@@ -93,22 +143,35 @@ export default async function SkillDNAPage() {
         )
       : 0;
 
-  const strongSkills = skills.filter(
-    (skill) => skill.proficiency >= 75
-  );
+  const averageTrustedSkill =
+    trustedSkills.length > 0
+      ? Math.round(
+          trustedSkills.reduce(
+            (sum, skill) =>
+              sum + skill.trustedProficiency,
+            0
+          ) / trustedSkills.length
+        )
+      : 0;
 
-  const developingSkills = skills.filter(
+  const strongSkills = trustedSkills.filter(
     (skill) =>
-      skill.proficiency >= 60 &&
-      skill.proficiency < 75
+      skill.trustedProficiency >= 75
   );
 
-  const improvementSkills = skills.filter(
-    (skill) => skill.proficiency < 60
+  const developingSkills = trustedSkills.filter(
+    (skill) =>
+      skill.trustedProficiency >= 60 &&
+      skill.trustedProficiency < 75
+  );
+
+  const improvementSkills = trustedSkills.filter(
+    (skill) =>
+      skill.trustedProficiency < 60
   );
 
   // -----------------------------------------
-  // 5. Verification statistics
+  // 6. Verification statistics
   // -----------------------------------------
 
   const highVerification = skills.filter(
@@ -145,19 +208,22 @@ export default async function SkillDNAPage() {
       : 0;
 
   // -----------------------------------------
-  // 6. Categories
+  // 7. Categories
   // -----------------------------------------
 
   const categories = Array.from(
     new Set(
       skills
-        .map((skill) => skill.skill.category)
+        .map(
+          (skill) =>
+            skill.skill.category
+        )
         .filter(Boolean)
     )
   );
 
   // -----------------------------------------
-  // 7. Page
+  // 8. Page
   // -----------------------------------------
 
   return (
@@ -185,9 +251,10 @@ export default async function SkillDNAPage() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-gray-400">
-            Your Skill DNA represents the skills you have
-            developed, your current proficiency levels, and
-            the strength of evidence supporting those skills.
+            Your Skill DNA represents the skills you
+            have developed, your current proficiency
+            levels, and the strength of evidence
+            supporting those skills.
           </p>
         </section>
 
@@ -195,7 +262,7 @@ export default async function SkillDNAPage() {
         {/* OVERVIEW */}
         {/* -------------------------------- */}
 
-        <section className="grid gap-5 md:grid-cols-4">
+        <section className="grid gap-5 md:grid-cols-5">
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
             <p className="text-sm text-gray-500">
@@ -221,7 +288,21 @@ export default async function SkillDNAPage() {
             </p>
 
             <p className="mt-2 text-xs text-gray-500">
-              Across your recorded skills
+              Your claimed proficiency
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-purple-500/20 bg-purple-500/[0.05] p-6">
+            <p className="text-sm text-purple-300">
+              Trusted Proficiency
+            </p>
+
+            <p className="mt-3 text-4xl font-bold text-purple-300">
+              {averageTrustedSkill}%
+            </p>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Evidence-adjusted capability
             </p>
           </div>
 
@@ -235,7 +316,7 @@ export default async function SkillDNAPage() {
             </p>
 
             <p className="mt-2 text-xs text-gray-500">
-              Proficiency of 75% or above
+              Trusted proficiency ≥ 75%
             </p>
           </div>
 
@@ -249,7 +330,7 @@ export default async function SkillDNAPage() {
             </p>
 
             <p className="mt-2 text-xs text-gray-500">
-              Supported by verification evidence
+              Supported by evidence
             </p>
           </div>
 
@@ -264,7 +345,6 @@ export default async function SkillDNAPage() {
           {/* Career Interest */}
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
             <p className="text-sm font-medium text-purple-400">
               CAREER INTEREST
             </p>
@@ -276,15 +356,14 @@ export default async function SkillDNAPage() {
 
             <p className="mt-2 text-sm leading-6 text-gray-500">
               Your current career direction helps
-              SkillSetu personalize future recommendations.
+              SkillSetu personalize future
+              recommendations.
             </p>
-
           </div>
 
           {/* Skill Categories */}
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
             <p className="text-sm font-medium text-purple-400">
               SKILL CATEGORIES
             </p>
@@ -294,15 +373,11 @@ export default async function SkillDNAPage() {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-
               {categories.length === 0 ? (
-
                 <span className="text-sm text-gray-500">
                   No categories yet
                 </span>
-
               ) : (
-
                 categories.map((category) => (
                   <span
                     key={category}
@@ -311,17 +386,13 @@ export default async function SkillDNAPage() {
                     {category}
                   </span>
                 ))
-
               )}
-
             </div>
-
           </div>
 
           {/* Evidence */}
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
             <p className="text-sm font-medium text-purple-400">
               SKILL EVIDENCE
             </p>
@@ -331,7 +402,8 @@ export default async function SkillDNAPage() {
             </p>
 
             <p className="mt-2 text-sm text-gray-500">
-              Evidence items connected to your skills.
+              Evidence items connected to your
+              skills.
             </p>
 
             <div className="mt-4 flex gap-2 text-xs">
@@ -343,7 +415,6 @@ export default async function SkillDNAPage() {
                 {assessments.length} assessments
               </span>
             </div>
-
           </div>
 
         </section>
@@ -356,56 +427,50 @@ export default async function SkillDNAPage() {
 
           {/* Strong */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
+          <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.03] p-6">
             <p className="text-sm text-gray-500">
               STRONG
             </p>
 
-            <p className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-3xl font-bold text-green-300">
               {strongSkills.length}
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              75% and above
+              Trusted proficiency ≥ 75%
             </p>
-
           </div>
 
           {/* Developing */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
+          <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.03] p-6">
             <p className="text-sm text-gray-500">
               DEVELOPING
             </p>
 
-            <p className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-3xl font-bold text-yellow-300">
               {developingSkills.length}
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              60% – 74%
+              Trusted proficiency 60% – 74%
             </p>
-
           </div>
 
           {/* Improvement */}
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-
+          <div className="rounded-2xl border border-orange-500/20 bg-orange-500/[0.03] p-6">
             <p className="text-sm text-gray-500">
               NEEDS IMPROVEMENT
             </p>
 
-            <p className="mt-2 text-3xl font-bold">
+            <p className="mt-2 text-3xl font-bold text-orange-300">
               {improvementSkills.length}
             </p>
 
             <p className="mt-1 text-xs text-gray-500">
-              Below 60%
+              Trusted proficiency below 60%
             </p>
-
           </div>
 
         </section>
@@ -426,36 +491,43 @@ export default async function SkillDNAPage() {
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Current proficiency and verification strength
-              for each recorded skill.
+              Your claimed proficiency compared with
+              evidence-supported trusted proficiency.
             </p>
           </div>
 
-          {skills.length === 0 ? (
+          {trustedSkills.length === 0 ? (
 
             <div className="mt-8 rounded-xl border border-dashed border-white/10 p-10 text-center">
-
               <p className="text-gray-400">
                 Your Skill DNA is empty.
               </p>
 
               <p className="mt-2 text-sm text-gray-600">
-                Skills will appear here once they are added
-                to your profile.
+                Skills will appear here once they
+                are added to your profile.
               </p>
-
             </div>
 
           ) : (
 
             <div className="mt-8 space-y-6">
 
-              {skills.map((studentSkill) => {
+              {trustedSkills.map((studentSkill) => {
 
-                const proficiency =
+                const claimedProficiency =
                   Math.min(
                     Math.max(
-                      studentSkill.proficiency,
+                      studentSkill.claimedProficiency,
+                      0
+                    ),
+                    100
+                  );
+
+                const trustedProficiency =
+                  Math.min(
+                    Math.max(
+                      studentSkill.trustedProficiency,
                       0
                     ),
                     100
@@ -467,10 +539,11 @@ export default async function SkillDNAPage() {
                     className="rounded-xl border border-white/10 p-5"
                   >
 
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Skill Header */}
+
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
                       <div>
-
                         <h3 className="font-semibold">
                           {studentSkill.skill.name}
                         </h3>
@@ -480,46 +553,149 @@ export default async function SkillDNAPage() {
                             {studentSkill.skill.category}
                           </p>
                         )}
-
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      {/* Confidence */}
 
-                        <span className="text-sm font-semibold">
-                          {studentSkill.proficiency}%
+                      <span
+                        className={`w-fit rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
+                          studentSkill.confidence ===
+                          "HIGH"
+                            ? "border-green-500/20 text-green-300"
+                            : studentSkill.confidence ===
+                              "MEDIUM"
+                            ? "border-yellow-500/20 text-yellow-300"
+                            : studentSkill.confidence ===
+                              "LOW"
+                            ? "border-orange-500/20 text-orange-300"
+                            : "border-white/10 text-gray-500"
+                        }`}
+                      >
+                        {studentSkill.confidence}
+                      </span>
+
+                    </div>
+
+                    {/* -------------------------------- */}
+                    {/* Trusted Proficiency */}
+                    {/* -------------------------------- */}
+
+                    <div className="mt-5">
+
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-300">
+                          Trusted Proficiency
                         </span>
 
-                        <span
-                          className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
-                            studentSkill.verificationStrength ===
-                            "HIGH"
-                              ? "border-green-500/20 text-green-300"
-                              : studentSkill.verificationStrength ===
-                                "MEDIUM"
-                              ? "border-yellow-500/20 text-yellow-300"
-                              : studentSkill.verificationStrength ===
-                                "LOW"
-                              ? "border-orange-500/20 text-orange-300"
-                              : "border-white/10 text-gray-500"
-                          }`}
-                        >
-                          {
-                            studentSkill.verificationStrength
-                          }
+                        <span className="text-sm font-bold text-purple-300">
+                          {trustedProficiency}%
                         </span>
+                      </div>
 
+                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-purple-500 transition-all"
+                          style={{
+                            width: `${trustedProficiency}%`,
+                          }}
+                        />
                       </div>
 
                     </div>
 
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                    {/* -------------------------------- */}
+                    {/* Claimed Proficiency */}
+                    {/* -------------------------------- */}
 
-                      <div
-                        className="h-full rounded-full bg-purple-500 transition-all"
-                        style={{
-                          width: `${proficiency}%`,
-                        }}
-                      />
+                    <div className="mt-5">
+
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">
+                          Claimed Proficiency
+                        </span>
+
+                        <span className="text-xs text-gray-400">
+                          {claimedProficiency}%
+                        </span>
+                      </div>
+
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                        <div
+                          className="h-full rounded-full bg-gray-500"
+                          style={{
+                            width: `${claimedProficiency}%`,
+                          }}
+                        />
+                      </div>
+
+                    </div>
+
+                    {/* -------------------------------- */}
+                    {/* Evidence Information */}
+                    {/* -------------------------------- */}
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+
+                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                          Evidence Score
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-300">
+                          {studentSkill.evidenceScore}%
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                          Evidence
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-300">
+                          {studentSkill.evidenceCount}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                        <p className="text-[10px] uppercase tracking-wide text-gray-600">
+                          Verified Evidence
+                        </p>
+
+                        <p className="mt-1 text-sm font-semibold text-gray-300">
+                          {studentSkill.verifiedEvidenceCount}
+                        </p>
+                      </div>
+
+                    </div>
+
+                    {/* -------------------------------- */}
+                    {/* Verification Strength */}
+                    {/* -------------------------------- */}
+
+                    <div className="mt-4 flex items-center justify-between">
+
+                      <span className="text-xs text-gray-600">
+                        Verification Strength
+                      </span>
+
+                      <span
+                        className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide ${
+                          studentSkill.verificationStrength ===
+                          "HIGH"
+                            ? "border-green-500/20 text-green-300"
+                            : studentSkill.verificationStrength ===
+                              "MEDIUM"
+                            ? "border-yellow-500/20 text-yellow-300"
+                            : studentSkill.verificationStrength ===
+                              "LOW"
+                            ? "border-orange-500/20 text-orange-300"
+                            : "border-white/10 text-gray-500"
+                        }`}
+                      >
+                        {
+                          studentSkill.verificationStrength
+                        }
+                      </span>
 
                     </div>
 
@@ -549,13 +725,16 @@ export default async function SkillDNAPage() {
             </h2>
 
             <p className="mt-2 max-w-2xl text-sm text-gray-500">
-              SkillSetu distinguishes between a skill claim
-              and the evidence supporting that claim.
-              Stronger evidence increases verification strength.
+              SkillSetu distinguishes between a skill
+              claim and the evidence supporting that
+              claim. Stronger evidence increases
+              verification strength.
             </p>
           </div>
 
           <div className="mt-7 grid gap-4 md:grid-cols-4">
+
+            {/* HIGH */}
 
             <div className="rounded-xl border border-green-500/20 bg-green-500/[0.05] p-5">
               <p className="text-xs text-gray-500">
@@ -571,6 +750,8 @@ export default async function SkillDNAPage() {
               </p>
             </div>
 
+            {/* MEDIUM */}
+
             <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/[0.05] p-5">
               <p className="text-xs text-gray-500">
                 MEDIUM
@@ -585,6 +766,8 @@ export default async function SkillDNAPage() {
               </p>
             </div>
 
+            {/* LOW */}
+
             <div className="rounded-xl border border-orange-500/20 bg-orange-500/[0.05] p-5">
               <p className="text-xs text-gray-500">
                 LOW
@@ -598,6 +781,8 @@ export default async function SkillDNAPage() {
                 Limited evidence
               </p>
             </div>
+
+            {/* UNVERIFIED */}
 
             <div className="rounded-xl border border-white/10 p-5">
               <p className="text-xs text-gray-500">
@@ -636,8 +821,8 @@ export default async function SkillDNAPage() {
             </h3>
 
             <p className="mt-1 text-sm text-gray-500">
-              Explore opportunities ranked using your
-              current Skill DNA.
+              Explore opportunities ranked using
+              your current Skill DNA.
             </p>
           </Link>
 
@@ -672,8 +857,8 @@ export default async function SkillDNAPage() {
             </h3>
 
             <p className="mt-1 text-sm text-gray-500">
-              Showcase projects and evidence supporting
-              your skills.
+              Showcase projects and evidence
+              supporting your skills.
             </p>
           </Link>
 
