@@ -1,6 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  calculateMatchScore,
+  type CompetencyLevel,
+} from "@/lib/matching";
 
 export async function GET() {
   try {
@@ -83,28 +87,19 @@ export async function GET() {
     const results = applications.map(
       (application) => ({
         id: application.id,
-
         status: application.status,
-
         matchScore: application.matchScore,
-
         createdAt: application.createdAt,
 
         opportunity: {
           id: application.opportunity.id,
-
           title: application.opportunity.title,
-
           company: application.opportunity.company,
-
           description:
             application.opportunity.description,
-
           location:
             application.opportunity.location,
-
           type: application.opportunity.type,
-
           createdAt:
             application.opportunity.createdAt,
 
@@ -115,16 +110,13 @@ export async function GET() {
             application.opportunity.skills.map(
               (item) => ({
                 id: item.skill.id,
-
                 name: item.skill.name,
-
-                category:
-                  item.skill.category,
+                category: item.skill.category,
 
                 required: item.required,
 
-                minimumProficiency:
-                  item.minimumProficiency,
+                requiredLevel:
+                  item.requiredLevel,
 
                 weight: item.weight,
               })
@@ -185,7 +177,9 @@ export async function POST(request: Request) {
     // 3. Student-only access
     if (user.role !== "STUDENT") {
       return NextResponse.json(
-        { error: "Only students can apply." },
+        {
+          error: "Only students can apply.",
+        },
         { status: 403 }
       );
     }
@@ -193,7 +187,9 @@ export async function POST(request: Request) {
     // 4. Student profile must exist
     if (!user.studentProfile) {
       return NextResponse.json(
-        { error: "Student profile not found." },
+        {
+          error: "Student profile not found.",
+        },
         { status: 404 }
       );
     }
@@ -203,9 +199,15 @@ export async function POST(request: Request) {
 
     const opportunityId = body.opportunityId;
 
-    if (!opportunityId) {
+    if (
+      typeof opportunityId !== "string" ||
+      !opportunityId.trim()
+    ) {
       return NextResponse.json(
-        { error: "Opportunity ID is required." },
+        {
+          error:
+            "Opportunity ID is required.",
+        },
         { status: 400 }
       );
     }
@@ -223,7 +225,9 @@ export async function POST(request: Request) {
 
     if (!opportunity) {
       return NextResponse.json(
-        { error: "Opportunity not found." },
+        {
+          error: "Opportunity not found.",
+        },
         { status: 404 }
       );
     }
@@ -232,7 +236,8 @@ export async function POST(request: Request) {
     const existingApplication =
       await prisma.application.findFirst({
         where: {
-          studentProfileId: user.studentProfile.id,
+          studentProfileId:
+            user.studentProfile.id,
           opportunityId,
         },
       });
@@ -240,7 +245,8 @@ export async function POST(request: Request) {
     if (existingApplication) {
       return NextResponse.json(
         {
-          error: "You have already applied to this opportunity.",
+          error:
+            "You have already applied to this opportunity.",
           application: existingApplication,
         },
         { status: 409 }
@@ -251,55 +257,43 @@ export async function POST(request: Request) {
     const studentSkills =
       await prisma.studentSkill.findMany({
         where: {
-          studentProfileId: user.studentProfile.id,
+          studentProfileId:
+            user.studentProfile.id,
+        },
+        select: {
+          skillId: true,
+          competencyLevel: true,
         },
       });
 
-    // 9. Calculate match score
-    const studentSkillMap = new Map(
-      studentSkills.map((skill) => [
-        skill.skillId,
-        skill.proficiency,
-      ])
-    );
+    // 9. Convert Prisma data into matching inputs
+    const studentSkillInputs =
+      studentSkills.map((skill) => ({
+        skillId: skill.skillId,
+        competencyLevel:
+          skill.competencyLevel as
+            | CompetencyLevel
+            | null,
+      }));
 
-    let totalWeight = 0;
-    let achievedWeight = 0;
-
-    for (const requirement of opportunity.skills) {
-      const weight =
-        requirement.weight > 0
-          ? requirement.weight
-          : 1;
-
-      totalWeight += weight;
-
-      const studentProficiency =
-        studentSkillMap.get(
-          requirement.skillId
-        ) ?? 0;
-
-      const proficiencyRatio = Math.min(
-        studentProficiency /
-          Math.max(
-            requirement.minimumProficiency,
-            1
-          ),
-        1
+    const opportunitySkillInputs =
+      opportunity.skills.map(
+        (requirement) => ({
+          skillId: requirement.skillId,
+          required: requirement.required,
+          weight: requirement.weight,
+          requiredLevel:
+            requirement.requiredLevel as CompetencyLevel,
+        })
       );
 
-      achievedWeight +=
-        proficiencyRatio * weight;
-    }
+    // 10. Calculate match score
+    const matchScore = calculateMatchScore(
+      studentSkillInputs,
+      opportunitySkillInputs
+    );
 
-    const matchScore =
-      totalWeight > 0
-        ? Math.round(
-            (achievedWeight / totalWeight) * 100
-          )
-        : 0;
-
-    // 10. Create application
+    // 11. Create application
     const application =
       await prisma.application.create({
         data: {
@@ -313,7 +307,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Application submitted successfully.",
+        message:
+          "Application submitted successfully.",
         application,
       },
       { status: 201 }
