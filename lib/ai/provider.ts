@@ -1,16 +1,31 @@
 export type ExtractedSkill = {
   name: string;
   category: string;
-  minimumProficiency: number;
-  weight: number;
+
+  /**
+   * How important this skill is to the opportunity.
+   *
+   * CORE    → essential for the role
+   * IMPORTANT → strongly expected
+   * USEFUL  → nice to have
+   */
+  importance: "CORE" | "IMPORTANT" | "USEFUL";
+
+  /**
+   * Whether the skill is required to perform the role.
+   */
   required: boolean;
 };
 
 export type ExtractedOpportunity = {
   title: string;
+
   company: string;
+
   description: string;
+
   location: string | null;
+
   type:
     | "INTERNSHIP"
     | "JOB"
@@ -21,6 +36,7 @@ export type ExtractedOpportunity = {
     | "CONSULTANCY"
     | "INDUSTRIAL_TRAINING"
     | "GUEST_LECTURE";
+
   skills: ExtractedSkill[];
 };
 

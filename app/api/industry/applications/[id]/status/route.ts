@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 const ALLOWED_STATUSES = [
   "APPLIED",
   "SHORTLISTED",
+  "REJECTED",
   "SELECTED",
   "COMPLETED",
 ] as const;

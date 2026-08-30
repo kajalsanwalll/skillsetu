@@ -48,10 +48,10 @@ model Skill {
 }
 
 model StudentSkill {
-  id                   String              @id @default(cuid())
+  id                   String               @id @default(cuid())
   studentProfileId     String
   skillId              String
-
+  proficiency          Float               @default(0)
   competencyLevel      CompetencyLevel?
   verificationStrength VerificationStrength @default(UNVERIFIED)
 
@@ -134,18 +134,16 @@ model Opportunity {
 }
 
 model OpportunitySkill {
-  id             String          @id @default(cuid())
-  opportunityId  String
-  skillId        String
+  id                  String          @id @default(cuid())
+  opportunityId       String
+  skillId             String
+  required            Boolean         @default(true)
+  weight              Float           @default(1)
+  minimumProficiency   Float           @default(0)
+  requiredLevel        CompetencyLevel @default(FOUNDATIONAL)
 
-  required       Boolean         @default(true)
-  weight         Float           @default(1)
-
-  requiredLevel  CompetencyLevel @default(FOUNDATIONAL)
-
-  opportunity    Opportunity     @relation(fields: [opportunityId],references: [id],onDelete: Cascade)
-
-  skill          Skill           @relation(fields: [skillId],references: [id],onDelete: Cascade)
+  opportunity         Opportunity     @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  skill               Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([opportunityId, skillId])
 }

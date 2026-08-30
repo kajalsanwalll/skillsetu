@@ -15,8 +15,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "Node.js",
         category: "Backend",
-        minimumProficiency: 80,
-        weight: 1,
+        importance: "CORE",
         required: true,
       });
     }
@@ -25,8 +24,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "Express",
         category: "Backend",
-        minimumProficiency: 70,
-        weight: 0.9,
+        importance: "CORE",
         required: true,
       });
     }
@@ -38,8 +36,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "REST APIs",
         category: "Backend",
-        minimumProficiency: 75,
-        weight: 1,
+        importance: "CORE",
         required: true,
       });
     }
@@ -51,8 +48,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "PostgreSQL",
         category: "Database",
-        minimumProficiency: 70,
-        weight: 0.9,
+        importance: "CORE",
         required: true,
       });
     }
@@ -61,8 +57,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "Docker",
         category: "DevOps",
-        minimumProficiency: 50,
-        weight: 0.6,
+        importance: "USEFUL",
         required: false,
       });
     }
@@ -71,8 +66,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "Redis",
         category: "Backend",
-        minimumProficiency: 40,
-        weight: 0.4,
+        importance: "USEFUL",
         required: false,
       });
     }
@@ -81,8 +75,7 @@ export class MockAIProvider implements AIProvider {
       skills.push({
         name: "Git",
         category: "Developer Tools",
-        minimumProficiency: 60,
-        weight: 0.5,
+        importance: "USEFUL",
         required: false,
       });
     }
