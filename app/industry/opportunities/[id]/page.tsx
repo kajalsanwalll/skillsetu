@@ -5,10 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 
 type Skill = {
   id: string;
-  name: string;
-  category: string | null;
   required: boolean;
+  requiredLevel: string;
   weight: number;
+  skill: {
+    id: string;
+    name: string;
+    category: string | null;
+  };
 };
 
 type Opportunity = {
@@ -342,19 +346,25 @@ export default function IndustryOpportunityDetailPage() {
                         : "border-[#232B47] bg-[#171E33]/60"
                     }`}
                   >
-                    <p className="font-medium">
-                      {skill.name}
-                    </p>
+                    <p className="font-medium text-[#F5F1E8]">
+  {skill.skill.name}
+</p>
 
-                    <p className="text-xs text-[#9AA3C0] mt-1">
-                      Minimum:{" "}
-                      {skill.minimumProficiency}%
-                    </p>
+{skill.skill.category && (
+  <p className="text-xs text-[#9AA3C0] mt-1">
+    {skill.skill.category}
+  </p>
+)}
 
-                    {skill.required && (
-                      <p className="text-xs text-[#F4A93B] mt-1">
-                        Required
-                      </p>
+<p className="text-xs text-[#9AA3C0] mt-2">
+  Required level: {skill.requiredLevel}
+</p>
+
+{skill.required && (
+  <p className="text-xs text-[#F4A93B] mt-1">
+    Required
+  </p>
+
                     )}
                   </div>
                 )
