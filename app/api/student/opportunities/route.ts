@@ -1,46 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
-import { calculateMatchScore } from "@/lib/matching/calculate-match";
-import { calculateTrustedProficiency } from "@/lib/skills/calculate-trusted-proficiency";
+import {
+  calculateMatchScore,
+  type CompetencyLevel,
+} from "@/lib/matching";
 
-/**
- * Converts an opportunity's competency requirement
- * into the numeric proficiency used by the existing
- * matching algorithm.
- *
- * These values are internal scoring thresholds.
- * The UI should display the competency level instead.
- */
-const COMPETENCY_PROFICIENCY: Record<string, number> = {
-  EXPOSURE: 20,
-  FOUNDATIONAL: 40,
-  INTERMEDIATE: 60,
-  ADVANCED: 80,
-  EXPERT: 100,
-};
-
-/**
- * Converts a numeric trusted proficiency into
- * the corresponding competency level.
- */
-function proficiencyToCompetencyLevel(
-  proficiency: number
-) {
-  if (proficiency >= 90) return "EXPERT";
-  if (proficiency >= 75) return "ADVANCED";
-  if (proficiency >= 50) return "INTERMEDIATE";
-  if (proficiency >= 25) return "FOUNDATIONAL";
-
-  return "EXPOSURE";
-}
-
-/**
- * Used only for comparing student level against
- * opportunity required level.
- */
-const COMPETENCY_LEVEL_VALUE: Record<string, number> = {
+const COMPETENCY_LEVEL_VALUE: Record<
+  CompetencyLevel,
+  number
+> = {
   EXPOSURE: 1,
   FOUNDATIONAL: 2,
   INTERMEDIATE: 3,
@@ -50,7 +19,9 @@ const COMPETENCY_LEVEL_VALUE: Record<string, number> = {
 
 export async function GET() {
   try {
-    // 1. Authenticate
+    // ==================================================
+    // 1. AUTHENTICATE
+    // ==================================================
 
     const { isAuthenticated, userId } = await auth();
 
@@ -65,13 +36,14 @@ export async function GET() {
       );
     }
 
-    // 2. Get student + skills + evidence + applications
+    // ==================================================
+    // 2. GET USER + CURRENT STUDENT SKILLS
+    // ==================================================
 
     const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
       },
-
       include: {
         studentProfile: {
           include: {
@@ -80,8 +52,6 @@ export async function GET() {
                 skill: true,
               },
             },
-
-            evidence: true,
 
             applications: {
               select: {
@@ -93,9 +63,22 @@ export async function GET() {
       },
     });
 
-    // 3. Validate student
+    // ==================================================
+    // 3. VALIDATE USER
+    // ==================================================
 
-    if (!user || user.role !== "STUDENT") {
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "User not found.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    if (user.role !== "STUDENT") {
       return NextResponse.json(
         {
           error: "Student access required.",
@@ -119,60 +102,28 @@ export async function GET() {
 
     const profile = user.studentProfile;
 
-    // 4. Calculate trusted proficiency for every student skill
+    // ==================================================
+    // 4. CURRENT STUDENT SKILLS
+    //
+    // IMPORTANT:
+    // Use competencyLevel, exactly like the
+    // applications API and opportunity/[id] API.
+    // ==================================================
 
-    const trustedSkills = profile.skills.map(
-      (studentSkill) => {
-        const skillEvidence =
-          profile.evidence.filter(
-            (evidence) =>
-              evidence.skillId ===
-              studentSkill.skillId
-          );
+    const studentSkillInputs = profile.skills.map(
+      (studentSkill) => ({
+        skillId: studentSkill.skillId,
 
-        const result =
-          calculateTrustedProficiency({
-            claimedProficiency:
-              studentSkill.proficiency,
-
-            evidence: skillEvidence.map(
-              (evidence) => ({
-                score: evidence.score,
-                verified: evidence.verified,
-                verificationStrength:
-                  evidence.verificationStrength,
-              })
-            ),
-          });
-
-        return {
-          skillId: studentSkill.skillId,
-
-          claimedProficiency:
-            result.claimedProficiency,
-
-          trustedProficiency:
-            result.trustedProficiency,
-
-          evidenceScore:
-            result.evidenceScore,
-
-          confidence:
-            result.confidence,
-
-          evidenceCount:
-            skillEvidence.length,
-
-          verifiedEvidenceCount:
-            skillEvidence.filter(
-              (evidence) =>
-                evidence.verified
-            ).length,
-        };
-      }
+        competencyLevel:
+          studentSkill.competencyLevel as
+            | CompetencyLevel
+            | null,
+      })
     );
 
-    // 5. Get opportunities
+    // ==================================================
+    // 5. GET OPPORTUNITIES
+    // ==================================================
 
     const opportunities =
       await prisma.opportunity.findMany({
@@ -195,160 +146,118 @@ export async function GET() {
         },
       });
 
-    // 6. Calculate matching information
+    // ==================================================
+    // 6. CALCULATE CURRENT MATCH FOR EVERY OPPORTUNITY
+    // ==================================================
 
     const results = opportunities
       .map((opportunity) => {
-        /**
-         * Convert requiredLevel into the numeric
-         * minimum proficiency expected by the
-         * existing calculateMatchScore function.
-         */
-        const matchRequirements =
+        // ----------------------------------------------
+        // Opportunity requirements
+        // ----------------------------------------------
+
+        const opportunitySkillInputs =
           opportunity.skills.map(
-            (opportunitySkill) => ({
-              skillId:
-                opportunitySkill.skillId,
+            (requirement) => ({
+              skillId: requirement.skillId,
 
-              required:
-                opportunitySkill.required,
+              required: requirement.required,
 
-              weight:
-                opportunitySkill.weight,
+              weight: requirement.weight,
 
-              minimumProficiency:
-                COMPETENCY_PROFICIENCY[
-                  opportunitySkill.requiredLevel
-                ],
+              requiredLevel:
+                requirement.requiredLevel as CompetencyLevel,
             })
           );
 
-        /**
-         * Keep using TRUSTED proficiency for
-         * actual matching.
-         */
+        // ----------------------------------------------
+        // CURRENT MATCH SCORE
+        //
+        // This uses the student's CURRENT Skill DNA.
+        // ----------------------------------------------
+
         const matchScore =
           calculateMatchScore(
-            trustedSkills.map(
-              (studentSkill) => ({
-                skillId:
-                  studentSkill.skillId,
-
-                proficiency:
-                  studentSkill.trustedProficiency,
-              })
-            ),
-
-            matchRequirements
+            studentSkillInputs,
+            opportunitySkillInputs
           );
 
-        // 7. Create detailed skill matching information
+        // ----------------------------------------------
+        // CURRENT SKILL-BY-SKILL MATCH
+        // ----------------------------------------------
 
-        const matchedSkills =
-          opportunity.skills.map(
-            (opportunitySkill) => {
-              const studentSkill =
-                trustedSkills.find(
-                  (skill) =>
-                    skill.skillId ===
-                    opportunitySkill.skillId
-                );
+        const skills = opportunity.skills.map(
+          (requirement) => {
+            const studentSkill =
+              profile.skills.find(
+                (skill) =>
+                  skill.skillId ===
+                  requirement.skillId
+              );
 
-              const trustedProficiency =
-                studentSkill?.trustedProficiency ??
-                0;
+            const studentLevel =
+              (studentSkill?.competencyLevel ??
+                null) as CompetencyLevel | null;
 
-              /**
-               * Requirement stored in Prisma.
-               *
-               * Example:
-               * FOUNDATIONAL
-               * INTERMEDIATE
-               * ADVANCED
-               */
-              const requiredLevel =
-                opportunitySkill.requiredLevel;
+            const requiredLevel =
+              requirement.requiredLevel as CompetencyLevel;
 
-              /**
-               * Convert student's trusted numeric
-               * proficiency into a competency level
-               * for display/comparison.
-               */
-              const studentLevel =
-                proficiencyToCompetencyLevel(
-                  trustedProficiency
-                );
-
-              /**
-               * Compare competency levels rather
-               * than comparing arbitrary percentages.
-               */
-              const meetsRequirement =
-                COMPETENCY_LEVEL_VALUE[
-                  studentLevel
-                ] >=
+            const meetsRequirement =
+              studentLevel !== null &&
+              COMPETENCY_LEVEL_VALUE[
+                studentLevel
+              ] >=
                 COMPETENCY_LEVEL_VALUE[
                   requiredLevel
                 ];
 
-              return {
-                id: opportunitySkill.skill.id,
+            return {
+              id: requirement.skill.id,
 
-                name:
-                  opportunitySkill.skill.name,
+              name: requirement.skill.name,
 
-                category:
-                  opportunitySkill.skill.category,
+              category:
+                requirement.skill.category,
 
-                required:
-                  opportunitySkill.required,
+              required:
+                requirement.required,
 
-                weight:
-                  opportunitySkill.weight,
+              requiredLevel,
 
-                /**
-                 * NEW:
-                 * Human-readable requirement.
-                 */
-                requiredLevel,
+              weight:
+                requirement.weight,
 
-                /**
-                 * NEW:
-                 * Student's calculated competency level.
-                 */
-                studentLevel,
+              studentLevel,
 
-                /**
-                 * Keep trusted proficiency available
-                 * for the detail page / scoring.
-                 */
-                trustedProficiency,
+              hasSkill:
+                studentSkill !== undefined,
 
-                /**
-                 * Keep claimed proficiency available
-                 * for transparency.
-                 */
-                claimedProficiency:
-                  studentSkill
-                    ?.claimedProficiency ?? 0,
+              meetsRequirement,
+            };
+          }
+        );
 
-                meetsRequirement,
+        // ----------------------------------------------
+        // REQUIRED SKILL GAPS
+        // ----------------------------------------------
 
-                evidenceCount:
-                  studentSkill
-                    ?.evidenceCount ?? 0,
+        const skillGaps = skills.filter(
+          (skill) =>
+            skill.required &&
+            !skill.meetsRequirement
+        );
 
-                verifiedEvidenceCount:
-                  studentSkill
-                    ?.verifiedEvidenceCount ?? 0,
+        // ----------------------------------------------
+        // REQUIRED SKILLS THAT ARE SATISFIED
+        // ----------------------------------------------
 
-                confidence:
-                  studentSkill?.confidence ?? 0,
-              };
-            }
-          );
+        const matchedSkills = skills.filter(
+          (skill) => skill.meetsRequirement
+        );
 
-        // 8. Check whether student already applied
+        // ----------------------------------------------
+        // ALREADY APPLIED?
+        // ----------------------------------------------
 
         const hasApplied =
           profile.applications.some(
@@ -356,6 +265,10 @@ export async function GET() {
               application.opportunityId ===
               opportunity.id
           );
+
+        // ----------------------------------------------
+        // RETURN OPPORTUNITY
+        // ----------------------------------------------
 
         return {
           id: opportunity.id,
@@ -370,8 +283,7 @@ export async function GET() {
           location:
             opportunity.location,
 
-          type:
-            opportunity.type,
+          type: opportunity.type,
 
           createdAt:
             opportunity.createdAt,
@@ -381,20 +293,33 @@ export async function GET() {
               opportunity.industry.name,
           },
 
-          skills: matchedSkills,
-
+          // IMPORTANT:
+          // This is now calculated from the
+          // CURRENT Skill DNA.
           matchScore,
 
           hasApplied,
+
+          skills,
+
+          matchedSkills,
+
+          skillGaps,
         };
       })
 
-      // 9. Highest matches first
+      // ==================================================
+      // 7. HIGHEST MATCHES FIRST
+      // ==================================================
 
       .sort(
         (a, b) =>
           b.matchScore - a.matchScore
       );
+
+    // ==================================================
+    // 8. RESPONSE
+    // ==================================================
 
     return NextResponse.json({
       success: true,
