@@ -139,7 +139,6 @@ model OpportunitySkill {
   skillId             String
   required            Boolean         @default(true)
   weight              Float           @default(1)
-  minimumProficiency   Float           @default(0)
   requiredLevel        CompetencyLevel @default(FOUNDATIONAL)
 
   opportunity         Opportunity     @relation(fields: [opportunityId], references: [id], onDelete: Cascade)

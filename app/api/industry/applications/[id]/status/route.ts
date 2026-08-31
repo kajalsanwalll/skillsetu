@@ -67,13 +67,29 @@ export async function PATCH(
 
     const { id } = await params;
 
+    if (!id) {
+      return NextResponse.json(
+        { error: "Application ID is required." },
+        { status: 400 }
+      );
+    }
+
     // -----------------------------------------
-    // 5. Read requested status
+    // 5. Read request body
     // -----------------------------------------
 
-    const body = await request.json();
+    let body: { status?: string };
 
-    const status = body.status as string;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body." },
+        { status: 400 }
+      );
+    }
+
+    const status = body.status;
 
     if (!status) {
       return NextResponse.json(
@@ -95,8 +111,7 @@ export async function PATCH(
     ) {
       return NextResponse.json(
         {
-          error:
-            "Invalid application status.",
+          error: "Invalid application status.",
         },
         { status: 400 }
       );
@@ -132,7 +147,7 @@ export async function PATCH(
     }
 
     // -----------------------------------------
-    // 8. Verify ownership
+    // 8. Verify opportunity ownership
     // -----------------------------------------
 
     if (
@@ -157,7 +172,7 @@ export async function PATCH(
           id: application.id,
         },
         data: {
-          status,
+          status: status as ApplicationStatus,
         },
       });
 
@@ -170,10 +185,8 @@ export async function PATCH(
       application: {
         id: updatedApplication.id,
         status: updatedApplication.status,
-        matchScore:
-          updatedApplication.matchScore,
-        createdAt:
-          updatedApplication.createdAt,
+        matchScore: updatedApplication.matchScore,
+        createdAt: updatedApplication.createdAt,
       },
     });
   } catch (error) {

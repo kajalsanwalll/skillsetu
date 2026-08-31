@@ -67,16 +67,9 @@ export async function POST(request: Request) {
 
     const data = parsed.data;
 
-    /*
-     * ----------------------------------------------------
-     * 6. Create/reuse Skills
-     * ----------------------------------------------------
-     *
-     * We intentionally do this OUTSIDE the transaction.
-     * This avoids long-running interactive transactions
-     * with Neon.
-     */
-
+    // 6. Create/reuse Skills
+    // Intentionally outside a transaction to avoid
+    // long-running interactive transactions with Neon.
     const skillRecords = [];
 
     for (const extractedSkill of data.skills) {
@@ -97,33 +90,19 @@ export async function POST(request: Request) {
         skillId: skill.id,
         required: extractedSkill.required,
         weight: extractedSkill.weight,
-        minimumProficiency:
-          extractedSkill.minimumProficiency,
+        requiredLevel: extractedSkill.requiredLevel,
       });
     }
 
-    /*
-     * ----------------------------------------------------
-     * 7. Create Opportunity
-     * ----------------------------------------------------
-     *
-     * Nested create handles OpportunitySkill records.
-     */
-
+    // 7. Create Opportunity
     const opportunity =
       await prisma.opportunity.create({
         data: {
           title: data.title.trim(),
-
           company: data.company.trim(),
-
           description: data.description.trim(),
-
-          location:
-            data.location?.trim() || null,
-
+          location: data.location?.trim() || null,
           type: data.type,
-
           industryId: user.id,
 
           skills: {
@@ -158,8 +137,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        error:
-          "Failed to create opportunity.",
+        error: "Failed to create opportunity.",
       },
       { status: 500 }
     );
@@ -212,7 +190,6 @@ export async function GET() {
               skill: true,
             },
           },
-
           applications: true,
         },
 

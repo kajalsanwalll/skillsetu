@@ -2,12 +2,25 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const LEVEL_SCORE = {
+  EXPOSURE: 20,
+  FOUNDATIONAL: 40,
+  INTERMEDIATE: 60,
+  ADVANCED: 80,
+  EXPERT: 100,
+} as const;
+
+type CompetencyLevel = keyof typeof LEVEL_SCORE;
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // -----------------------------------------
     // 1. Authenticate
+    // -----------------------------------------
+
     const { isAuthenticated, userId } = await auth();
 
     if (!isAuthenticated || !userId) {
@@ -17,7 +30,10 @@ export async function GET(
       );
     }
 
+    // -----------------------------------------
     // 2. Find SkillSetu user
+    // -----------------------------------------
+
     const user = await prisma.user.findUnique({
       where: {
         clerkId: userId,
@@ -31,7 +47,10 @@ export async function GET(
       );
     }
 
+    // -----------------------------------------
     // 3. Industry-only access
+    // -----------------------------------------
+
     if (user.role !== "INDUSTRY") {
       return NextResponse.json(
         {
@@ -42,15 +61,22 @@ export async function GET(
       );
     }
 
+    // -----------------------------------------
     // 4. Get application ID
+    // -----------------------------------------
+
     const { id } = await params;
 
+    // -----------------------------------------
     // 5. Fetch application
+    // -----------------------------------------
+
     const application =
       await prisma.application.findUnique({
         where: {
           id,
         },
+
         include: {
           opportunity: {
             include: {
@@ -61,6 +87,7 @@ export async function GET(
               },
             },
           },
+
           studentProfile: {
             include: {
               user: {
@@ -70,27 +97,35 @@ export async function GET(
                   email: true,
                 },
               },
+
               skills: {
                 include: {
                   skill: true,
                 },
               },
+
               evidence: {
                 include: {
                   skill: true,
                 },
+
                 orderBy: {
                   createdAt: "desc",
                 },
               },
+
               assessments: true,
+
               academicCredentials: true,
             },
           },
         },
       });
 
+    // -----------------------------------------
     // 6. Application doesn't exist
+    // -----------------------------------------
+
     if (!application) {
       return NextResponse.json(
         {
@@ -100,9 +135,12 @@ export async function GET(
       );
     }
 
+    // -----------------------------------------
     // 7. SECURITY:
     // Make sure this application belongs to
     // an opportunity owned by this industry user.
+    // -----------------------------------------
+
     if (
       application.opportunity.industryId !==
       user.id
@@ -116,7 +154,10 @@ export async function GET(
       );
     }
 
-    // 8. Build explainable skill match
+    // -----------------------------------------
+    // 8. Build explainable competency match
+    // -----------------------------------------
+
     const studentSkills =
       application.studentProfile.skills;
 
@@ -133,24 +174,66 @@ export async function GET(
                 opportunitySkill.skillId
             );
 
-          const proficiency =
-            studentSkill?.proficiency ?? 0;
+          const studentLevel =
+            studentSkill?.competencyLevel ?? null;
 
-          const minimum =
-            opportunitySkill.minimumProficiency;
+          const requiredLevel =
+            opportunitySkill.requiredLevel;
 
+          const studentScore =
+            studentLevel
+              ? LEVEL_SCORE[
+                  studentLevel as CompetencyLevel
+                ]
+              : 0;
+
+          const requiredScore =
+            LEVEL_SCORE[
+              requiredLevel as CompetencyLevel
+            ];
+
+          // Candidate meets or exceeds
+          // the required competency level.
           const meetsMinimum =
-            proficiency >= minimum;
+            studentScore >= requiredScore;
 
+          // Calculate how much of the required
+          // competency has been achieved.
           const ratio =
-            minimum > 0
+            requiredScore > 0
               ? Math.min(
-                  proficiency / minimum,
+                  studentScore / requiredScore,
                   1
                 )
-              : proficiency > 0
-              ? 1
-              : 0;
+              : 1;
+
+          const contribution = Math.round(
+            ratio * 100
+          );
+
+          // Gap is measured in competency score
+          // points, e.g. EXPOSURE (20) →
+          // ADVANCED (80) = gap of 60.
+          const gap = Math.max(
+            requiredScore - studentScore,
+            0
+          );
+
+          let status:
+            | "STRONG"
+            | "MODERATE"
+            | "GAP";
+
+          if (studentScore >= requiredScore) {
+            status = "STRONG";
+          } else if (
+            studentScore >=
+            requiredScore * 0.7
+          ) {
+            status = "MODERATE";
+          } else {
+            status = "GAP";
+          }
 
           return {
             skillId:
@@ -165,16 +248,18 @@ export async function GET(
             weight:
               opportunitySkill.weight,
 
-            minimumProficiency:
-              minimum,
+            requiredLevel,
 
-            candidateProficiency:
-              proficiency,
+            candidateLevel:
+              studentLevel,
+
+            gap,
 
             meetsMinimum,
 
-            contribution:
-              Math.round(ratio * 100),
+            contribution,
+
+            status,
 
             verificationStrength:
               studentSkill
@@ -184,7 +269,10 @@ export async function GET(
         }
       );
 
+    // -----------------------------------------
     // 9. Calculate summary statistics
+    // -----------------------------------------
+
     const requiredSkills =
       skillBreakdown.filter(
         (skill) => skill.required
@@ -205,7 +293,25 @@ export async function GET(
         (skill) => skill.meetsMinimum
       );
 
+    const strongSkills =
+      skillBreakdown.filter(
+        (skill) => skill.status === "STRONG"
+      );
+
+    const moderateSkills =
+      skillBreakdown.filter(
+        (skill) => skill.status === "MODERATE"
+      );
+
+    const gapSkills =
+      skillBreakdown.filter(
+        (skill) => skill.status === "GAP"
+      );
+
+    // -----------------------------------------
     // 10. Return candidate information
+    // -----------------------------------------
+
     return NextResponse.json({
       success: true,
 
@@ -222,7 +328,8 @@ export async function GET(
       },
 
       opportunity: {
-        id: application.opportunity.id,
+        id:
+          application.opportunity.id,
 
         title:
           application.opportunity.title,
@@ -275,6 +382,15 @@ export async function GET(
 
         matchedOptionalSkills:
           matchedOptionalSkills.length,
+
+        strongSkills:
+          strongSkills.length,
+
+        moderateSkills:
+          moderateSkills.length,
+
+        gapSkills:
+          gapSkills.length,
       },
 
       evidence:
@@ -293,15 +409,18 @@ export async function GET(
 
             score: item.score,
 
-            verified: item.verified,
+            verified:
+              item.verified,
 
             verificationStrength:
               item.verificationStrength,
 
             skill: {
-              id: item.skill.id,
+              id:
+                item.skill.id,
 
-              name: item.skill.name,
+              name:
+                item.skill.name,
             },
 
             createdAt:
@@ -310,7 +429,8 @@ export async function GET(
         ),
 
       assessments:
-        application.studentProfile.assessments,
+        application.studentProfile
+          .assessments,
 
       academicCredentials:
         application.studentProfile

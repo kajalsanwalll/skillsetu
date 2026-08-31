@@ -17,9 +17,15 @@ type OpportunityType =
 type Skill = {
   name: string;
   category: string;
-  minimumProficiency: number;
-  weight: number;
+  importance: "CORE" | "IMPORTANT" | "USEFUL";
   required: boolean;
+  requiredLevel:
+    | "EXPOSURE"
+    | "FOUNDATIONAL"
+    | "INTERMEDIATE"
+    | "ADVANCED"
+    | "EXPERT";
+  weight: number;
 };
 
 type ExtractedOpportunity = {
@@ -161,9 +167,10 @@ export default function NewOpportunityPage() {
         {
           name: "",
           category: "General",
-          minimumProficiency: 50,
+          importance: "USEFUL",
           weight: 0.5,
           required: true,
+          requiredLevel: "FOUNDATIONAL",
         },
       ],
     });
@@ -553,29 +560,44 @@ export default function NewOpportunityPage() {
                         {/* Proficiency */}
                         <div>
                           <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
-                            Minimum proficiency ·{" "}
+                            {" "}
                             <span className="text-[#2BA792]">
                               {skill.minimumProficiency}
                             </span>
                           </label>
 
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={
-                              skill.minimumProficiency
-                            }
-                            onChange={(e) =>
-                              updateSkill(index, {
-                                minimumProficiency:
-                                  Number(
-                                    e.target.value
-                                  ),
-                              })
-                            }
-                            className="mt-3 w-full accent-[#2BA792]"
-                          />
+                          <div>
+                         <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
+                         Required level {" "}
+                          <span className="text-[#2BA792]">
+                          {skill.requiredLevel}
+                          </span>
+                         </label>
+
+                          <select
+                          value={skill.requiredLevel}
+                          onChange={(e) =>
+                          updateSkill(index, {
+                            requiredLevel:
+                            e.target.value as Skill["requiredLevel"],
+                          })
+                          }
+                          className="
+                           mt-1 w-full rounded-lg
+                           border border-[#232B47] bg-[#171E33]/60
+                             px-3 py-2 text-[#F5F1E8]
+                            outline-none transition
+                            focus:border-[#F4A93B]
+                            focus:ring-1 focus:ring-[#F4A93B]/30
+                            "
+                         >
+                         <option value="EXPOSURE">Exposure</option>
+                         <option value="FOUNDATIONAL">Foundational</option>
+                         <option value="INTERMEDIATE">Intermediate</option>
+                         <option value="ADVANCED">Advanced</option>
+                         <option value="EXPERT">Expert</option>
+                        </select>
+                        </div>
                         </div>
 
                         {/* Weight */}
@@ -583,7 +605,7 @@ export default function NewOpportunityPage() {
                           <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
                             Weight ·{" "}
                             <span className="text-[#E8598B]">
-                              {skill.weight.toFixed(2)}
+                              {(skill.weight ?? 0).toFixed(2)}
                             </span>
                           </label>
 
@@ -592,7 +614,7 @@ export default function NewOpportunityPage() {
                             min="0"
                             max="1"
                             step="0.05"
-                            value={skill.weight}
+                            value={skill.weight ?? 0}
                             onChange={(e) =>
                               updateSkill(index, {
                                 weight: Number(

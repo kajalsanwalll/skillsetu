@@ -8,7 +8,6 @@ type Skill = {
   name: string;
   category: string | null;
   required: boolean;
-  minimumProficiency: number;
   weight: number;
 };
 

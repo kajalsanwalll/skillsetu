@@ -2,14 +2,26 @@ import { z } from "zod";
 
 export const extractedSkillSchema = z.object({
   name: z.string().min(1),
+
   category: z.string().min(1),
 
   importance: z.enum([
     "CORE",
+    "IMPORTANT",
     "USEFUL",
   ]),
 
   required: z.boolean(),
+
+  requiredLevel: z.enum([
+    "EXPOSURE",
+    "FOUNDATIONAL",
+    "INTERMEDIATE",
+    "ADVANCED",
+    "EXPERT",
+  ]),
+
+  weight: z.number().min(0).max(1),
 });
 
 export const extractedOpportunitySchema = z.object({

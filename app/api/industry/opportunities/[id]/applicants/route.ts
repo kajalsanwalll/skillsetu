@@ -45,14 +45,14 @@ export async function GET(
     // 4. Get opportunity ID
     const { id } = await params;
 
-    // 5. Verify that this opportunity belongs
-    //    to the logged-in industry user
-    const opportunity = await prisma.opportunity.findFirst({
-      where: {
-        id,
-        industryId: user.id,
-      },
-    });
+    // 5. Verify opportunity ownership
+    const opportunity =
+      await prisma.opportunity.findFirst({
+        where: {
+          id,
+          industryId: user.id,
+        },
+      });
 
     if (!opportunity) {
       return NextResponse.json(
@@ -64,71 +64,72 @@ export async function GET(
     }
 
     // 6. Fetch applicants
-    const applications = await prisma.application.findMany({
-      where: {
-        opportunityId: opportunity.id,
-      },
-      include: {
-        studentProfile: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
+    const applications =
+      await prisma.application.findMany({
+        where: {
+          opportunityId: opportunity.id,
+        },
+        include: {
+          studentProfile: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
               },
-            },
-            skills: {
-              include: {
-                skill: true,
+
+              skills: {
+                include: {
+                  skill: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: [
-        {
-          matchScore: "desc",
+
+        orderBy: [
+          {
+            matchScore: "desc",
+          },
+          {
+            createdAt: "desc",
+          },
+        ],
+      });
+
+    // 7. Shape response
+    const applicants = applications.map(
+      (application) => ({
+        applicationId: application.id,
+        status: application.status,
+        matchScore: application.matchScore,
+        appliedAt: application.createdAt,
+
+        student: {
+          id: application.studentProfile.id,
+          name: application.studentProfile.user.name,
+          email: application.studentProfile.user.email,
         },
-        {
-          createdAt: "desc",
-        },
-      ],
-    });
 
-    // 7. Shape the response
-    const applicants = applications.map((application) => ({
-      applicationId: application.id,
+        skills:
+          application.studentProfile.skills.map(
+            (studentSkill) => ({
+              id: studentSkill.id,
+              skillId: studentSkill.skill.id,
+              name: studentSkill.skill.name,
+              category: studentSkill.skill.category,
 
-      status: application.status,
+              competencyLevel:
+                studentSkill.competencyLevel,
 
-      matchScore: application.matchScore,
-
-      appliedAt: application.createdAt,
-
-      student: {
-        id: application.studentProfile.id,
-
-        name: application.studentProfile.user.name,
-
-        email: application.studentProfile.user.email,
-      },
-
-      skills: application.studentProfile.skills.map(
-        (studentSkill) => ({
-          id: studentSkill.skill.id,
-
-          name: studentSkill.skill.name,
-
-          category: studentSkill.skill.category,
-
-          proficiency: studentSkill.proficiency,
-
-          verificationStrength:
-            studentSkill.verificationStrength,
-        })
-      ),
-    }));
+              verificationStrength:
+                studentSkill.verificationStrength,
+            })
+          ),
+      })
+    );
 
     // 8. Return applicants
     return NextResponse.json({
@@ -141,7 +142,6 @@ export async function GET(
       },
 
       totalApplicants: applicants.length,
-
       applicants,
     });
   } catch (error) {

@@ -3,11 +3,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+type CompetencyLevel =
+  | "EXPOSURE"
+  | "FOUNDATIONAL"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
 type StudentSkill = {
   id: string;
+  skillId: string;
   name: string;
   category: string | null;
-  proficiency: number;
+  competencyLevel: CompetencyLevel | null;
   verificationStrength: string;
 };
 
@@ -36,6 +44,14 @@ const selectClass = `
   px-4 py-3 text-sm text-[#F5F1E8] outline-none transition
   focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
 `;
+
+const COMPETENCY_LABELS: Record<CompetencyLevel, string> = {
+  EXPOSURE: "Exposure",
+  FOUNDATIONAL: "Foundational",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED: "Advanced",
+  EXPERT: "Expert",
+};
 
 export default function ApplicantsPage() {
   const params = useParams();
@@ -69,8 +85,7 @@ export default function ApplicantsPage() {
 
         if (!response.ok) {
           throw new Error(
-            data.error ||
-              "Failed to load applicants."
+            data.error || "Failed to load applicants."
           );
         }
 
@@ -143,6 +158,7 @@ export default function ApplicantsPage() {
             Loading applicants…
           </p>
         </div>
+
         <ThemeStyles />
       </main>
     );
@@ -156,6 +172,7 @@ export default function ApplicantsPage() {
             {error}
           </div>
         </div>
+
         <ThemeStyles />
       </main>
     );
@@ -180,7 +197,6 @@ export default function ApplicantsPage() {
 
         {/* Header */}
         <section className="mb-8">
-
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#F4A93B] mb-2">
             Applicant management
           </p>
@@ -197,12 +213,10 @@ export default function ApplicantsPage() {
             Review and manage candidates based
             on their verified Skill DNA.
           </p>
-
         </section>
 
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-
           <SummaryCard
             label="Total Applicants"
             value={applicants.length}
@@ -230,12 +244,10 @@ export default function ApplicantsPage() {
             }
             accent="#E8598B"
           />
-
         </div>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-
           <select
             value={statusFilter}
             onChange={(e) =>
@@ -258,13 +270,6 @@ export default function ApplicantsPage() {
             </option>
 
             <option
-              value="UNDER_REVIEW"
-              className="bg-[#0F1526]"
-            >
-              Under Review
-            </option>
-
-            <option
               value="SHORTLISTED"
               className="bg-[#0F1526]"
             >
@@ -283,6 +288,13 @@ export default function ApplicantsPage() {
               className="bg-[#0F1526]"
             >
               Rejected
+            </option>
+
+            <option
+              value="COMPLETED"
+              className="bg-[#0F1526]"
+            >
+              Completed
             </option>
           </select>
 
@@ -314,13 +326,11 @@ export default function ApplicantsPage() {
               Name
             </option>
           </select>
-
         </div>
 
         {/* Empty */}
         {filteredApplicants.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
-
             <div className="text-4xl mb-4">
               👥
             </div>
@@ -333,11 +343,9 @@ export default function ApplicantsPage() {
               No candidates match the current
               filter.
             </p>
-
           </div>
         ) : (
           <div className="space-y-5">
-
             {filteredApplicants.map(
               (applicant) => (
                 <ApplicantCard
@@ -346,10 +354,8 @@ export default function ApplicantsPage() {
                 />
               )
             )}
-
           </div>
         )}
-
       </div>
 
       <ThemeStyles />
@@ -369,9 +375,11 @@ function ThemeStyles() {
       .font-serif {
         font-family: "Fraunces", serif;
       }
+
       .font-sans {
         font-family: "IBM Plex Sans", sans-serif;
       }
+
       .font-mono {
         font-family: "IBM Plex Mono", monospace;
       }
@@ -394,12 +402,12 @@ function SummaryCard({
 }) {
   return (
     <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-5">
-
       <div className="flex items-center gap-2">
         <span
           className="h-1.5 w-1.5 rounded-full"
           style={{ backgroundColor: accent }}
         />
+
         <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0]">
           {label}
         </p>
@@ -411,7 +419,6 @@ function SummaryCard({
       >
         {value}
       </p>
-
     </div>
   );
 }
@@ -442,14 +449,11 @@ function ApplicantCard({
 
   return (
     <article className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 transition hover:border-[#F4A93B]/30">
-
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
         {/* Candidate */}
         <div className="flex-1">
-
           <div className="flex flex-wrap items-center gap-3">
-
             <div className="h-11 w-11 rounded-full bg-[#F4A93B]/10 border border-[#F4A93B]/25 flex items-center justify-center font-serif text-[#F4A93B]">
               {applicant.student.name
                 .charAt(0)
@@ -457,7 +461,6 @@ function ApplicantCard({
             </div>
 
             <div>
-
               <h2 className="font-serif text-xl">
                 {applicant.student.name}
               </h2>
@@ -465,40 +468,27 @@ function ApplicantCard({
               <p className="text-sm text-[#9AA3C0]">
                 {applicant.student.email}
               </p>
-
             </div>
 
             <StatusBadge
               status={applicant.status}
             />
-
           </div>
 
           {/* Skills */}
           <div className="mt-5">
-
             <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0] mb-3">
               Candidate Skills
             </p>
 
             <div className="flex flex-wrap gap-2">
-
               {applicant.skills
                 .slice(0, 8)
                 .map((skill) => (
-                  <span
+                  <SkillBadge
                     key={skill.id}
-                    className="rounded-lg border border-[#232B47] bg-[#0F1526]/60 px-3 py-2 text-xs text-[#C7CCE0]"
-                  >
-                    {skill.name}
-
-                    <span className="ml-2 text-[#2BA792]">
-                      {Math.round(
-                        skill.proficiency
-                      )}
-                      %
-                    </span>
-                  </span>
+                    skill={skill}
+                  />
                 ))}
 
               {applicant.skills.length > 8 && (
@@ -509,22 +499,17 @@ function ApplicantCard({
                   more
                 </span>
               )}
-
             </div>
-
           </div>
 
           <p className="font-mono text-[11px] text-[#5B6386] mt-4">
             Applied {appliedDate}
           </p>
-
         </div>
 
         {/* Match */}
         <div className="shrink-0 flex flex-col items-center gap-3">
-
           <div className="rounded-2xl border border-[#F4A93B]/25 bg-[#F4A93B]/10 px-6 py-4 text-center min-w-[120px]">
-
             <p className="font-serif text-3xl text-[#F4A93B]">
               {matchScore !== null
                 ? `${matchScore}%`
@@ -534,7 +519,6 @@ function ApplicantCard({
             <p className="font-mono text-[11px] uppercase tracking-wide text-[#9AA3C0] mt-1">
               Skill Match
             </p>
-
           </div>
 
           <button
@@ -548,12 +532,33 @@ function ApplicantCard({
           >
             View Candidate
           </button>
-
         </div>
-
       </div>
-
     </article>
+  );
+}
+
+/* ---------------------------------------------
+   SKILL BADGE
+--------------------------------------------- */
+
+function SkillBadge({
+  skill,
+}: {
+  skill: StudentSkill;
+}) {
+  const level = skill.competencyLevel;
+
+  return (
+    <span className="rounded-lg border border-[#232B47] bg-[#0F1526]/60 px-3 py-2 text-xs text-[#C7CCE0]">
+      {skill.name}
+
+      <span className="ml-2 text-[#2BA792]">
+        {level
+          ? COMPETENCY_LABELS[level]
+          : "Unverified"}
+      </span>
+    </span>
   );
 }
 
@@ -569,14 +574,8 @@ function StatusBadge({
   const normalized =
     status.toUpperCase();
 
-  // Palette-native status colors — no red/blue/yellow/green defaults
   let className =
-    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]"; // APPLIED (neutral)
-
-  if (normalized === "UNDER_REVIEW") {
-    className =
-      "border-[#F4A93B]/30 bg-[#F4A93B]/10 text-[#F4A93B]";
-  }
+    "border-[#3A4266] bg-[#0F1526]/60 text-[#9AA3C0]";
 
   if (normalized === "SHORTLISTED") {
     className =
@@ -593,14 +592,16 @@ function StatusBadge({
       "border-[#E8598B]/30 bg-[#E8598B]/10 text-[#E8598B]";
   }
 
+  if (normalized === "COMPLETED") {
+    className =
+      "border-[#F4A93B]/30 bg-[#F4A93B]/10 text-[#F4A93B]";
+  }
+
   return (
     <span
       className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wide ${className}`}
     >
-      {normalized.replaceAll(
-        "_",
-        " "
-      )}
+      {normalized.replaceAll("_", " ")}
     </span>
   );
 }
