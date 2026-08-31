@@ -21,19 +21,25 @@ model User {
 }
 
 model StudentProfile {
-  id                  String               @id @default(cuid())
-  userId              String               @unique
-  careerInterest      String?
-  bio                 String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id                    String               @id @default(cuid())
+  userId                String               @unique
+  careerInterest        String?
+  bio                   String?
 
-  academicCredentials AcademicCredential[]
-  applications        Application[]
-  assessments         Assessment[]
-  evidence            SkillEvidence[]
-  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skills              StudentSkill[]
+  resumeUrl             String?
+  resumePublicId        String?
+  resumeFileName        String?
+  resumeUploadedAt      DateTime?
+
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  academicCredentials   AcademicCredential[]
+  applications          Application[]
+  assessments           Assessment[]
+  evidence              SkillEvidence[]
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills                StudentSkill[]
 }
 
 model Skill {

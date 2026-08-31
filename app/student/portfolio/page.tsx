@@ -1,149 +1,158 @@
-
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  FileText,
+  FolderGit2,
+  GraduationCap,
+  Link2,
+  MapPin,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  Upload,
+  UserRound,
+  Users,
+  X,
+  Award,
+  BriefcaseBusiness,
+  ClipboardCheck,
+} from "lucide-react";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 type Skill = {
   id: string;
-  skillId: string;
   name: string;
   category: string | null;
+  description: string | null;
   proficiency: number;
+  competencyLevel: string | null;
   verificationStrength: string;
 };
 
 type Evidence = {
   id: string;
-  type: string;
   title: string;
   description: string | null;
+  type: string;
   url: string | null;
-  score: number | null;
   verified: boolean;
   verificationStrength: string;
-  createdAt: string;
   skill: {
     id: string;
     name: string;
-    category: string | null;
   } | null;
-};
-
-type Credential = {
-  id: string;
-  source: string;
-  credentialId: string | null;
-  title: string;
-  institution: string | null;
-  score: number | null;
-  credits: number | null;
-  issueDate: string | null;
-  verificationUrl: string | null;
-  verified: boolean;
-  verificationStrength: string;
   createdAt: string;
 };
 
-type Assessment = {
-  id: string;
-  score: number | null;
-  createdAt: string;
-};
-
-type Application = {
-  id: string;
-  status: string;
-  matchScore: number | null;
-  createdAt: string;
-  opportunity: {
-    id: string;
-    title: string;
-    company: string | null;
-    location: string | null;
-    type: string | null;
-    industry: {
-      name: string;
-    } | null;
-  };
-};
-
-type PortfolioData = {
-  student: {
-    id: string;
+type Portfolio = {
+  user: {
     name: string;
     email: string;
   };
 
   profile: {
-    id: string;
     careerInterest: string | null;
-    [key: string]: unknown;
+    bio: string | null;
+
+    resume: {
+      url: string;
+      publicId: string | null;
+      fileName: string | null;
+      uploadedAt: string | null;
+    } | null;
   };
 
   skills: Skill[];
-  evidence: Evidence[];
-  credentials: Credential[];
-  assessments: Assessment[];
-  applications: Application[];
 
-  stats: {
-    totalSkills: number;
-    verifiedSkills: number;
-    totalEvidence: number;
-    verifiedEvidence: number;
-    totalCredentials: number;
-    verifiedCredentials: number;
-    totalApplications: number;
-  };
+  evidence: Evidence[];
+
+  academicCredentials: any[];
+
+  assessments: any[];
 };
 
-const TEAL = "#2BA792";
-const MARIGOLD = "#F4A93B";
-const ROSE = "#E8598B";
-const MUTED = "#9AA3C0";
+const evidenceLabels: Record<
+  string,
+  string
+> = {
+  PROJECT: "Project",
+  CERTIFICATION: "Certification",
+  INTERNSHIP: "Internship",
+  NPTEL: "NPTEL",
+  ASSESSMENT: "Assessment",
+  SELF_REPORTED: "Other",
+};
 
-function verificationColor(strength: string) {
-  switch (strength) {
-    case "HIGH":
-      return TEAL;
-    case "MEDIUM":
-      return MARIGOLD;
-    case "LOW":
-      return ROSE;
-    default:
-      return MUTED;
-  }
-}
+function competency(level: string | null) {
+  if (!level) return "Developing";
 
-function formatType(type: string) {
-  return type
-    .replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (letter) =>
-      letter.toUpperCase()
-    );
-}
-
-function formatDate(date: string | null) {
-  if (!date) return "Date not available";
-
-  return new Date(date).toLocaleDateString(
-    "en-IN",
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    }
+  return (
+    level.charAt(0) +
+    level.slice(1).toLowerCase()
   );
 }
 
-export default function StudentPortfolioPage() {
-  const [data, setData] =
-    useState<PortfolioData | null>(null);
+function evidenceIcon(type: string) {
+  switch (type) {
+    case "PROJECT":
+      return FolderGit2;
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+    case "CERTIFICATION":
+      return Award;
+
+    case "INTERNSHIP":
+      return BriefcaseBusiness;
+
+    case "ASSESSMENT":
+      return ClipboardCheck;
+
+    case "NPTEL":
+      return GraduationCap;
+
+    default:
+      return FileText;
+  }
+}
+
+export default function PortfolioPage() {
+  const [portfolio, setPortfolio] =
+    useState<Portfolio | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+  const [skillModal, setSkillModal] =
+    useState(false);
+
+  const [evidenceModal, setEvidenceModal] =
+    useState(false);
+
+  const [resumeUploading, setResumeUploading] =
+    useState(false);
+
+  const [skillLoading, setSkillLoading] =
+    useState(false);
+
+  const [evidenceLoading, setEvidenceLoading] =
+    useState(false);
+
+  const resumeInput =
+    useRef<HTMLInputElement>(null);
 
   async function loadPortfolio() {
     try {
@@ -151,23 +160,29 @@ export default function StudentPortfolioPage() {
       setError("");
 
       const response = await fetch(
-        "/api/student/portfolio"
+        "/api/student/portfolio",
+        {
+          cache: "no-store",
+        }
       );
 
-      const result = await response.json();
+      const data =
+        await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         throw new Error(
-          result.error ||
+          data.error ||
             "Failed to load portfolio."
         );
       }
 
-      setData(result.portfolio);
-    } catch (error) {
+      setPortfolio(data.portfolio);
+    } catch (err) {
+      console.error(err);
+
       setError(
-        error instanceof Error
-          ? error.message
+        err instanceof Error
+          ? err.message
           : "Failed to load portfolio."
       );
     } finally {
@@ -179,356 +194,722 @@ export default function StudentPortfolioPage() {
     loadPortfolio();
   }, []);
 
+  async function uploadResume(
+    file: File
+  ) {
+    if (
+      file.type !==
+      "application/pdf"
+    ) {
+      alert("Please upload a PDF.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert(
+        "Resume must be smaller than 10 MB."
+      );
+      return;
+    }
+
+    try {
+      setResumeUploading(true);
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "action",
+        "resume"
+      );
+
+      formData.append(
+        "file",
+        file
+      );
+
+      const response =
+        await fetch(
+          "/api/student/portfolio",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Upload failed."
+        );
+      }
+
+      await loadPortfolio();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Upload failed."
+      );
+    } finally {
+      setResumeUploading(false);
+    }
+  }
+
+  async function deleteResume() {
+    if (
+      !confirm(
+        "Delete your current resume?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response =
+        await fetch(
+          "/api/student/portfolio",
+          {
+            method: "DELETE",
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Delete failed."
+        );
+      }
+
+      await loadPortfolio();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Delete failed."
+      );
+    }
+  }
+
+  async function addSkill(
+    skillId: string,
+    proficiency: number,
+    level: string
+  ) {
+    try {
+      setSkillLoading(true);
+
+      const response =
+        await fetch(
+          "/api/student/portfolio",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              action: "skill",
+              skillId,
+              proficiency,
+              competencyLevel:
+                level,
+            }),
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Failed to add skill."
+        );
+      }
+
+      setSkillModal(false);
+
+      await loadPortfolio();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to add skill."
+      );
+    } finally {
+      setSkillLoading(false);
+    }
+  }
+
+  async function addEvidence(
+    form: FormData
+  ) {
+    try {
+      setEvidenceLoading(true);
+
+      form.append(
+        "action",
+        "evidence"
+      );
+
+      const response =
+        await fetch(
+          "/api/student/portfolio",
+          {
+            method: "POST",
+            body: form,
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+            "Failed to add evidence."
+        );
+      }
+
+      setEvidenceModal(false);
+
+      await loadPortfolio();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to add evidence."
+      );
+    } finally {
+      setEvidenceLoading(false);
+    }
+  }
+
+  function printPortfolio() {
+    window.print();
+  }
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[#9AA3C0]">
-            Loading your portfolio…
+      <main className="min-h-screen bg-[#080d1d] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-10 w-10 rounded-full border-2 border-blue-400 border-t-transparent animate-spin mx-auto mb-4" />
+
+          <p className="text-slate-400">
+            Loading portfolio...
           </p>
         </div>
       </main>
     );
   }
 
-  if (error || !data) {
+  if (error || !portfolio) {
     return (
-      <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
-        <div className="mx-auto max-w-6xl">
-          <Link
-            href="/student/dashboard"
-            className="text-sm text-[#9AA3C0] hover:text-[#F5F1E8]"
+      <main className="min-h-screen bg-[#080d1d] text-white flex items-center justify-center p-6">
+        <div className="max-w-lg w-full rounded-2xl border border-red-400/20 bg-red-400/5 p-8 text-center">
+          <h2 className="text-xl font-semibold mb-3">
+            Unable to load portfolio
+          </h2>
+
+          <p className="text-slate-400 mb-6">
+            {error}
+          </p>
+
+          <button
+            onClick={loadPortfolio}
+            className="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 transition"
           >
-            ← Back to Dashboard
-          </Link>
-
-          <div className="mt-8 rounded-2xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-6">
-            <p className="text-sm text-[#F3AFC6]">
-              {error ||
-                "Unable to load your portfolio."}
-            </p>
-
-            <button
-              onClick={loadPortfolio}
-              className="mt-4 rounded-xl bg-[#E8598B] px-4 py-2 text-sm font-medium text-[#0F1526]"
-            >
-              Try Again
-            </button>
-          </div>
+            Try Again
+          </button>
         </div>
       </main>
     );
   }
 
-  const {
-    student,
-    profile,
-    skills,
-    evidence,
-    credentials,
-    assessments,
-    applications,
-    stats,
-  } = data;
-
-  const averageSkill =
-    skills.length > 0
-      ? Math.round(
-          skills.reduce(
-            (sum, skill) =>
-              sum + skill.proficiency,
-            0
-          ) / skills.length
-        )
-      : 0;
-
-  const verificationPercentage =
-    skills.length > 0
-      ? Math.round(
-          (stats.verifiedSkills /
-            skills.length) *
-            100
-        )
-      : 0;
-
-  const verifiedEvidence = evidence.filter(
-    (item) => item.verified
-  );
-
-  const projects = evidence.filter(
-    (item) =>
-      item.type === "PROJECT"
-  );
-
-  const categories = Array.from(
-    new Set(
-      skills
-        .map((skill) => skill.category)
-        .filter(
-          (category): category is string =>
-            Boolean(category)
-        )
-    )
-  );
-
-  const strongSkills = [...skills]
-    .sort(
-      (a, b) =>
-        b.proficiency - a.proficiency
-    )
-    .slice(0, 5);
+  const { user, profile } =
+    portfolio;
 
   return (
-    <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
-      <div className="mx-auto max-w-6xl space-y-8">
+    <main className="min-h-screen bg-[#080d1d] text-white">
+      <div className="max-w-[1450px] mx-auto px-6 lg:px-12 py-7">
 
-        {/* -------------------------------- */}
+        {/* ================================================= */}
         {/* HEADER */}
-        {/* -------------------------------- */}
+        {/* ================================================= */}
 
-        <section>
-          <Link
-            href="/student/dashboard"
-            className="text-sm text-[#9AA3C0] transition hover:text-[#F5F1E8]"
+        <div className="flex items-center justify-between mb-12">
+          <button
+            onClick={() =>
+              window.history.back()
+            }
+            className="flex items-center gap-3 text-slate-300 hover:text-white transition"
           >
-            ← Back to Dashboard
-          </Link>
+            <ArrowLeft size={20} />
 
-          <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <span>
+              Back to Dashboard
+            </span>
+          </button>
 
-            <div>
-              <p className="text-sm font-medium tracking-wide text-[#F4A93B]">
-                STUDENT PORTFOLIO
-              </p>
+          <button
+            onClick={printPortfolio}
+            className="print:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-700 bg-[#0d1428] hover:bg-[#121b34] transition"
+          >
+            <Download size={17} />
 
-              <h1 className="mt-2 text-4xl font-bold md:text-5xl">
-                {student.name}
+            Print / Download
+          </button>
+        </div>
+
+        {/* ================================================= */}
+        {/* PROFILE */}
+        {/* ================================================= */}
+
+        <section className="grid lg:grid-cols-[1fr_430px] gap-10 mb-10">
+
+          <div className="flex gap-8 items-start">
+
+            <div className="hidden sm:flex w-40 h-40 rounded-[24px] bg-gradient-to-br from-[#27396d] to-[#111a35] border border-blue-300/10 items-center justify-center shadow-2xl shrink-0">
+              <span className="text-6xl font-semibold">
+                {user.name
+                  ?.charAt(0)
+                  .toUpperCase()}
+              </span>
+            </div>
+
+            <div className="pt-1">
+
+              <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight">
+                {user.name}
               </h1>
 
-              <p className="mt-3 max-w-2xl text-[#9AA3C0]">
+              <div className="flex items-center gap-2 mt-3 text-blue-400 text-xl">
+                <span className="w-3 h-3 rounded-full bg-emerald-400" />
+
                 {profile.careerInterest ||
-                  "Student building a verified skill profile"}
+                  "Student"}
+              </div>
+
+              <p className="text-slate-400 max-w-2xl mt-5 leading-7">
+                {profile.bio ||
+                  "Building skills, learning through projects and preparing for real-world opportunities."}
               </p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {categories.map(
-                  (category) => (
-                    <span
-                      key={category}
-                      className="rounded-full border border-[#232B47] bg-[#171E33]/60 px-3 py-1 text-xs text-[#C7CCE0]"
-                    >
-                      {category}
-                    </span>
-                  )
-                )}
+              <div className="flex flex-wrap gap-5 mt-6 text-slate-400">
+
+                <span className="flex items-center gap-2">
+                  <UserRound size={17} />
+                  {user.email}
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <MapPin size={17} />
+                  India
+                </span>
+
+                <span className="flex items-center gap-2">
+                  <CalendarDays size={17} />
+                  Member
+                </span>
+
               </div>
             </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href="/student/skill-dna"
-                className="rounded-xl border border-[#232B47] px-4 py-2 text-sm text-[#C7CCE0] transition hover:border-[#F4A93B]/50 hover:text-[#F5F1E8]"
-              >
-                View Skill DNA
-              </Link>
-
-              <Link
-                href="/student/evidence"
-                className="rounded-xl bg-[#F4A93B] px-4 py-2 text-sm font-medium text-[#0F1526] transition hover:bg-[#f6bd6a]"
-              >
-                Manage Evidence
-              </Link>
-            </div>
-
           </div>
-        </section>
 
-        {/* -------------------------------- */}
-        {/* PROFILE SUMMARY */}
-        {/* -------------------------------- */}
+          {/* ================================================= */}
+          {/* RESUME */}
+          {/* ================================================= */}
 
-        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+          <div className="rounded-2xl border border-slate-700/70 bg-[#121a31] p-6">
 
-          <div className="grid gap-6 md:grid-cols-3">
+            <div className="flex justify-between items-center mb-6">
 
-            <div className="md:col-span-2">
-              <p className="text-sm font-medium text-[#F4A93B]">
-                PROFILE
-              </p>
-
-              <h2 className="mt-2 text-2xl font-bold">
-                {profile.careerInterest ||
-                  "Career interest not specified"}
+              <h2 className="text-xl font-semibold">
+                Resume
               </h2>
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#9AA3C0]">
-                This portfolio brings together your
-                skills, evidence, credentials and
-                application activity into one
-                structured profile.
-              </p>
-
-              <p className="mt-3 text-sm text-[#5B6386]">
-                {student.email}
-              </p>
+              {profile.resume && (
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 text-sm">
+                  <CheckCircle2 size={14} />
+                  Uploaded
+                </span>
+              )}
             </div>
 
-            <div className="rounded-xl border border-[#232B47] bg-[#0F1526]/50 p-5">
-              <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
-                Skill DNA Strength
-              </p>
+            {profile.resume ? (
+              <>
+                <div className="flex gap-4 items-center">
 
-              <p className="mt-2 text-4xl font-bold text-[#F4A93B]">
-                {averageSkill}%
-              </p>
+                  <div className="w-12 h-14 rounded-lg bg-red-400/10 border border-red-400/30 flex items-center justify-center text-red-400">
+                    <FileText />
+                  </div>
 
-              <p className="mt-1 text-xs text-[#9AA3C0]">
-                Average self-reported proficiency
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">
+                      {profile.resume.fileName ||
+                        "Resume.pdf"}
+                    </p>
+
+                    <p className="text-sm text-slate-400 mt-1">
+                      {profile.resume.uploadedAt
+                        ? `Uploaded on ${new Date(
+                            profile.resume.uploadedAt
+                          ).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}`
+                        : "Uploaded"}
+                    </p>
+                  </div>
+
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 mt-6">
+
+                  <a
+                    href={
+                      profile.resume.url
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-center py-2.5 rounded-lg border border-slate-600 hover:bg-slate-800 transition"
+                  >
+                    View
+                  </a>
+
+                  <button
+                    onClick={() =>
+                      resumeInput.current?.click()
+                    }
+                    className="py-2.5 rounded-lg border border-yellow-500/70 text-yellow-400 hover:bg-yellow-500/10 transition"
+                  >
+                    Replace
+                  </button>
+
+                  <button
+                    onClick={deleteResume}
+                    className="py-2.5 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() =>
+                  resumeInput.current?.click()
+                }
+                className="w-full border border-dashed border-slate-600 rounded-xl p-7 hover:border-blue-400 hover:bg-blue-400/5 transition"
+              >
+                <Upload
+                  className="mx-auto mb-3 text-blue-400"
+                />
+
+                <p className="font-medium">
+                  Upload your resume
+                </p>
+
+                <p className="text-sm text-slate-500 mt-1">
+                  PDF up to 10 MB
+                </p>
+              </button>
+            )}
+
+            <input
+              ref={resumeInput}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={(event) => {
+                const file =
+                  event.target.files?.[0];
+
+                if (file) {
+                  uploadResume(file);
+                }
+
+                event.target.value = "";
+              }}
+            />
+
+            {resumeUploading && (
+              <p className="text-sm text-blue-400 mt-4">
+                Uploading resume...
               </p>
-            </div>
+            )}
 
           </div>
-
         </section>
 
-        {/* -------------------------------- */}
-        {/* PORTFOLIO STATS */}
-        {/* -------------------------------- */}
+        {/* ================================================= */}
+        {/* STATS */}
+        {/* ================================================= */}
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-9">
 
           <StatCard
+            icon={Sparkles}
+            value={portfolio.skills.length}
             label="Skills"
-            value={stats.totalSkills}
-            description={`${stats.verifiedSkills} verified`}
-            accent={MARIGOLD}
           />
 
           <StatCard
-            label="Evidence"
-            value={stats.totalEvidence}
-            description={`${stats.verifiedEvidence} verified`}
-            accent={TEAL}
+            icon={Users}
+            value={portfolio.evidence.length}
+            label="Proof of Work"
           />
 
           <StatCard
-            label="Credentials"
-            value={stats.totalCredentials}
-            description={`${stats.verifiedCredentials} verified`}
-            accent={TEAL}
+            icon={ShieldCheck}
+            value={
+              portfolio
+                .academicCredentials
+                .length
+            }
+            label="Academic Credentials"
           />
 
           <StatCard
-            label="Applications"
-            value={stats.totalApplications}
-            description="Opportunities applied to"
-            accent={ROSE}
+            icon={UserRound}
+            value={
+              portfolio.assessments.length
+            }
+            label="Assessments"
           />
 
         </section>
 
-        {/* -------------------------------- */}
+        {/* ================================================= */}
         {/* SKILLS */}
-        {/* -------------------------------- */}
+        {/* ================================================= */}
 
-        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+        <section className="rounded-2xl border border-slate-700/60 bg-[#10182d] p-6 lg:p-7 mb-5">
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex justify-between items-start mb-6">
 
             <div>
-              <p className="text-sm font-medium text-[#F4A93B]">
-                SKILL DNA
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
-                Core Capabilities
+              <h2 className="text-xl font-semibold">
+                What I can do
               </h2>
 
-              <p className="mt-1 text-sm text-[#9AA3C0]">
-                Your strongest recorded skills and
-                their current verification strength.
+              <p className="text-slate-400 text-sm mt-2">
+                Skills developed through learning,
+                projects, assessments and real-world
+                evidence.
               </p>
             </div>
 
-            <Link
-              href="/student/skill-dna"
-              className="text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
+            <button
+              onClick={() =>
+                setSkillModal(true)
+              }
+              className="print:hidden p-2.5 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition"
             >
-              View full Skill DNA →
-            </Link>
+              <Plus size={20} />
+            </button>
 
           </div>
 
-          {strongSkills.length === 0 ? (
-            <EmptyState
-              message="No skills added yet."
-              action="Build your Skill DNA →"
-              href="/student/skill-dna"
-            />
+          {portfolio.skills.length === 0 ? (
+            <div className="py-12 text-center text-slate-500">
+              No skills added yet.
+            </div>
           ) : (
-            <div className="mt-7 space-y-5">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-              {strongSkills.map(
-                (skill) => {
-                  const color =
-                    verificationColor(
-                      skill.verificationStrength
+              {portfolio.skills.map(
+                (skill) => (
+                  <div
+                    key={skill.id}
+                    className="rounded-xl bg-[#17213b] border border-slate-700/50 p-4"
+                  >
+
+                    <div className="flex items-center justify-between gap-3">
+
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-400" />
+
+                        <span className="font-medium">
+                          {skill.name}
+                        </span>
+                      </div>
+
+                      <span className="text-sm font-medium">
+                        {Math.round(
+                          skill.proficiency
+                        )}
+                        %
+                      </span>
+                    </div>
+
+                    <div className="h-1.5 rounded-full bg-slate-700 mt-4 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-400"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.max(
+                              0,
+                              skill.proficiency
+                            )
+                          )}%`,
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center mt-3 text-sm">
+
+                      <span className="text-slate-400">
+                        {competency(
+                          skill.competencyLevel
+                        )}
+                      </span>
+
+                      {skill.verificationStrength !==
+                        "UNVERIFIED" && (
+                        <span className="text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2
+                            size={14}
+                          />
+                          Verified
+                        </span>
+                      )}
+
+                    </div>
+
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+        {/* ================================================= */}
+        {/* EVIDENCE */}
+        {/* ================================================= */}
+
+        <section className="rounded-2xl border border-slate-700/60 bg-[#10182d] p-6 lg:p-7">
+
+          <div className="flex justify-between items-start mb-6">
+
+            <div>
+              <h2 className="text-xl font-semibold">
+                Things that prove my skills
+              </h2>
+
+              <p className="text-slate-400 text-sm mt-2">
+                Projects, certifications,
+                internships and other evidence
+                connected to your capabilities.
+              </p>
+            </div>
+
+            <button
+              onClick={() =>
+                setEvidenceModal(true)
+              }
+              className="print:hidden p-2.5 rounded-xl bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition"
+            >
+              <Plus size={20} />
+            </button>
+
+          </div>
+
+          {portfolio.evidence.length ===
+          0 ? (
+            <div className="py-12 text-center text-slate-500">
+              No proof of work added yet.
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+
+              {portfolio.evidence.map(
+                (item) => {
+                  const Icon =
+                    evidenceIcon(
+                      item.type
                     );
 
                   return (
-                    <div key={skill.id}>
+                    <div
+                      key={item.id}
+                      className="rounded-xl bg-[#17213b] border border-slate-700/50 p-4 flex flex-col min-h-[230px]"
+                    >
 
-                      <div className="mb-2 flex items-center justify-between gap-4">
+                      <div className="flex items-center justify-between mb-4">
 
-                        <div>
-                          <p className="font-medium">
-                            {skill.name}
-                          </p>
-
-                          {skill.category && (
-                            <p className="mt-1 text-xs text-[#5B6386]">
-                              {skill.category}
-                            </p>
-                          )}
+                        <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                          <Icon size={18} />
                         </div>
 
-                        <div className="flex items-center gap-3">
-
-                          <span className="text-sm text-[#C7CCE0]">
-                            {Math.round(
-                              skill.proficiency
-                            )}
-                            %
-                          </span>
-
-                          <span
-                            className="rounded-full border px-2 py-1 text-[10px] uppercase tracking-wide"
-                            style={{
-                              borderColor: `${color}50`,
-                              color,
-                              backgroundColor: `${color}10`,
-                            }}
-                          >
-                            {skill.verificationStrength}
-                          </span>
-
-                        </div>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">
+                          {evidenceLabels[
+                            item.type
+                          ] ||
+                            item.type}
+                        </span>
 
                       </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-[#F4A93B]"
-                          style={{
-                            width: `${Math.min(
-                              Math.max(
-                                skill.proficiency,
-                                0
-                              ),
-                              100
-                            )}%`,
-                          }}
-                        />
+                      <h3 className="font-semibold leading-5">
+                        {item.title}
+                      </h3>
+
+                      {item.skill && (
+                        <p className="text-xs text-blue-400 mt-2">
+                          {item.skill.name}
+                        </p>
+                      )}
+
+                      <p className="text-sm text-slate-400 leading-6 mt-3 flex-1">
+                        {item.description ||
+                          "Evidence submitted to demonstrate this capability."}
+                      </p>
+
+                      <div className="flex items-center justify-between mt-5">
+
+                        {item.url ? (
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300"
+                          >
+                            <Link2
+                              size={14}
+                            />
+
+                            View Proof
+                          </a>
+                        ) : (
+                          <span className="text-sm text-slate-600">
+                            No proof link
+                          </span>
+                        )}
+
+                        {item.verified && (
+                          <CheckCircle2
+                            size={16}
+                            className="text-emerald-400"
+                          />
+                        )}
+
                       </div>
 
                     </div>
@@ -541,530 +922,556 @@ export default function StudentPortfolioPage() {
 
         </section>
 
-        {/* -------------------------------- */}
-        {/* PROJECTS / EVIDENCE */}
-        {/* -------------------------------- */}
-
-        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
-            <div>
-              <p className="text-sm font-medium text-[#F4A93B]">
-                PROJECTS & EVIDENCE
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
-                Proof of Capability
-              </h2>
-
-              <p className="mt-1 text-sm text-[#9AA3C0]">
-                Evidence supporting the skills in your
-                portfolio.
-              </p>
-            </div>
-
-            <Link
-              href="/student/evidence"
-              className="text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
-            >
-              Manage evidence →
-            </Link>
-
-          </div>
-
-          {evidence.length === 0 ? (
-            <EmptyState
-              message="No evidence has been added yet."
-              action="Add your first project →"
-              href="/student/evidence"
-            />
-          ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-
-              {evidence
-                .slice(0, 6)
-                .map((item) => {
-
-                  const color =
-                    verificationColor(
-                      item.verificationStrength
-                    );
-
-                  return (
-                    <article
-                      key={item.id}
-                      className="rounded-xl border border-[#232B47] bg-[#0F1526]/50 p-5"
-                    >
-
-                      <div className="flex items-start justify-between gap-4">
-
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-
-                            <span className="rounded-full border border-[#E8598B]/30 bg-[#E8598B]/10 px-2.5 py-1 text-[10px] uppercase tracking-wide text-[#E8598B]">
-                              {formatType(
-                                item.type
-                              )}
-                            </span>
-
-                            {item.verified && (
-                              <span className="rounded-full border border-[#2BA792]/30 bg-[#2BA792]/10 px-2.5 py-1 text-[10px] uppercase tracking-wide text-[#2BA792]">
-                                Verified
-                              </span>
-                            )}
-
-                          </div>
-
-                          <h3 className="mt-3 font-semibold">
-                            {item.title}
-                          </h3>
-
-                          {item.skill && (
-                            <p className="mt-1 text-sm text-[#F4A93B]">
-                              {item.skill.name}
-                            </p>
-                          )}
-                        </div>
-
-                        {item.score !== null && (
-                          <div className="shrink-0 text-right">
-                            <p className="text-xl font-bold text-[#F4A93B]">
-                              {item.score}%
-                            </p>
-
-                            <p className="text-[10px] uppercase tracking-wide text-[#5B6386]">
-                              Score
-                            </p>
-                          </div>
-                        )}
-
-                      </div>
-
-                      {item.description && (
-                        <p className="mt-4 line-clamp-3 text-sm leading-6 text-[#9AA3C0]">
-                          {item.description}
-                        </p>
-                      )}
-
-                      <div className="mt-5 flex items-center justify-between">
-
-                        <span
-                          className="text-[10px] uppercase tracking-wide"
-                          style={{
-                            color,
-                          }}
-                        >
-                          {item.verificationStrength}
-                        </span>
-
-                        <div className="flex gap-3">
-
-                          <span className="text-xs text-[#5B6386]">
-                            {formatDate(
-                              item.createdAt
-                            )}
-                          </span>
-
-                          {item.url && (
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-[#F4A93B] hover:text-[#f6bd6a]"
-                            >
-                              View →
-                            </a>
-                          )}
-
-                        </div>
-
-                      </div>
-
-                    </article>
-                  );
-                })}
-
-            </div>
-          )}
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* CREDENTIALS */}
-        {/* -------------------------------- */}
-
-        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
-
-          <div>
-            <p className="text-sm font-medium text-[#F4A93B]">
-              CREDENTIALS
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold">
-              Academic & Professional Credentials
-            </h2>
-
-            <p className="mt-1 text-sm text-[#9AA3C0]">
-              Credentials associated with your student
-              profile.
-            </p>
-          </div>
-
-          {credentials.length === 0 ? (
-            <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-6 text-center">
-              <p className="text-sm text-[#9AA3C0]">
-                No credentials added yet.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-6 space-y-3">
-
-              {credentials
-                .slice(0, 5)
-                .map((credential) => {
-
-                  const color =
-                    verificationColor(
-                      credential.verificationStrength
-                    );
-
-                  return (
-                    <div
-                      key={credential.id}
-                      className="rounded-xl border border-[#232B47] bg-[#0F1526]/50 p-5"
-                    >
-
-                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
-                        <div>
-                          <h3 className="font-semibold">
-                            {credential.title}
-                          </h3>
-
-                          {credential.institution && (
-                            <p className="mt-1 text-sm text-[#C7CCE0]">
-                              {credential.institution}
-                            </p>
-                          )}
-
-                          <p className="mt-1 text-xs text-[#5B6386]">
-                            {credential.source}
-                            {credential.issueDate
-                              ? ` · ${formatDate(
-                                  credential.issueDate
-                                )}`
-                              : ""}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-
-                          <span
-                            className="rounded-full border px-3 py-1 text-[10px] uppercase tracking-wide"
-                            style={{
-                              borderColor: `${color}50`,
-                              color,
-                              backgroundColor: `${color}10`,
-                            }}
-                          >
-                            {credential.verified
-                              ? "Verified"
-                              : "Pending"}
-                          </span>
-
-                          {credential.verificationUrl && (
-                            <a
-                              href={
-                                credential.verificationUrl
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
-                            >
-                              Verify →
-                            </a>
-                          )}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-                  );
-                })}
-
-            </div>
-          )}
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* APPLICATIONS */}
-        {/* -------------------------------- */}
-
-        <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
-            <div>
-              <p className="text-sm font-medium text-[#F4A93B]">
-                OPPORTUNITY ACTIVITY
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
-                Recent Applications
-              </h2>
-
-              <p className="mt-1 text-sm text-[#9AA3C0]">
-                Your latest applications and opportunity
-                matches.
-              </p>
-            </div>
-
-            <Link
-              href="/student/applications"
-              className="text-sm text-[#F4A93B] hover:text-[#f6bd6a]"
-            >
-              View all applications →
-            </Link>
-
-          </div>
-
-          {applications.length === 0 ? (
-            <EmptyState
-              message="You haven't applied to any opportunities yet."
-              action="Explore opportunities →"
-              href="/student/opportunities"
-            />
-          ) : (
-            <div className="mt-6 space-y-3">
-
-              {applications
-                .slice(0, 5)
-                .map((application) => (
-
-                  <div
-                    key={application.id}
-                    className="rounded-xl border border-[#232B47] bg-[#0F1526]/50 p-5"
-                  >
-
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
-                      <div>
-                        <h3 className="font-semibold">
-                          {
-                            application
-                              .opportunity
-                              .title
-                          }
-                        </h3>
-
-                        <p className="mt-1 text-sm text-[#C7CCE0]">
-                          {
-                            application
-                              .opportunity
-                              .company
-                          }
-
-                          {application
-                            .opportunity
-                            .location
-                            ? ` · ${application.opportunity.location}`
-                            : ""}
-                        </p>
-
-                        <p className="mt-1 text-xs text-[#5B6386]">
-                          Applied{" "}
-                          {formatDate(
-                            application.createdAt
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-
-                        {application.matchScore !==
-                          null && (
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-[#F4A93B]">
-                              {
-                                application.matchScore
-                              }
-                              %
-                            </p>
-
-                            <p className="text-[10px] uppercase tracking-wide text-[#5B6386]">
-                              Match
-                            </p>
-                          </div>
-                        )}
-
-                        <span className="rounded-full border border-[#232B47] px-3 py-1 text-[10px] uppercase tracking-wide text-[#C7CCE0]">
-                          {formatType(
-                            application.status
-                          )}
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-                ))}
-
-            </div>
-          )}
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* VERIFICATION SUMMARY */}
-        {/* -------------------------------- */}
-
-        <section className="rounded-2xl border border-[#2BA792]/20 bg-[#2BA792]/5 p-6">
-
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-
-            <div>
-              <p className="text-sm font-medium text-[#2BA792]">
-                PORTFOLIO CREDIBILITY
-              </p>
-
-              <h2 className="mt-1 text-2xl font-bold">
-                {verificationPercentage}% of your
-                skills are verified
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[#9AA3C0]">
-                Verification strength is based on the
-                supporting evidence associated with your
-                skills. Add strong evidence to make your
-                portfolio more credible.
-              </p>
-            </div>
-
-            <div className="shrink-0 text-left md:text-right">
-
-              <p className="text-4xl font-bold text-[#2BA792]">
-                {stats.verifiedEvidence}
-              </p>
-
-              <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
-                Verified evidence items
-              </p>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* -------------------------------- */}
-        {/* FOOTER NAV */}
-        {/* -------------------------------- */}
-
-        <section className="flex flex-wrap justify-center gap-4 border-t border-[#232B47] pt-6">
-
-          <Link
-            href="/student/dashboard"
-            className="text-sm text-[#9AA3C0] hover:text-[#F5F1E8]"
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            href="/student/skill-dna"
-            className="text-sm text-[#9AA3C0] hover:text-[#F5F1E8]"
-          >
-            Skill DNA
-          </Link>
-
-          <Link
-            href="/student/evidence"
-            className="text-sm text-[#9AA3C0] hover:text-[#F5F1E8]"
-          >
-            Evidence
-          </Link>
-
-          <Link
-            href="/student/opportunities"
-            className="text-sm text-[#9AA3C0] hover:text-[#F5F1E8]"
-          >
-            Opportunities
-          </Link>
-
-        </section>
-
       </div>
+
+      {/* =================================================== */}
+      {/* SKILL MODAL */}
+      {/* =================================================== */}
+
+      {skillModal && (
+        <SkillModal
+          skills={portfolio.skills}
+          loading={skillLoading}
+          onClose={() =>
+            setSkillModal(false)
+          }
+          onSubmit={addSkill}
+        />
+      )}
+
+      {/* =================================================== */}
+      {/* EVIDENCE MODAL */}
+      {/* =================================================== */}
+
+      {evidenceModal && (
+        <EvidenceModal
+          skills={portfolio.skills}
+          loading={evidenceLoading}
+          onClose={() =>
+            setEvidenceModal(false)
+          }
+          onSubmit={addEvidence}
+        />
+      )}
     </main>
   );
 }
 
-/* ---------------------------------------------
-   STAT CARD
---------------------------------------------- */
+// ============================================================
+// STAT CARD
+// ============================================================
 
 function StatCard({
-  label,
+  icon: Icon,
   value,
-  description,
-  accent,
+  label,
 }: {
+  icon: any;
+  value: number;
   label: string;
-  value: number | string;
-  description: string;
-  accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-5">
+    <div className="rounded-2xl border border-slate-700/60 bg-[#10182d] p-5 flex items-center gap-5">
 
-      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
-        {label}
-      </p>
+      <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+        <Icon size={23} />
+      </div>
 
-      <p
-        className="mt-2 text-3xl font-bold"
-        style={{ color: accent }}
-      >
-        {value}
-      </p>
+      <div>
+        <div className="text-2xl font-semibold">
+          {value}
+        </div>
 
-      <p className="mt-1 text-xs text-[#9AA3C0]">
-        {description}
-      </p>
+        <div className="text-sm text-slate-400 mt-1">
+          {label}
+        </div>
+      </div>
 
     </div>
   );
 }
 
-/* ---------------------------------------------
-   EMPTY STATE
---------------------------------------------- */
+// ============================================================
+// SKILL MODAL
+// ============================================================
 
-function EmptyState({
-  message,
-  action,
-  href,
+function SkillModal({
+  skills,
+  loading,
+  onClose,
+  onSubmit,
 }: {
-  message: string;
-  action: string;
-  href: string;
+  skills: Skill[];
+  loading: boolean;
+  onClose: () => void;
+  onSubmit: (
+    skillId: string,
+    proficiency: number,
+    level: string
+  ) => void;
+}) {
+  const [skillId, setSkillId] =
+    useState("");
+
+  const [proficiency, setProficiency] =
+    useState(70);
+
+  const [level, setLevel] =
+    useState("INTERMEDIATE");
+
+  return (
+    <Modal
+      title="Add Skill"
+      onClose={onClose}
+    >
+
+      <div className="space-y-5">
+
+        <div>
+          <label className="label">
+            Skill
+          </label>
+
+          <select
+            value={skillId}
+            onChange={(e) =>
+              setSkillId(e.target.value)
+            }
+            className="input"
+          >
+            <option value="">
+              Select a skill
+            </option>
+
+            {skills.length === 0 ? (
+              <option disabled>
+                No available skills
+              </option>
+            ) : (
+              skills.map((skill) => (
+                <option
+                  key={skill.id}
+                  value={skill.id}
+                >
+                  {skill.name}
+                </option>
+              ))
+            )}
+          </select>
+
+          <p className="text-xs text-slate-500 mt-2">
+            Skills already in your profile are
+            shown here.
+          </p>
+        </div>
+
+        <div>
+          <div className="flex justify-between">
+            <label className="label">
+              Proficiency
+            </label>
+
+            <span className="text-blue-400">
+              {proficiency}%
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={proficiency}
+            onChange={(e) =>
+              setProficiency(
+                Number(e.target.value)
+              )
+            }
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="label">
+            Competency Level
+          </label>
+
+          <select
+            value={level}
+            onChange={(e) =>
+              setLevel(e.target.value)
+            }
+            className="input"
+          >
+            <option value="EXPOSURE">
+              Exposure
+            </option>
+
+            <option value="FOUNDATIONAL">
+              Foundational
+            </option>
+
+            <option value="INTERMEDIATE">
+              Intermediate
+            </option>
+
+            <option value="ADVANCED">
+              Advanced
+            </option>
+
+            <option value="EXPERT">
+              Expert
+            </option>
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-3">
+
+          <button
+            onClick={onClose}
+            className="modal-secondary"
+          >
+            Cancel
+          </button>
+
+          <button
+            disabled={
+              !skillId || loading
+            }
+            onClick={() =>
+              onSubmit(
+                skillId,
+                proficiency,
+                level
+              )
+            }
+            className="modal-primary"
+          >
+            {loading
+              ? "Adding..."
+              : "Add Skill"}
+          </button>
+
+        </div>
+
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// EVIDENCE MODAL
+// ============================================================
+
+function EvidenceModal({
+  skills,
+  loading,
+  onClose,
+  onSubmit,
+}: {
+  skills: Skill[];
+  loading: boolean;
+  onClose: () => void;
+  onSubmit: (
+    form: FormData
+  ) => void;
+}) {
+  const [title, setTitle] =
+    useState("");
+
+  const [description, setDescription] =
+    useState("");
+
+  const [type, setType] =
+    useState("PROJECT");
+
+  const [skillId, setSkillId] =
+    useState("");
+
+  const [url, setUrl] =
+    useState("");
+
+  const [file, setFile] =
+    useState<File | null>(null);
+
+  function submit() {
+    if (!title.trim()) {
+      alert(
+        "Please enter a title."
+      );
+      return;
+    }
+
+    if (!skillId) {
+      alert(
+        "Please select a related skill."
+      );
+      return;
+    }
+
+    if (!file) {
+      alert(
+        "Please upload proof."
+      );
+      return;
+    }
+
+    const form =
+      new FormData();
+
+    form.append(
+      "title",
+      title
+    );
+
+    form.append(
+      "description",
+      description
+    );
+
+    form.append(
+      "type",
+      type
+    );
+
+    form.append(
+      "skillId",
+      skillId
+    );
+
+    form.append(
+      "url",
+      url
+    );
+
+    form.append(
+      "file",
+      file
+    );
+
+    onSubmit(form);
+  }
+
+  return (
+    <Modal
+      title="Add Proof of Work"
+      onClose={onClose}
+    >
+
+      <div className="space-y-4">
+
+        <div>
+          <label className="label">
+            Type
+          </label>
+
+          <select
+            value={type}
+            onChange={(e) =>
+              setType(e.target.value)
+            }
+            className="input"
+          >
+            <option value="PROJECT">
+              Project
+            </option>
+
+            <option value="CERTIFICATION">
+              Certification
+            </option>
+
+            <option value="INTERNSHIP">
+              Internship
+            </option>
+
+            <option value="NPTEL">
+              NPTEL
+            </option>
+
+            <option value="ASSESSMENT">
+              Assessment
+            </option>
+
+            <option value="SELF_REPORTED">
+              Other
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label className="label">
+            Title
+          </label>
+
+          <input
+            value={title}
+            onChange={(e) =>
+              setTitle(e.target.value)
+            }
+            placeholder="e.g. SkillSetu Platform"
+            className="input"
+          />
+        </div>
+
+        <div>
+          <label className="label">
+            Related Skill
+          </label>
+
+          <select
+            value={skillId}
+            onChange={(e) =>
+              setSkillId(e.target.value)
+            }
+            className="input"
+          >
+            <option value="">
+              Select skill
+            </option>
+
+            {skills.map((skill) => (
+              <option
+                key={skill.id}
+                value={skill.id}
+              >
+                {skill.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="label">
+            Description
+          </label>
+
+          <textarea
+            value={description}
+            onChange={(e) =>
+              setDescription(
+                e.target.value
+              )
+            }
+            rows={4}
+            placeholder="Briefly describe this achievement..."
+            className="input resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="label">
+            URL
+          </label>
+
+          <input
+            value={url}
+            onChange={(e) =>
+              setUrl(e.target.value)
+            }
+            placeholder="https://..."
+            className="input"
+          />
+        </div>
+
+        <div>
+          <label className="label">
+            Upload Proof
+          </label>
+
+          <label className="border border-dashed border-slate-600 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-400/5 transition">
+
+            <Upload
+              className="text-blue-400 mb-2"
+            />
+
+            <span className="text-sm">
+              {file
+                ? file.name
+                : "Choose PDF or image"}
+            </span>
+
+            <span className="text-xs text-slate-500 mt-1">
+              Maximum 10 MB
+            </span>
+
+            <input
+              type="file"
+              accept=".pdf,image/*"
+              className="hidden"
+              onChange={(e) =>
+                setFile(
+                  e.target.files?.[0] ||
+                    null
+                )
+              }
+            />
+
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-3">
+
+          <button
+            onClick={onClose}
+            className="modal-secondary"
+          >
+            Cancel
+          </button>
+
+          <button
+            disabled={loading}
+            onClick={submit}
+            className="modal-primary"
+          >
+            {loading
+              ? "Uploading..."
+              : "Add Evidence"}
+          </button>
+
+        </div>
+
+      </div>
+    </Modal>
+  );
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+
+function Modal({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-8 text-center">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-5">
 
-      <p className="text-sm text-[#9AA3C0]">
-        {message}
-      </p>
+      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 bg-[#10182d] shadow-2xl">
 
-      <Link
-        href={href}
-        className="mt-4 inline-block text-sm font-medium text-[#F4A93B] hover:text-[#f6bd6a]"
-      >
-        {action}
-      </Link>
+        <div className="sticky top-0 bg-[#10182d] border-b border-slate-700 px-6 py-5 flex items-center justify-between">
 
+          <h2 className="text-xl font-semibold">
+            {title}
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white"
+          >
+            <X />
+          </button>
+
+        </div>
+
+        <div className="p-6">
+          {children}
+        </div>
+
+      </div>
     </div>
   );
 }
