@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type CompetencyLevel =
+  | "EXPOSURE"
+  | "FOUNDATIONAL"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
 type OpportunitySkill = {
   id: string;
   name: string;
   category: string | null;
   required: boolean;
-  minimumProficiency: number;
+  requiredLevel: CompetencyLevel;
   weight: number;
 };
 
@@ -34,83 +41,85 @@ function matchScoreColor(score: number) {
   return ROSE;
 }
 
-export default function StudentOpportunitiesPage() {
-  const [opportunities, setOpportunities] = useState<
-    Opportunity[]
-  >([]);
+function formatCompetencyLevel(level: CompetencyLevel) {
+  return level.charAt(0) + level.slice(1).toLowerCase();
+}
 
+export default function StudentOpportunitiesPage() {
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [appliedOpportunityIds, setAppliedOpportunityIds] = useState<
-  Set<string>
+    Set<string>
   >(new Set());
 
   useEffect(() => {
-  async function loadOpportunities() {
-    try {
-      const [opportunitiesResponse, applicationsResponse] =
-        await Promise.all([
+    async function loadOpportunities() {
+      try {
+        const [
+          opportunitiesResponse,
+          applicationsResponse,
+        ] = await Promise.all([
           fetch("/api/student/opportunities"),
           fetch("/api/student/applications"),
         ]);
 
-      const opportunitiesData =
-        await opportunitiesResponse.json();
+        const opportunitiesData =
+          await opportunitiesResponse.json();
 
-      const applicationsData =
-        await applicationsResponse.json();
+        const applicationsData =
+          await applicationsResponse.json();
 
-      if (!opportunitiesResponse.ok) {
-        throw new Error(
-          opportunitiesData.error ||
-            "Failed to load opportunities."
+        if (!opportunitiesResponse.ok) {
+          throw new Error(
+            opportunitiesData.error ||
+              "Failed to load opportunities."
+          );
+        }
+
+        if (!applicationsResponse.ok) {
+          throw new Error(
+            applicationsData.error ||
+              "Failed to load applications."
+          );
+        }
+
+        setOpportunities(
+          opportunitiesData.opportunities || []
         );
-      }
 
-      if (!applicationsResponse.ok) {
-        throw new Error(
-          applicationsData.error ||
-            "Failed to load applications."
+        const appliedIds = new Set<string>(
+          (applicationsData.applications || []).map(
+            (application: {
+              opportunity: {
+                id: string;
+              };
+            }) => application.opportunity.id
+          )
         );
+
+        setAppliedOpportunityIds(appliedIds);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load opportunities."
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setOpportunities(
-        opportunitiesData.opportunities || []
-      );
-
-      const appliedIds = new Set<string>(
-        (applicationsData.applications || []).map(
-          (application: {
-            opportunity: {
-              id: string;
-            };
-          }) => application.opportunity.id
-        )
-      );
-
-      setAppliedOpportunityIds(appliedIds);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Failed to load opportunities."
-      );
-    } finally {
-      setLoading(false);
     }
-  }
 
-  loadOpportunities();
-}, []);
+    loadOpportunities();
+  }, []);
 
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
         <div className="max-w-6xl mx-auto">
           <p className="text-[#9AA3C0]">
-            Finding opportunities that match your
-            Skill DNA...
+            Finding opportunities that match your Skill DNA...
           </p>
         </div>
       </main>
@@ -144,8 +153,8 @@ export default function StudentOpportunitiesPage() {
           </h1>
 
           <p className="text-[#9AA3C0] mt-2 max-w-2xl">
-            SkillSetu matches your verified skills
-            against real opportunity requirements.
+            SkillSetu matches your verified skills against
+            real opportunity requirements.
           </p>
         </section>
 
@@ -157,23 +166,21 @@ export default function StudentOpportunitiesPage() {
             </h2>
 
             <p className="text-[#9AA3C0] mt-2">
-              Check back soon as industry partners
-              add new opportunities.
+              Check back soon as industry partners add new
+              opportunities.
             </p>
           </div>
         ) : (
           <div className="space-y-5">
-            {opportunities.map(
-              (opportunity) => (
-                <OpportunityCard
-                 key={opportunity.id}
-                 opportunity={opportunity}
-                 initiallyApplied={appliedOpportunityIds.has(
-                 opportunity.id
-                 )}
-                />
-              )
-            )}
+            {opportunities.map((opportunity) => (
+              <OpportunityCard
+                key={opportunity.id}
+                opportunity={opportunity}
+                initiallyApplied={appliedOpportunityIds.has(
+                  opportunity.id
+                )}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -188,16 +195,14 @@ function OpportunityCard({
   opportunity: Opportunity;
   initiallyApplied: boolean;
 }) {
-  const matchScore = Math.round(
-    opportunity.matchScore
-  );
-
+  const matchScore = Math.round(opportunity.matchScore);
   const scoreColor = matchScoreColor(matchScore);
 
   const router = useRouter();
 
   const [applied, setApplied] =
-  useState(initiallyApplied);
+    useState(initiallyApplied);
+
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState("");
 
@@ -247,15 +252,15 @@ function OpportunityCard({
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
 
         <div className="flex-1">
+
           <div className="flex flex-wrap items-center gap-3 mb-3">
 
+            {/* Opportunity type */}
             <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs font-medium text-[#C7CCE0]">
-              {opportunity.type.replaceAll(
-                "_",
-                " "
-              )}
+              {opportunity.type.replaceAll("_", " ")}
             </span>
 
+            {/* Location */}
             {opportunity.location && (
               <span className="text-xs text-[#9AA3C0]">
                 📍 {opportunity.location}
@@ -285,15 +290,16 @@ function OpportunityCard({
               backgroundColor: `${scoreColor}1A`,
             }}
           >
-
-            <p className="text-3xl font-bold" style={{ color: scoreColor }}>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: scoreColor }}
+            >
               {matchScore}%
             </p>
 
             <p className="text-xs text-[#9AA3C0] mt-1">
               Skill Match
             </p>
-
           </div>
         </div>
       </div>
@@ -307,30 +313,35 @@ function OpportunityCard({
 
         <div className="flex flex-wrap gap-2">
 
-          {opportunity.skills.map(
-            (skill) => (
-              <div
-                key={skill.id}
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  skill.required
-                    ? "border-[#F4A93B]/30 bg-[#F4A93B]/10 text-[#f6d09a]"
-                    : "border-[#232B47] bg-white/[0.02] text-[#C7CCE0]"
-                }`}
-              >
+          {opportunity.skills.map((skill) => (
+            <div
+              key={skill.id}
+              className={`rounded-lg border px-3 py-2 text-sm ${
+                skill.required
+                  ? "border-[#F4A93B]/30 bg-[#F4A93B]/10 text-[#f6d09a]"
+                  : "border-[#232B47] bg-white/[0.02] text-[#C7CCE0]"
+              }`}
+            >
+              {/* Skill name */}
+              <span className="font-medium">
                 {skill.name}
+              </span>
 
-                <span className="ml-2 text-xs text-[#9AA3C0]">
-                  {skill.minimumProficiency}%
-                </span>
-
-                {skill.required && (
-                  <span className="ml-1 text-[#F4A93B]">
-                    *
-                  </span>
+              {/* Required competency level */}
+              <span className="ml-2 text-xs text-[#9AA3C0]">
+                {formatCompetencyLevel(
+                  skill.requiredLevel
                 )}
-              </div>
-            )
-          )}
+              </span>
+
+              {/* Required marker */}
+              {skill.required && (
+                <span className="ml-1 text-[#F4A93B]">
+                  *
+                </span>
+              )}
+            </div>
+          ))}
 
         </div>
 
@@ -349,7 +360,7 @@ function OpportunityCard({
       {/* Actions */}
       <div className="mt-6 flex justify-end gap-3">
 
-        {/* Existing button */}
+        {/* View opportunity */}
         <button
           type="button"
           onClick={() =>
@@ -362,7 +373,7 @@ function OpportunityCard({
           View Opportunity
         </button>
 
-        {/* Apply button */}
+        {/* Apply */}
         <button
           type="button"
           onClick={handleApply}
