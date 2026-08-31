@@ -38,6 +38,20 @@ export async function GET() {
                 createdAt: "desc",
               },
             },
+            academicCredentials: {
+              orderBy: {
+                createdAt: "desc",
+              },
+            },
+            applications: {
+              include: {
+                opportunity: true,
+              },
+              orderBy: {
+                createdAt: "desc",
+              },
+              take: 5,
+            },
           },
         },
       },
@@ -69,6 +83,8 @@ export async function GET() {
       );
     }
 
+    const opportunityCount = await prisma.opportunity.count();
+
     return NextResponse.json({
       user: {
         id: user.id,
@@ -77,6 +93,7 @@ export async function GET() {
         role: user.role,
       },
       profile: user.studentProfile,
+      opportunityCount,
     });
   } catch (error) {
     console.error(
