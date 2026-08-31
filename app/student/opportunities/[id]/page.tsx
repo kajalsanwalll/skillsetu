@@ -3,19 +3,40 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+type CompetencyLevel =
+  | "EXPOSURE"
+  | "FOUNDATIONAL"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
 type GapSkill = {
   skillId: string;
   skillName: string;
   category: string | null;
+
   studentProficiency: number;
+
+  // Numeric proficiency calculated from the competency requirement
   requiredProficiency: number;
+
   gap: number;
   weight: number;
   required: boolean;
-  status:
-    | "STRONG"
-    | "MODERATE"
-    | "GAP";
+
+  // NEW: actual competency requirement
+  requiredLevel: CompetencyLevel;
+
+  status: "STRONG" | "MODERATE" | "GAP";
+};
+
+type OpportunitySkill = {
+  id: string;
+  name: string;
+  category: string | null;
+  required: boolean;
+  requiredLevel: CompetencyLevel;
+  weight: number;
 };
 
 type Opportunity = {
@@ -32,12 +53,13 @@ type Opportunity = {
   };
 
   readinessScore: number;
-
   strongSkills: number;
   moderateSkills: number;
   gapSkills: number;
 
   gapAnalysis: GapSkill[];
+
+  skills: OpportunitySkill[];
 };
 
 const TEAL = "#2BA792";
@@ -56,6 +78,10 @@ function readinessColor(score: number) {
   return ROSE;
 }
 
+function formatCompetencyLevel(level: CompetencyLevel) {
+  return level.charAt(0) + level.slice(1).toLowerCase();
+}
+
 export default function OpportunityDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -65,112 +91,109 @@ export default function OpportunityDetailPage() {
   const [opportunity, setOpportunity] =
     useState<Opportunity | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [applied, setApplied] = useState(false);
   const [applying, setApplying] = useState(false);
-  const [applicationError, setApplicationError] = useState("");  
+  const [applicationError, setApplicationError] = useState("");
 
   useEffect(() => {
-  async function loadOpportunity() {
+    async function loadOpportunity() {
+      try {
+        const response = await fetch(
+          `/api/student/opportunities/${id}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || "Failed to load opportunity."
+          );
+        }
+
+        const loadedOpportunity = data.opportunity;
+
+        setOpportunity(loadedOpportunity);
+
+        // Check whether the student has already applied
+        const applicationsResponse = await fetch(
+          "/api/student/applications"
+        );
+
+        const applicationsData =
+          await applicationsResponse.json();
+
+        if (applicationsResponse.ok) {
+          const alreadyApplied =
+            applicationsData.applications?.some(
+              (application: {
+                opportunity: {
+                  id: string;
+                };
+              }) =>
+                application.opportunity.id ===
+                loadedOpportunity.id
+            );
+
+          setApplied(alreadyApplied);
+        }
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load opportunity."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (id) {
+      loadOpportunity();
+    }
+  }, [id]);
+
+  async function handleApply() {
+    if (!opportunity) return;
+
+    setApplying(true);
+    setApplicationError("");
+
     try {
       const response = await fetch(
-        `/api/student/opportunities/${id}`
+        "/api/student/applications",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            opportunityId: opportunity.id,
+          }),
+        }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Failed to load opportunity."
+          data.error || "Failed to submit application."
         );
       }
 
-      const loadedOpportunity = data.opportunity;
-
-      setOpportunity(loadedOpportunity);
-
-      // Check whether the student has already applied
-      const applicationsResponse = await fetch(
-        "/api/student/applications"
-      );
-
-      const applicationsData =
-        await applicationsResponse.json();
-
-      if (applicationsResponse.ok) {
-        const alreadyApplied =
-          applicationsData.applications?.some(
-            (application: {
-              opportunity: {
-                id: string;
-              };
-            }) =>
-              application.opportunity.id ===
-              loadedOpportunity.id
-          );
-
-        setApplied(alreadyApplied);
-      }
+      setApplied(true);
     } catch (error) {
-      setError(
+      setApplicationError(
         error instanceof Error
           ? error.message
-          : "Failed to load opportunity."
+          : "Failed to submit application."
       );
     } finally {
-      setLoading(false);
+      setApplying(false);
     }
   }
-
-  if (id) {
-    loadOpportunity();
-  }
- }, [id]);
-
-  async function handleApply() {
-  if (!opportunity) return;
-
-  setApplying(true);
-  setApplicationError("");
-
-  try {
-    const response = await fetch(
-      "/api/student/applications",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          opportunityId: opportunity.id,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Failed to submit application."
-      );
-    }
-
-    setApplied(true);
-  } catch (error) {
-    setApplicationError(
-      error instanceof Error
-        ? error.message
-        : "Failed to submit application."
-    );
-  } finally {
-    setApplying(false);
-  }
- } 
 
   if (loading) {
     return (
@@ -202,23 +225,22 @@ export default function OpportunityDetailPage() {
 
   const strongSkills =
     opportunity.gapAnalysis.filter(
-      (skill) =>
-        skill.status === "STRONG"
+      (skill) => skill.status === "STRONG"
     );
 
   const moderateSkills =
     opportunity.gapAnalysis.filter(
-      (skill) =>
-        skill.status === "MODERATE"
+      (skill) => skill.status === "MODERATE"
     );
 
   const gapSkills =
     opportunity.gapAnalysis.filter(
-      (skill) =>
-        skill.status === "GAP"
+      (skill) => skill.status === "GAP"
     );
 
-  const readinessTint = readinessColor(opportunity.readinessScore);
+  const readinessTint = readinessColor(
+    opportunity.readinessScore
+  );
 
   return (
     <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
@@ -228,9 +250,7 @@ export default function OpportunityDetailPage() {
         <button
           type="button"
           onClick={() =>
-            router.push(
-              "/student/opportunities"
-            )
+            router.push("/student/opportunities")
           }
           className="text-sm text-[#9AA3C0] hover:text-[#C7CCE0]"
         >
@@ -243,10 +263,7 @@ export default function OpportunityDetailPage() {
 
             <div>
               <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs font-medium text-[#C7CCE0]">
-                {opportunity.type.replaceAll(
-                  "_",
-                  " "
-                )}
+                {opportunity.type.replaceAll("_", " ")}
               </span>
 
               <h1 className="mt-4 text-3xl font-bold">
@@ -273,8 +290,14 @@ export default function OpportunityDetailPage() {
                   backgroundColor: `${readinessTint}1A`,
                 }}
               >
-                <p className="text-4xl font-bold" style={{ color: readinessTint }}>
-                  {opportunity.readinessScore}%
+                <p
+                  className="text-4xl font-bold"
+                  style={{ color: readinessTint }}
+                >
+                  {Math.round(
+                    opportunity.readinessScore
+                  )}
+                  %
                 </p>
 
                 <p className="mt-1 text-sm text-[#9AA3C0]">
@@ -293,7 +316,9 @@ export default function OpportunityDetailPage() {
                   disabled={applying}
                   className="rounded-xl bg-[#F4A93B] px-5 py-3 text-sm font-semibold text-[#0F1526] transition hover:bg-[#f6bd6a] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {applying ? "Applying..." : "Apply Now"}
+                  {applying
+                    ? "Applying..."
+                    : "Apply Now"}
                 </button>
               )}
             </div>
@@ -306,6 +331,7 @@ export default function OpportunityDetailPage() {
           </div>
         </section>
 
+        {/* Application error */}
         {applicationError && (
           <div className="rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-4 text-sm text-[#f083a8]">
             {applicationError}
@@ -319,22 +345,33 @@ export default function OpportunityDetailPage() {
           </h2>
 
           <p className="mt-1 text-[#9AA3C0]">
-            Your readiness is calculated by
-            comparing your current Skill DNA
-            against this opportunity&apos;s
-            required proficiency levels and
-            skill weights.
+            Your readiness is calculated by comparing
+            your current Skill DNA against this
+            opportunity&apos;s required competency levels
+            and skill weights.
           </p>
         </section>
 
-        {/* Summary — one distribution instead of three repeating cards */}
+        {/* Summary */}
         <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
           <SegmentedBar
             label="Skill readiness breakdown"
             segments={[
-              { label: "Strong", count: strongSkills.length, color: TEAL },
-              { label: "Moderate", count: moderateSkills.length, color: MARIGOLD },
-              { label: "Gap", count: gapSkills.length, color: ROSE },
+              {
+                label: "Strong",
+                count: strongSkills.length,
+                color: TEAL,
+              },
+              {
+                label: "Moderate",
+                count: moderateSkills.length,
+                color: MARIGOLD,
+              },
+              {
+                label: "Gap",
+                count: gapSkills.length,
+                color: ROSE,
+              },
             ]}
           />
         </section>
@@ -343,7 +380,7 @@ export default function OpportunityDetailPage() {
         {strongSkills.length > 0 && (
           <SkillSection
             title="Strong Skills"
-            description="You currently meet or exceed the required proficiency."
+            description="You currently meet or exceed the required competency level."
             skills={strongSkills}
           />
         )}
@@ -365,7 +402,6 @@ export default function OpportunityDetailPage() {
             skills={gapSkills}
           />
         )}
-
       </div>
     </main>
   );
@@ -376,13 +412,22 @@ function SegmentedBar({
   segments,
 }: {
   label: string;
-  segments: { label: string; count: number; color: string }[];
+  segments: {
+    label: string;
+    count: number;
+    color: string;
+  }[];
 }) {
-  const total = segments.reduce((sum, s) => sum + s.count, 0);
+  const total = segments.reduce(
+    (sum, s) => sum + s.count,
+    0
+  );
 
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-[#9AA3C0]">
+        {label}
+      </p>
 
       <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-white/5">
         {total === 0 ? (
@@ -403,12 +448,21 @@ function SegmentedBar({
 
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {segments.map((segment) => (
-          <span key={segment.label} className="flex items-center gap-1.5 text-xs text-[#9AA3C0]">
+          <span
+            key={segment.label}
+            className="flex items-center gap-1.5 text-xs text-[#9AA3C0]"
+          >
             <span
               className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: segment.color }}
+              style={{
+                backgroundColor: segment.color,
+              }}
             />
-            {segment.label}: <span className="text-[#C7CCE0]">{segment.count}</span>
+
+            {segment.label}:{" "}
+            <span className="text-[#C7CCE0]">
+              {segment.count}
+            </span>
           </span>
         ))}
       </div>
@@ -427,7 +481,6 @@ function SkillSection({
 }) {
   return (
     <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
-
       <div>
         <h2 className="text-xl font-bold">
           {title}
@@ -439,7 +492,6 @@ function SkillSection({
       </div>
 
       <div className="mt-6 space-y-5">
-
         {skills.map((skill) => {
           const tint = statusColor[skill.status];
 
@@ -448,7 +500,6 @@ function SkillSection({
               key={skill.skillId}
               className="rounded-xl border border-[#232B47] p-5"
             >
-
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
                 <div>
@@ -464,8 +515,14 @@ function SkillSection({
                 </div>
 
                 <div className="text-sm">
-                  <span className="font-semibold" style={{ color: tint }}>
-                    {skill.studentProficiency}%
+                  <span
+                    className="font-semibold"
+                    style={{ color: tint }}
+                  >
+                    {Math.round(
+                      skill.studentProficiency
+                    )}
+                    %
                   </span>
 
                   <span className="mx-2 text-[#5B6488]">
@@ -473,16 +530,15 @@ function SkillSection({
                   </span>
 
                   <span className="text-[#9AA3C0]">
-                    {skill.requiredProficiency}%
-                    required
+                    {formatCompetencyLevel(
+                      skill.requiredLevel
+                    )}
                   </span>
                 </div>
-
               </div>
 
-              {/* Progress — colored by status */}
+              {/* Student proficiency */}
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -493,10 +549,9 @@ function SkillSection({
                     backgroundColor: tint,
                   }}
                 />
-
               </div>
 
-              {/* Gap information */}
+              {/* Requirement information */}
               <div className="mt-3 flex flex-wrap gap-3 text-xs">
 
                 <span className="rounded-full border border-[#232B47] px-3 py-1 text-[#9AA3C0]">
@@ -509,24 +564,30 @@ function SkillSection({
                   </span>
                 )}
 
+                <span className="rounded-full border border-[#232B47] bg-white/[0.02] px-3 py-1 text-[#C7CCE0]">
+                  Required Level:{" "}
+                  <span className="font-medium">
+                    {formatCompetencyLevel(
+                      skill.requiredLevel
+                    )}
+                  </span>
+                </span>
+
                 {skill.gap > 0 && (
                   <span className="rounded-full border border-[#E8598B]/30 bg-[#E8598B]/10 px-3 py-1 text-[#f083a8]">
-                    {skill.gap}% gap
+                    {Math.round(skill.gap)}% gap
                   </span>
                 )}
 
-                {skill.gap === 0 && (
+                {skill.gap <= 0 && (
                   <span className="rounded-full border border-[#2BA792]/30 bg-[#2BA792]/10 px-3 py-1 text-[#6fd6c4]">
                     Requirement met
                   </span>
                 )}
-
               </div>
-
             </div>
           );
         })}
-
       </div>
     </section>
   );
