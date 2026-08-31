@@ -7,7 +7,12 @@ export type OpportunitySkillInput = {
   skillId: string;
   required: boolean;
   weight: number;
-  minimumProficiency: number;
+  requiredLevel:
+    | "EXPOSURE"
+    | "FOUNDATIONAL"
+    | "INTERMEDIATE"
+    | "ADVANCED"
+    | "EXPERT";
 };
 
 export type SkillGapResult = {
@@ -17,6 +22,7 @@ export type SkillGapResult = {
   gap: number;
   weight: number;
   required: boolean;
+  requiredLevel: OpportunitySkillInput["requiredLevel"];
   status: "STRONG" | "MODERATE" | "GAP";
 };
 
@@ -26,6 +32,21 @@ export type GapAnalysisResult = {
   strongSkills: SkillGapResult[];
   moderateSkills: SkillGapResult[];
   gapSkills: SkillGapResult[];
+};
+
+/**
+ * Converts the competency level stored on an opportunity
+ * into the 0–100 proficiency scale used by StudentSkill.
+ */
+const COMPETENCY_THRESHOLDS: Record<
+  OpportunitySkillInput["requiredLevel"],
+  number
+> = {
+  EXPOSURE: 20,
+  FOUNDATIONAL: 40,
+  INTERMEDIATE: 60,
+  ADVANCED: 80,
+  EXPERT: 95,
 };
 
 export function calculateGapAnalysis(
@@ -49,25 +70,27 @@ export function calculateGapAnalysis(
       studentSkillMap.get(opportunitySkill.skillId) ?? 0;
 
     const requiredProficiency =
-      opportunitySkill.minimumProficiency;
+      COMPETENCY_THRESHOLDS[
+        opportunitySkill.requiredLevel
+      ];
 
     const gap = Math.max(
       0,
       requiredProficiency - studentProficiency
     );
 
-    /*
+    /**
      * How well the student satisfies this requirement.
      *
      * Example:
-     * student = 80
-     * required = 70
      *
+     * required = ADVANCED = 80
+     * student = 60
+     *
+     * requirementScore = 75
+     *
+     * If student = 80:
      * requirementScore = 100
-     *
-     * If student = 35 and required = 70:
-     *
-     * requirementScore = 50
      */
     const requirementScore =
       requiredProficiency > 0
@@ -79,17 +102,19 @@ export function calculateGapAnalysis(
           )
         : 100;
 
-    weightedScore +=
-      requirementScore * opportunitySkill.weight;
+    const weight =
+      opportunitySkill.weight > 0
+        ? opportunitySkill.weight
+        : 1;
 
-    totalWeight += opportunitySkill.weight;
+    weightedScore +=
+      requirementScore * weight;
+
+    totalWeight += weight;
 
     let status: SkillGapResult["status"];
 
-    if (
-      studentProficiency >=
-      requiredProficiency
-    ) {
+    if (studentProficiency >= requiredProficiency) {
       status = "STRONG";
     } else if (
       studentProficiency >=
@@ -105,8 +130,9 @@ export function calculateGapAnalysis(
       studentProficiency,
       requiredProficiency,
       gap,
-      weight: opportunitySkill.weight,
+      weight,
       required: opportunitySkill.required,
+      requiredLevel: opportunitySkill.requiredLevel,
       status,
     });
   }
@@ -121,12 +147,15 @@ export function calculateGapAnalysis(
   return {
     readinessScore,
     skills: results,
+
     strongSkills: results.filter(
       (skill) => skill.status === "STRONG"
     ),
+
     moderateSkills: results.filter(
       (skill) => skill.status === "MODERATE"
     ),
+
     gapSkills: results.filter(
       (skill) => skill.status === "GAP"
     ),

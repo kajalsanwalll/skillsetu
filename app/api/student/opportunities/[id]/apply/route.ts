@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { calculateMatchScore } from "@/lib/matching/calculate-match";
+import { calculateTrustedProficiency } from "@/lib/skills/calculate-trusted-proficiency";
 
 export async function POST(
   _request: Request,
@@ -34,6 +35,7 @@ export async function POST(
         studentProfile: {
           include: {
             skills: true,
+            evidence: true,
           },
         },
       },
@@ -94,14 +96,15 @@ export async function POST(
     // 6. Find opportunity
     // --------------------------------------------------
 
-    const opportunity = await prisma.opportunity.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        skills: true,
-      },
-    });
+    const opportunity =
+      await prisma.opportunity.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          skills: true,
+        },
+      });
 
     if (!opportunity) {
       return NextResponse.json(
@@ -139,39 +142,93 @@ export async function POST(
     }
 
     // --------------------------------------------------
-    // 8. Calculate SkillSetu match score
+    // 8. Calculate TRUSTED student proficiency
     // --------------------------------------------------
 
-    const studentSkills =
+    const trustedSkills =
       user.studentProfile.skills.map(
-        (studentSkill) => ({
-          skillId: studentSkill.skillId,
-          proficiency:
-            studentSkill.proficiency,
-        })
+        (studentSkill) => {
+          const skillEvidence =
+            user.studentProfile!.evidence.filter(
+              (evidence) =>
+                evidence.skillId ===
+                studentSkill.skillId
+            );
+
+          const result =
+            calculateTrustedProficiency({
+              claimedProficiency:
+                studentSkill.proficiency,
+
+              evidence: skillEvidence.map(
+                (evidence) => ({
+                  score: evidence.score,
+                  verified: evidence.verified,
+                  verificationStrength:
+                    evidence.verificationStrength,
+                })
+              ),
+            });
+
+          return {
+            skillId: studentSkill.skillId,
+            proficiency:
+              result.trustedProficiency,
+          };
+        }
       );
+
+    // --------------------------------------------------
+    // 9. Prepare opportunity requirements
+    // --------------------------------------------------
+    //
+    // IMPORTANT:
+    // OpportunitySkill now uses:
+    //
+    // requiredLevel:
+    // EXPOSURE
+    // FOUNDATIONAL
+    // INTERMEDIATE
+    // ADVANCED
+    // EXPERT
+    //
+    // There is NO minimumProficiency field
+    // in the current Prisma schema.
+    //
+    // calculateMatchScore should therefore receive
+    // the numeric proficiency requirement generated
+    // from requiredLevel.
+    // --------------------------------------------------
 
     const opportunitySkills =
       opportunity.skills.map(
         (opportunitySkill) => ({
           skillId:
             opportunitySkill.skillId,
+
           required:
             opportunitySkill.required,
+
           weight:
             opportunitySkill.weight,
-          minimumProficiency:
-            opportunitySkill.minimumProficiency,
+
+          requiredLevel:
+            opportunitySkill.requiredLevel,
         })
       );
 
-    const matchScore = calculateMatchScore(
-      studentSkills,
-      opportunitySkills
-    );
+    // --------------------------------------------------
+    // 10. Calculate SkillSetu match score
+    // --------------------------------------------------
+
+    const matchScore =
+      calculateMatchScore(
+        trustedSkills,
+        opportunitySkills
+      );
 
     // --------------------------------------------------
-    // 9. Create application
+    // 11. Create application
     // --------------------------------------------------
 
     const application =
@@ -187,6 +244,7 @@ export async function POST(
 
           status: "APPLIED",
         },
+
         include: {
           opportunity: {
             select: {
@@ -201,12 +259,13 @@ export async function POST(
       });
 
     // --------------------------------------------------
-    // 10. Return successful application
+    // 12. Return successful application
     // --------------------------------------------------
 
     return NextResponse.json(
       {
         success: true,
+
         message:
           "Application submitted successfully.",
 
