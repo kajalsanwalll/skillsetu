@@ -50,13 +50,16 @@ export default function StudentOpportunitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [appliedOpportunityIds, setAppliedOpportunityIds] = useState<
-    Set<string>
-  >(new Set());
+  const [appliedOpportunityIds, setAppliedOpportunityIds] =
+    useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function loadOpportunities() {
       try {
+        // ==================================================
+        // FETCH OPPORTUNITIES + APPLICATIONS
+        // ==================================================
+
         const [
           opportunitiesResponse,
           applicationsResponse,
@@ -70,6 +73,10 @@ export default function StudentOpportunitiesPage() {
 
         const applicationsData =
           await applicationsResponse.json();
+
+        // ==================================================
+        // CHECK RESPONSES
+        // ==================================================
 
         if (!opportunitiesResponse.ok) {
           throw new Error(
@@ -85,12 +92,88 @@ export default function StudentOpportunitiesPage() {
           );
         }
 
-        setOpportunities(
-          opportunitiesData.opportunities || []
+        // ==================================================
+        // APPLICATIONS
+        // ==================================================
+
+        const applications =
+          applicationsData.applications || [];
+
+        // ==================================================
+        // CREATE MAP:
+        //
+        // opportunityId -> CURRENT/LIVE MATCH SCORE
+        //
+        // Example:
+        //
+        // {
+        //   "opp123": 82,
+        //   "opp456": 67
+        // }
+        //
+        // This is the important part.
+        // ==================================================
+
+        const currentMatchScores = new Map<
+          string,
+          number
+        >();
+
+        applications.forEach(
+          (application: {
+            opportunity: {
+              id: string;
+            };
+            currentMatchScore: number;
+          }) => {
+            currentMatchScores.set(
+              application.opportunity.id,
+              application.currentMatchScore
+            );
+          }
         );
 
+        // ==================================================
+        // UPDATE OPPORTUNITY SCORES
+        //
+        // For an opportunity the student already applied to:
+        //
+        //     use currentMatchScore
+        //
+        // For a new opportunity:
+        //
+        //     use opportunity.matchScore
+        // ==================================================
+
+        const updatedOpportunities =
+          (opportunitiesData.opportunities || []).map(
+            (opportunity: Opportunity) => {
+              const currentScore =
+                currentMatchScores.get(opportunity.id);
+
+              return {
+                ...opportunity,
+
+                matchScore:
+                  currentScore !== undefined
+                    ? currentScore
+                    : opportunity.matchScore,
+              };
+            }
+          );
+
+        // ==================================================
+        // SAVE OPPORTUNITIES
+        // ==================================================
+
+        setOpportunities(updatedOpportunities);
+
+        // ==================================================
+        // GET APPLIED OPPORTUNITY IDS
+        // ==================================================
+
         const appliedIds = new Set<string>(
-          (applicationsData.applications || []).map(
+          applications.map(
             (application: {
               opportunity: {
                 id: string;
@@ -114,6 +197,10 @@ export default function StudentOpportunitiesPage() {
     loadOpportunities();
   }, []);
 
+  // ==================================================
+  // LOADING
+  // ==================================================
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
@@ -125,6 +212,10 @@ export default function StudentOpportunitiesPage() {
       </main>
     );
   }
+
+  // ==================================================
+  // ERROR
+  // ==================================================
 
   if (error) {
     return (
@@ -138,11 +229,16 @@ export default function StudentOpportunitiesPage() {
     );
   }
 
+  // ==================================================
+  // PAGE
+  // ==================================================
+
   return (
     <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
+
         <section className="mb-10">
           <p className="text-sm text-[#F4A93B] mb-2">
             OPPORTUNITY DISCOVERY
@@ -159,6 +255,7 @@ export default function StudentOpportunitiesPage() {
         </section>
 
         {/* Empty state */}
+
         {opportunities.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#232B47] p-12 text-center">
             <h2 className="text-xl font-semibold">
@@ -188,6 +285,10 @@ export default function StudentOpportunitiesPage() {
   );
 }
 
+// ==================================================
+// OPPORTUNITY CARD
+// ==================================================
+
 function OpportunityCard({
   opportunity,
   initiallyApplied,
@@ -195,16 +296,27 @@ function OpportunityCard({
   opportunity: Opportunity;
   initiallyApplied: boolean;
 }) {
-  const matchScore = Math.round(opportunity.matchScore);
-  const scoreColor = matchScoreColor(matchScore);
-
   const router = useRouter();
+
+  const matchScore = Math.round(
+    opportunity.matchScore
+  );
+
+  const scoreColor =
+    matchScoreColor(matchScore);
 
   const [applied, setApplied] =
     useState(initiallyApplied);
 
-  const [applying, setApplying] = useState(false);
-  const [applyError, setApplyError] = useState("");
+  const [applying, setApplying] =
+    useState(false);
+
+  const [applyError, setApplyError] =
+    useState("");
+
+  // ==================================================
+  // APPLY
+  // ==================================================
 
   async function handleApply() {
     setApplying(true);
@@ -220,9 +332,11 @@ function OpportunityCard({
 
       const data = await response.json();
 
+      // ==================================================
+      // ALREADY APPLIED
+      // ==================================================
+
       if (!response.ok) {
-        // If the API says the student already applied,
-        // keep the UI in the Applied state.
         if (response.status === 409) {
           setApplied(true);
           return;
@@ -232,6 +346,10 @@ function OpportunityCard({
           data.error || "Failed to apply."
         );
       }
+
+      // ==================================================
+      // SUCCESS
+      // ==================================================
 
       setApplied(true);
     } catch (error) {
@@ -245,22 +363,27 @@ function OpportunityCard({
     }
   }
 
+  // ==================================================
+  // RENDER
+  // ==================================================
+
   return (
     <article className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 hover:border-[#F4A93B]/30 transition">
 
       {/* Main information */}
+
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
 
         <div className="flex-1">
 
+          {/* Type + Location */}
+
           <div className="flex flex-wrap items-center gap-3 mb-3">
 
-            {/* Opportunity type */}
             <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs font-medium text-[#C7CCE0]">
               {opportunity.type.replaceAll("_", " ")}
             </span>
 
-            {/* Location */}
             {opportunity.location && (
               <span className="text-xs text-[#9AA3C0]">
                 📍 {opportunity.location}
@@ -268,13 +391,19 @@ function OpportunityCard({
             )}
           </div>
 
+          {/* Title */}
+
           <h2 className="text-2xl font-semibold">
             {opportunity.title}
           </h2>
 
+          {/* Company */}
+
           <p className="text-[#F4A93B] mt-1">
             {opportunity.company}
           </p>
+
+          {/* Description */}
 
           <p className="text-[#9AA3C0] mt-4 leading-relaxed">
             {opportunity.description}
@@ -282,6 +411,7 @@ function OpportunityCard({
         </div>
 
         {/* Match score */}
+
         <div className="shrink-0 md:w-32 text-center">
           <div
             className="rounded-2xl border p-4"
@@ -292,7 +422,9 @@ function OpportunityCard({
           >
             <p
               className="text-3xl font-bold"
-              style={{ color: scoreColor }}
+              style={{
+                color: scoreColor,
+              }}
             >
               {matchScore}%
             </p>
@@ -305,6 +437,7 @@ function OpportunityCard({
       </div>
 
       {/* Skills */}
+
       <div className="mt-6 pt-5 border-t border-[#232B47]">
 
         <p className="text-sm font-medium text-[#C7CCE0] mb-3">
@@ -322,12 +455,15 @@ function OpportunityCard({
                   : "border-[#232B47] bg-white/[0.02] text-[#C7CCE0]"
               }`}
             >
+
               {/* Skill name */}
+
               <span className="font-medium">
                 {skill.name}
               </span>
 
-              {/* Required competency level */}
+              {/* Required competency */}
+
               <span className="ml-2 text-xs text-[#9AA3C0]">
                 {formatCompetencyLevel(
                   skill.requiredLevel
@@ -335,6 +471,7 @@ function OpportunityCard({
               </span>
 
               {/* Required marker */}
+
               {skill.required && (
                 <span className="ml-1 text-[#F4A93B]">
                   *
@@ -351,6 +488,7 @@ function OpportunityCard({
       </div>
 
       {/* Apply error */}
+
       {applyError && (
         <div className="mt-4 rounded-xl border border-[#E8598B]/30 bg-[#E8598B]/10 p-3 text-sm text-[#f083a8]">
           {applyError}
@@ -358,9 +496,11 @@ function OpportunityCard({
       )}
 
       {/* Actions */}
+
       <div className="mt-6 flex justify-end gap-3">
 
         {/* View opportunity */}
+
         <button
           type="button"
           onClick={() =>
@@ -374,6 +514,7 @@ function OpportunityCard({
         </button>
 
         {/* Apply */}
+
         <button
           type="button"
           onClick={handleApply}
@@ -390,7 +531,6 @@ function OpportunityCard({
             ? "✓ Applied"
             : "Apply Now"}
         </button>
-
       </div>
     </article>
   );
