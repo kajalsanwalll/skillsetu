@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type SkillMatch = {
   id: string;
@@ -75,12 +76,27 @@ function gapSize(skill: SkillMatch) {
 }
 
 export default function SkillGapsPage() {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const opportunityFromUrl =
+    searchParams.get("opportunityId");
+
+  const [opportunities, setOpportunities] = useState<
+    Opportunity[]
+  >([]);
+
   const [selectedOpportunityId, setSelectedOpportunityId] =
-    useState("");
+  useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  /*
+   * ============================================================
+   * LOAD OPPORTUNITIES
+   * ============================================================
+   */
 
   useEffect(() => {
     async function loadOpportunities() {
@@ -96,7 +112,8 @@ export default function SkillGapsPage() {
 
         if (!response.ok) {
           throw new Error(
-            data.error || "Failed to load opportunities."
+            data.error ||
+              "Failed to load opportunities."
           );
         }
 
@@ -115,18 +132,110 @@ export default function SkillGapsPage() {
     loadOpportunities();
   }, []);
 
-  const selectedOpportunity = useMemo(() => {
-    if (!selectedOpportunityId) {
-      return opportunities[0] ?? null;
+  /*
+   * ============================================================
+   * RESTORE SELECTED OPPORTUNITY
+   *
+   * Priority:
+   * 1. opportunityId from URL
+   * 2. first available opportunity
+   * ============================================================
+   */
+
+  const activeOpportunityId = useMemo(() => {
+    if (
+      opportunityFromUrl &&
+      opportunities.some(
+        (opportunity) =>
+          opportunity.id === opportunityFromUrl
+      )
+    ) {
+      return opportunityFromUrl;
     }
 
-    return (
-      opportunities.find(
+    if (
+      selectedOpportunityId &&
+      opportunities.some(
         (opportunity) =>
           opportunity.id === selectedOpportunityId
-      ) ?? null
+      )
+    ) {
+      return selectedOpportunityId;
+    }
+
+    return opportunities[0]?.id ?? null;
+  }, [opportunities, opportunityFromUrl, selectedOpportunityId]);
+
+  useEffect(() => {
+    if (opportunities.length === 0) {
+      return;
+    }
+
+    const urlHasValidOpportunity =
+      opportunityFromUrl &&
+      opportunities.some(
+        (opportunity) =>
+          opportunity.id === opportunityFromUrl
+      );
+
+    if (!urlHasValidOpportunity && !selectedOpportunityId) {
+      const firstOpportunity =
+        opportunities[0];
+
+      router.replace(
+        `/student/gaps?opportunityId=${encodeURIComponent(
+          firstOpportunity.id
+        )}`
+      );
+    }
+  }, [
+    opportunities,
+    opportunityFromUrl,
+    selectedOpportunityId,
+    router,
+  ]);
+
+  /*
+   * ============================================================
+   * SELECTED OPPORTUNITY
+   * ============================================================
+   */
+
+  const selectedOpportunity = useMemo(() => {
+  if (!selectedOpportunityId) {
+    return opportunities[0] ?? null;
+  }
+
+  return (
+    opportunities.find(
+      (opportunity) => opportunity.id === selectedOpportunityId
+    ) ?? opportunities[0] ?? null
+  );
+}, [opportunities, selectedOpportunityId]);
+
+  /*
+   * ============================================================
+   * HANDLE OPPORTUNITY CHANGE
+   * ============================================================
+   */
+
+  function handleOpportunityChange(
+    opportunityId: string
+  ) {
+    setSelectedOpportunityId(opportunityId);
+
+    router.replace(
+      `/student/gaps?opportunityId=${encodeURIComponent(
+        opportunityId
+      )}`
     );
-  }, [opportunities, selectedOpportunityId]);
+  }
+
+  /*
+   * ============================================================
+   * GAP ANALYSIS
+   * ============================================================
+   */
 
   const gapAnalysis = useMemo(() => {
     if (!selectedOpportunity) {
@@ -142,7 +251,9 @@ export default function SkillGapsPage() {
     const skills = selectedOpportunity.skills;
 
     const matched = skills
-      .filter((skill) => skill.meetsRequirement)
+      .filter(
+        (skill) => skill.meetsRequirement
+      )
       .sort(
         (a, b) =>
           levelValue(b.studentLevel) -
@@ -172,19 +283,27 @@ export default function SkillGapsPage() {
           !skill.meetsRequirement &&
           isMissingSkill(skill)
       )
-      .sort((a, b) => b.weight - a.weight);
+      .sort(
+        (a, b) =>
+          b.weight - a.weight
+      );
 
-    const allGaps = [...missing, ...improvement];
+    const allGaps = [
+      ...missing,
+      ...improvement,
+    ];
 
-    const requiredSkills = skills.filter(
-      (skill) => skill.required
-    );
+    const requiredSkills =
+      skills.filter(
+        (skill) => skill.required
+      );
 
     const readiness =
       requiredSkills.length > 0
         ? Math.round(
             (requiredSkills.filter(
-              (skill) => skill.meetsRequirement
+              (skill) =>
+                skill.meetsRequirement
             ).length /
               requiredSkills.length) *
               100
@@ -200,6 +319,12 @@ export default function SkillGapsPage() {
     };
   }, [selectedOpportunity]);
 
+  /*
+   * ============================================================
+   * LOADING
+   * ============================================================
+   */
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
@@ -211,6 +336,12 @@ export default function SkillGapsPage() {
       </main>
     );
   }
+
+  /*
+   * ============================================================
+   * ERROR
+   * ============================================================
+   */
 
   if (error) {
     return (
@@ -224,6 +355,12 @@ export default function SkillGapsPage() {
     );
   }
 
+  /*
+   * ============================================================
+   * NO OPPORTUNITIES
+   * ============================================================
+   */
+
   if (opportunities.length === 0) {
     return (
       <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
@@ -236,9 +373,9 @@ export default function SkillGapsPage() {
             </p>
 
             <p className="mt-2 text-sm text-[#9AA3C0]">
-              Once opportunities are available, SkillSetu
-              will analyze the skills you need to become
-              a stronger match.
+              Once opportunities are available,
+              SkillSetu will analyze the skills you
+              need to become a stronger match.
             </p>
 
             <Link
@@ -260,6 +397,12 @@ export default function SkillGapsPage() {
     selectedOpportunity?.skills.filter(
       (skill) => skill.required
     ).length ?? 0;
+
+  /*
+   * ============================================================
+   * PAGE
+   * ============================================================
+   */
 
   return (
     <main className="min-h-screen bg-[#0F1526] px-6 py-10 text-[#F5F1E8]">
@@ -287,7 +430,11 @@ export default function SkillGapsPage() {
               label: "Skill Gaps",
             },
             {
-              href: "/student/roadmap",
+              href: selectedOpportunity
+                ? `/student/roadmap?opportunityId=${encodeURIComponent(
+                    selectedOpportunity.id
+                  )}`
+                : "/student/roadmap",
               icon: "🗺️",
               label: "Roadmap",
             },
@@ -303,10 +450,10 @@ export default function SkillGapsPage() {
             },
           ].map((item) => (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
               className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
-                item.href === "/student/gaps"
+                item.label === "Skill Gaps"
                   ? "border-[#F4A93B]/50 bg-[#F4A93B]/10 text-[#F4A93B]"
                   : "border-[#232B47] bg-[#171E33]/60 text-[#C7CCE0] hover:border-[#F4A93B]/40 hover:text-[#F5F1E8]"
               }`}
@@ -321,6 +468,7 @@ export default function SkillGapsPage() {
 
         <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
           <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+
             <div>
               <p className="text-sm font-medium text-[#F4A93B]">
                 TARGET OPPORTUNITY
@@ -331,9 +479,10 @@ export default function SkillGapsPage() {
               </h2>
 
               <p className="mt-2 max-w-2xl text-sm text-[#9AA3C0]">
-                SkillSetu compares your trusted Skill DNA
-                against the requirements of each opportunity
-                and identifies the areas holding you back.
+                SkillSetu compares your trusted
+                Skill DNA against the requirements
+                of each opportunity and identifies
+                the areas holding you back.
               </p>
             </div>
 
@@ -348,26 +497,29 @@ export default function SkillGapsPage() {
               <select
                 id="opportunity"
                 value={
-                  selectedOpportunity?.id ?? ""
+                  selectedOpportunityId ?? ""
                 }
                 onChange={(e) =>
-                  setSelectedOpportunityId(
+                  handleOpportunityChange(
                     e.target.value
                   )
                 }
                 className="w-full rounded-xl border border-[#232B47] bg-[#0F1526] px-4 py-3 text-sm text-[#F5F1E8] outline-none focus:border-[#F4A93B]"
               >
-                {opportunities.map((opportunity) => (
-                  <option
-                    key={opportunity.id}
-                    value={opportunity.id}
-                  >
-                    {opportunity.title} —{" "}
-                    {opportunity.company}
-                  </option>
-                ))}
+                {opportunities.map(
+                  (opportunity) => (
+                    <option
+                      key={opportunity.id}
+                      value={opportunity.id}
+                    >
+                      {opportunity.title} —{" "}
+                      {opportunity.company}
+                    </option>
+                  )
+                )}
               </select>
             </div>
+
           </div>
         </section>
 
@@ -377,6 +529,7 @@ export default function SkillGapsPage() {
 
             <section className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-7">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+
                 <div>
                   <p className="text-xs uppercase tracking-wider text-[#F4A93B]">
                     {selectedOpportunity.type}
@@ -392,7 +545,8 @@ export default function SkillGapsPage() {
 
                   {selectedOpportunity.location && (
                     <p className="mt-2 text-sm text-[#9AA3C0]">
-                      📍 {selectedOpportunity.location}
+                      📍{" "}
+                      {selectedOpportunity.location}
                     </p>
                   )}
                 </div>
@@ -405,17 +559,22 @@ export default function SkillGapsPage() {
                   />
 
                   <SummaryStat
-                    value={gapAnalysis.matched.length}
+                    value={
+                      gapAnalysis.matched.length
+                    }
                     label="Matched"
                     color="#2BA792"
                   />
 
                   <SummaryStat
-                    value={gapAnalysis.allGaps.length}
+                    value={
+                      gapAnalysis.allGaps.length
+                    }
                     label="Skill gaps"
                     color="#E8598B"
                   />
                 </div>
+
               </div>
 
               <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/10">
@@ -428,8 +587,9 @@ export default function SkillGapsPage() {
               </div>
 
               <p className="mt-3 text-xs text-[#9AA3C0]">
-                {requiredSkillCount} required skills ·{" "}
-                {totalSkills} total skills analyzed
+                {requiredSkillCount} required
+                skills · {totalSkills} total skills
+                analyzed
               </p>
             </section>
 
@@ -442,21 +602,23 @@ export default function SkillGapsPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-[#9AA3C0]">
-                  These are the skills where your current
-                  capability does not yet meet the
-                  opportunity requirement.
+                  These are the skills where your
+                  current capability does not yet
+                  meet the opportunity requirement.
                 </p>
               </div>
 
-              {gapAnalysis.allGaps.length === 0 ? (
+              {gapAnalysis.allGaps.length ===
+              0 ? (
                 <div className="rounded-2xl border border-[#2BA792]/30 bg-[#2BA792]/10 p-8 text-center">
                   <p className="text-lg font-semibold text-[#6fd6c4]">
                     🎉 No skill gaps detected.
                   </p>
 
                   <p className="mt-2 text-sm text-[#9AA3C0]">
-                    Your current Skill DNA meets all of the
-                    recorded requirements for this opportunity.
+                    Your current Skill DNA meets all
+                    of the recorded requirements for
+                    this opportunity.
                   </p>
                 </div>
               ) : (
@@ -467,6 +629,9 @@ export default function SkillGapsPage() {
                         key={skill.id}
                         skill={skill}
                         rank={index + 1}
+                        opportunityId={
+                          selectedOpportunity.id
+                        }
                       />
                     )
                   )}
@@ -483,68 +648,73 @@ export default function SkillGapsPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-[#9AA3C0]">
-                  These skills currently meet or exceed the
-                  required competency level.
+                  These skills currently meet or
+                  exceed the required competency level.
                 </p>
               </div>
 
-              {gapAnalysis.matched.length === 0 ? (
+              {gapAnalysis.matched.length ===
+              0 ? (
                 <div className="mt-6 rounded-xl border border-dashed border-[#232B47] p-6 text-center">
                   <p className="text-sm text-[#9AA3C0]">
-                    None of the recorded skills currently
-                    meet the requirements.
+                    None of the recorded skills
+                    currently meet the requirements.
                   </p>
                 </div>
               ) : (
                 <div className="mt-6 grid gap-3 md:grid-cols-2">
-                  {gapAnalysis.matched.map((skill) => (
-                    <div
-                      key={skill.id}
-                      className="rounded-xl border border-[#232B47] p-4"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="font-medium">
-                            {skill.name}
-                          </p>
+                  {gapAnalysis.matched.map(
+                    (skill) => (
+                      <div
+                        key={skill.id}
+                        className="rounded-xl border border-[#232B47] p-4"
+                      >
+                        <div className="flex items-center justify-between gap-4">
 
-                          {skill.category && (
-                            <p className="mt-1 text-xs text-[#9AA3C0]">
-                              {skill.category}
+                          <div>
+                            <p className="font-medium">
+                              {skill.name}
                             </p>
-                          )}
+
+                            {skill.category && (
+                              <p className="mt-1 text-xs text-[#9AA3C0]">
+                                {skill.category}
+                              </p>
+                            )}
+                          </div>
+
+                          <span className="rounded-full bg-[#2BA792]/10 px-3 py-1 text-xs font-medium text-[#6fd6c4]">
+                            ✓ Match
+                          </span>
+
                         </div>
 
-                        <span className="rounded-full bg-[#2BA792]/10 px-3 py-1 text-xs font-medium text-[#6fd6c4]">
-                          ✓ Match
-                        </span>
+                        <div className="mt-4 flex justify-between text-xs">
+                          <span className="text-[#9AA3C0]">
+                            Your level
+                          </span>
+
+                          <span className="font-medium text-[#C7CCE0]">
+                            {levelLabel(
+                              skill.studentLevel
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="mt-1 flex justify-between text-xs">
+                          <span className="text-[#9AA3C0]">
+                            Required
+                          </span>
+
+                          <span className="font-medium text-[#C7CCE0]">
+                            {levelLabel(
+                              skill.requiredLevel
+                            )}
+                          </span>
+                        </div>
                       </div>
-
-                      <div className="mt-4 flex justify-between text-xs">
-                        <span className="text-[#9AA3C0]">
-                          Your level
-                        </span>
-
-                        <span className="font-medium text-[#C7CCE0]">
-                          {levelLabel(
-                            skill.studentLevel
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="mt-1 flex justify-between text-xs">
-                        <span className="text-[#9AA3C0]">
-                          Required
-                        </span>
-
-                        <span className="font-medium text-[#C7CCE0]">
-                          {levelLabel(
-                            skill.requiredLevel
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               )}
             </section>
@@ -553,23 +723,30 @@ export default function SkillGapsPage() {
 
             <section className="rounded-2xl border border-[#F4A93B]/20 bg-[#F4A93B]/[0.06] p-6">
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+
                 <div>
                   <h2 className="text-xl font-bold">
                     Ready to close these gaps?
                   </h2>
 
                   <p className="mt-2 max-w-2xl text-sm text-[#C7CCE0]">
-                    Turn your highest-priority skill gaps
-                    into a focused learning roadmap.
+                    Turn your highest-priority skill
+                    gaps into a focused learning
+                    roadmap.
                   </p>
                 </div>
 
                 <Link
-                  href="/student/roadmap"
-                  className="shrink-0 rounded-xl bg-[#F4A93B] px-6 py-3 text-center text-sm font-semibold text-[#0F1526] transition hover:bg-[#f6bd6a]"
-                >
-                  Build My Roadmap →
-                </Link>
+  href={
+    selectedOpportunity
+      ? `/student/roadmap?opportunityId=${selectedOpportunity.id}`
+      : "/student/roadmap"
+  }
+  className="shrink-0 rounded-xl bg-[#F4A93B] px-6 py-3 text-center text-sm font-semibold text-[#0F1526] transition hover:bg-[#f6bd6a]"
+>
+  Build My Roadmap →
+</Link>
+
               </div>
             </section>
           </>
@@ -578,6 +755,12 @@ export default function SkillGapsPage() {
     </main>
   );
 }
+
+/*
+ * ============================================================
+ * PAGE HEADER
+ * ============================================================
+ */
 
 function PageHeader() {
   return (
@@ -591,12 +774,19 @@ function PageHeader() {
       </h1>
 
       <p className="mt-2 max-w-2xl text-[#9AA3C0]">
-        Compare your Skill DNA against real opportunity
-        requirements and see exactly what to improve next.
+        Compare your Skill DNA against real
+        opportunity requirements and see exactly
+        what to improve next.
       </p>
     </section>
   );
 }
+
+/*
+ * ============================================================
+ * SUMMARY STAT
+ * ============================================================
+ */
 
 function SummaryStat({
   value,
@@ -623,15 +813,22 @@ function SummaryStat({
   );
 }
 
+/*
+ * ============================================================
+ * SKILL GAP CARD
+ * ============================================================
+ */
+
 function SkillGapCard({
   skill,
   rank,
+  opportunityId,
 }: {
   skill: SkillMatch;
   rank: number;
+  opportunityId: string;
 }) {
   const missing = isMissingSkill(skill);
-
   const gap = gapSize(skill);
 
   const priority =
@@ -643,14 +840,19 @@ function SkillGapCard({
 
   return (
     <div className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6">
+
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+
         <div className="flex gap-4">
+
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E8598B]/10 text-sm font-bold text-[#f083a8]">
             {rank}
           </div>
 
           <div>
+
             <div className="flex flex-wrap items-center gap-2">
+
               <h3 className="text-lg font-semibold">
                 {skill.name}
               </h3>
@@ -660,6 +862,7 @@ function SkillGapCard({
                   {skill.category}
                 </span>
               )}
+
             </div>
 
             <p className="mt-2 text-sm text-[#9AA3C0]">
@@ -669,7 +872,9 @@ function SkillGapCard({
                     gap === 1 ? "" : "s"
                   } below the requirement.`}
             </p>
+
           </div>
+
         </div>
 
         <span
@@ -683,21 +888,27 @@ function SkillGapCard({
         >
           {priority} priority
         </span>
+
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
+
         <LevelBox
           label="Current"
           value={
             missing
               ? "Not acquired"
-              : levelLabel(skill.studentLevel)
+              : levelLabel(
+                  skill.studentLevel
+                )
           }
         />
 
         <LevelBox
           label="Required"
-          value={levelLabel(skill.requiredLevel)}
+          value={levelLabel(
+            skill.requiredLevel
+          )}
         />
 
         <LevelBox
@@ -708,20 +919,27 @@ function SkillGapCard({
               : "None"
           }
         />
+
       </div>
 
       <div className="mt-6">
+
         <div className="mb-2 flex justify-between text-xs">
+
           <span className="text-[#9AA3C0]">
             Current capability
           </span>
 
           <span className="text-[#C7CCE0]">
-            {levelLabel(skill.studentLevel)}
+            {levelLabel(
+              skill.studentLevel
+            )}
           </span>
+
         </div>
 
         <div className="h-2 overflow-hidden rounded-full bg-white/10">
+
           <div
             className="h-full rounded-full bg-[#E8598B] transition-all"
             style={{
@@ -731,10 +949,12 @@ function SkillGapCard({
               )}%`,
             }}
           />
+
         </div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
         <div className="text-xs text-[#5B6488]">
           {skill.required
             ? "Required for this opportunity"
@@ -744,15 +964,24 @@ function SkillGapCard({
         </div>
 
         <Link
-          href="/student/roadmap"
+          href={`/student/roadmap?opportunityId=${encodeURIComponent(
+            opportunityId
+          )}`}
           className="rounded-xl border border-[#F4A93B]/30 px-4 py-2 text-center text-sm font-medium text-[#F4A93B] transition hover:bg-[#F4A93B]/10"
         >
           Add to Roadmap →
         </Link>
+
       </div>
     </div>
   );
 }
+
+/*
+ * ============================================================
+ * LEVEL BOX
+ * ============================================================
+ */
 
 function LevelBox({
   label,
@@ -763,6 +992,7 @@ function LevelBox({
 }) {
   return (
     <div className="rounded-xl border border-[#232B47] bg-[#0F1526]/50 p-4">
+
       <p className="text-xs text-[#9AA3C0]">
         {label}
       </p>
@@ -770,6 +1000,7 @@ function LevelBox({
       <p className="mt-2 font-medium text-[#C7CCE0]">
         {value}
       </p>
+
     </div>
   );
 }

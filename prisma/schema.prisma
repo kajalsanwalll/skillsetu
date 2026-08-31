@@ -8,25 +8,25 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  clerkId        String          @unique
-  name           String
-  email          String          @unique
-  role           UserRole?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id        String    @id @default(cuid())
+  clerkId   String    @unique
+  name      String
+  email     String    @unique
+  role      UserRole?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   opportunities  Opportunity[]   @relation("IndustryOpportunities")
   studentProfile StudentProfile?
 }
 
 model StudentProfile {
-  id                  String               @id @default(cuid())
-  userId              String               @unique
-  careerInterest      String?
-  bio                 String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  careerInterest String?
+  bio            String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   academicCredentials AcademicCredential[]
   applications        Application[]
@@ -34,29 +34,35 @@ model StudentProfile {
   evidence            SkillEvidence[]
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   skills              StudentSkill[]
+
+  // NEW: Learning roadmaps generated for opportunities
+  roadmaps LearningRoadmap[]
 }
 
 model Skill {
-  id                String             @id @default(cuid())
-  name              String             @unique
-  category          String?
-  description       String?
+  id          String  @id @default(cuid())
+  name        String  @unique
+  category    String?
+  description String?
 
   opportunitySkills OpportunitySkill[]
   evidence          SkillEvidence[]
   studentSkills     StudentSkill[]
+
+  // NEW: Skills included in learning roadmaps
+  roadmapSkills RoadmapSkill[]
 }
 
 model StudentSkill {
   id                   String               @id @default(cuid())
   studentProfileId     String
   skillId              String
-  proficiency          Float               @default(0)
+  proficiency          Float                @default(0)
   competencyLevel      CompetencyLevel?
   verificationStrength VerificationStrength @default(UNVERIFIED)
 
-  skill                Skill               @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  studentProfile       StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  skill          Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 
   @@unique([studentProfileId, skillId])
 }
@@ -65,26 +71,22 @@ model SkillEvidence {
   id                   String               @id @default(cuid())
   studentProfileId     String
   skillId              String
-
   type                 EvidenceType
   title                String
   description          String?
   url                  String?
   score                Float?
-
   verified             Boolean              @default(false)
-  verificationStrength VerificationStrength  @default(UNVERIFIED)
-
+  verificationStrength VerificationStrength @default(UNVERIFIED)
   createdAt            DateTime             @default(now())
 
-  skill                Skill                @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  studentProfile       StudentProfile       @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  skill          Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 }
 
 model AcademicCredential {
   id                   String               @id @default(cuid())
   studentProfileId     String
-
   source               String
   credentialId         String?
   title                String
@@ -93,76 +95,144 @@ model AcademicCredential {
   credits              Float?
   issueDate            DateTime?
   verificationUrl      String?
-
   verified             Boolean              @default(false)
   verificationStrength VerificationStrength @default(UNVERIFIED)
-
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  studentProfile       StudentProfile       @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 }
 
 model Assessment {
-  id               String         @id @default(cuid())
+  id               String   @id @default(cuid())
   studentProfileId String
-
   title            String
   score            Float
+  createdAt        DateTime @default(now())
 
-  createdAt        DateTime       @default(now())
-
-  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 }
 
 model Opportunity {
-  id           String             @id @default(cuid())
-  title        String
-  company      String
-  description  String
-  location     String?
-  type         OpportunityType
-
-  industryId   String
-  createdAt    DateTime           @default(now())
+  id          String          @id @default(cuid())
+  title       String
+  company     String
+  description String
+  location    String?
+  type        OpportunityType
+  industryId  String
+  createdAt   DateTime        @default(now())
 
   applications Application[]
-
-  industry     User               @relation("IndustryOpportunities",fields: [industryId],references: [id])
-
+  industry     User               @relation("IndustryOpportunities", fields: [industryId], references: [id])
   skills       OpportunitySkill[]
+
+  // NEW: Roadmaps created for this opportunity
+  roadmaps LearningRoadmap[]
 }
 
 model OpportunitySkill {
-  id                  String          @id @default(cuid())
-  opportunityId       String
-  skillId             String
-  required            Boolean         @default(true)
-  weight              Float           @default(1)
-  requiredLevel        CompetencyLevel @default(FOUNDATIONAL)
+  id            String          @id @default(cuid())
+  opportunityId String
+  skillId       String
+  required      Boolean         @default(true)
+  weight        Float           @default(1)
+  requiredLevel CompetencyLevel @default(FOUNDATIONAL)
 
-  opportunity         Opportunity     @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
-  skill               Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  skill       Skill       @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([opportunityId, skillId])
 }
 
 model Application {
-  id               String         @id @default(cuid())
+  id               String   @id @default(cuid())
   studentProfileId String
   opportunityId    String
-
   matchScore       Float?
-  status           String         @default("APPLIED")
+  status           String   @default("APPLIED")
+  createdAt        DateTime @default(now())
 
-  createdAt        DateTime       @default(now())
-
-  opportunity      Opportunity    @relation(fields: [opportunityId],references: [id],onDelete: Cascade)
-
-  studentProfile   StudentProfile @relation(fields: [studentProfileId],references: [id],onDelete: Cascade)
+  opportunity    Opportunity    @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
 
   @@unique([studentProfileId, opportunityId])
 }
+
+// ============================================================
+// LEARNING ROADMAP
+// ============================================================
+
+model LearningRoadmap {
+  id               String @id @default(cuid())
+  studentProfileId String
+  opportunityId    String
+
+  status RoadmapStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  opportunity    Opportunity    @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  skills RoadmapSkill[]
+
+  // One roadmap per student per opportunity
+  @@unique([studentProfileId, opportunityId])
+}
+
+model RoadmapSkill {
+  id        String @id @default(cuid())
+  roadmapId String
+  skillId   String
+
+  // Student's level when roadmap was generated
+  currentLevel CompetencyLevel
+
+  // Level required by the opportunity
+  targetLevel CompetencyLevel
+
+  // Order in which skills should be worked on
+  order Int @default(0)
+
+  roadmap LearningRoadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  skill   Skill           @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  steps RoadmapStep[]
+
+  // A skill can appear only once in a particular roadmap
+  @@unique([roadmapId, skillId])
+}
+
+model RoadmapStep {
+  id             String @id @default(cuid())
+  roadmapSkillId String
+
+  title       String
+  description String
+
+  // Optional external learning resource
+  resourceUrl String?
+
+  // Approximate time required for this step
+  estimatedHours Float?
+
+  // Ordering inside the skill roadmap
+  order Int @default(0)
+
+  // Student progress
+  completed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roadmapSkill RoadmapSkill @relation(fields: [roadmapSkillId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
 
 enum UserRole {
   STUDENT
@@ -206,4 +276,10 @@ enum OpportunityType {
   CONSULTANCY
   INDUSTRIAL_TRAINING
   GUEST_LECTURE
+}
+
+enum RoadmapStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
 }
