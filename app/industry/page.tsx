@@ -7,7 +7,12 @@ type OpportunitySkill = {
   id: string;
   required: boolean;
   weight: number;
-  minimumProficiency: number;
+  requiredLevel:
+    | "EXPOSURE"
+    | "FOUNDATIONAL"
+    | "INTERMEDIATE"
+    | "ADVANCED"
+    | "EXPERT";
   skill: {
     id: string;
     name: string;
@@ -30,9 +35,7 @@ type Opportunity = {
 };
 
 export default function IndustryPage() {
-  const [opportunities, setOpportunities] =
-    useState<Opportunity[]>([]);
-
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -47,8 +50,7 @@ export default function IndustryPage() {
 
         if (!response.ok) {
           throw new Error(
-            data.error ||
-              "Failed to fetch opportunities."
+            data.error || "Failed to fetch opportunities."
           );
         }
 
@@ -117,8 +119,7 @@ export default function IndustryPage() {
             <p className="text-3xl font-bold mt-2">
               {opportunities.reduce(
                 (total, opportunity) =>
-                  total +
-                  opportunity.applications.length,
+                  total + opportunity.applications.length,
                 0
               )}
             </p>
@@ -183,81 +184,71 @@ export default function IndustryPage() {
           ) : (
             <div className="grid gap-5">
 
-              {opportunities.map(
-                (opportunity) => (
-                  <Link
-                    key={opportunity.id}
-                    href={`/industry/opportunities/${opportunity.id}`}
-                    className="block rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 hover:border-[#F4A93B]/40 hover:bg-[#171E33] transition"
-                  >
-                    <div className="flex items-start justify-between gap-5">
+              {opportunities.map((opportunity) => (
+                <Link
+                  key={opportunity.id}
+                  href={`/industry/opportunities/${opportunity.id}`}
+                  className="block rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 hover:border-[#F4A93B]/40 hover:bg-[#171E33] transition"
+                >
+                  <div className="flex items-start justify-between gap-5">
 
-                      <div>
-                        <h3 className="text-xl font-semibold">
-                          {opportunity.title}
-                        </h3>
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        {opportunity.title}
+                      </h3>
 
-                        <p className="text-[#9AA3C0] mt-1">
-                          {opportunity.company}
-                          {opportunity.location
-                            ? ` • ${opportunity.location}`
-                            : ""}
-                        </p>
-                      </div>
-
-                      <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs text-[#C7CCE0]">
-                        {opportunity.type}
-                      </span>
-
+                      <p className="text-[#9AA3C0] mt-1">
+                        {opportunity.company}
+                        {opportunity.location
+                          ? ` • ${opportunity.location}`
+                          : ""}
+                      </p>
                     </div>
 
-                    <p className="text-sm text-[#9AA3C0] mt-4 line-clamp-2">
-                      {opportunity.description}
-                    </p>
+                    <span className="rounded-full border border-[#232B47] px-3 py-1 text-xs text-[#C7CCE0]">
+                      {opportunity.type}
+                    </span>
+                  </div>
 
-                    <div className="flex flex-wrap gap-2 mt-5">
-                      {opportunity.skills
-                        .slice(0, 6)
-                        .map(
-                          ({ skill }) => (
-                            <span
-                              key={skill.id}
-                              className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-[#C7CCE0]"
-                            >
-                              {skill.name}
-                            </span>
-                          )
-                        )}
+                  <p className="text-sm text-[#9AA3C0] mt-4 line-clamp-2">
+                    {opportunity.description}
+                  </p>
 
-                      {opportunity.skills.length >
-                        6 && (
-                        <span className="text-xs text-[#9AA3C0] py-1.5">
-                          +
-                          {opportunity.skills.length -
-                            6}{" "}
-                          more
+                  <div className="flex flex-wrap gap-2 mt-5">
+                    {opportunity.skills
+                      .slice(0, 6)
+                      .map(({ skill }) => (
+                        <span
+                          key={skill.id}
+                          className="rounded-lg bg-white/5 px-3 py-1.5 text-xs text-[#C7CCE0]"
+                        >
+                          {skill.name}
                         </span>
-                      )}
-                    </div>
+                      ))}
 
-                    <div className="flex gap-5 mt-5 text-xs text-[#9AA3C0]">
-                      <span>
-                        {opportunity.skills.length} skills
+                    {opportunity.skills.length > 6 && (
+                      <span className="text-xs text-[#9AA3C0] py-1.5">
+                        +{opportunity.skills.length - 6} more
                       </span>
+                    )}
+                  </div>
 
-                      <span>
-                        {opportunity.applications.length}{" "}
-                        applications
-                      </span>
-                    </div>
-                  </Link>
-                )
-              )}
+                  <div className="flex gap-5 mt-5 text-xs text-[#9AA3C0]">
+                    <span>
+                      {opportunity.skills.length} skills
+                    </span>
+
+                    <span>
+                      {opportunity.applications.length}{" "}
+                      applications
+                    </span>
+                  </div>
+                </Link>
+              ))}
 
             </div>
           )}
         </section>
-
       </div>
     </main>
   );

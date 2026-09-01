@@ -191,10 +191,6 @@ export async function POST(
     // INTERMEDIATE
     // ADVANCED
     // EXPERT
-    //
-    // There is NO minimumProficiency field
-    // in the current Prisma schema.
-    //
     // calculateMatchScore should therefore receive
     // the numeric proficiency requirement generated
     // from requiredLevel.

@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type CompetencyLevel =
+  | "EXPOSURE"
+  | "FOUNDATIONAL"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
 type Application = {
   id: string;
   status: string;
@@ -26,7 +33,7 @@ type Application = {
       name: string;
       category: string | null;
       required: boolean;
-      minimumProficiency: number;
+      requiredLevel: CompetencyLevel;
       weight: number;
     }[];
   };
@@ -42,19 +49,15 @@ export default function StudentApplicationsPage() {
   useEffect(() => {
     async function loadApplications() {
       try {
-        const response = await fetch(
-          "/api/student/applications",
-          {
-            cache: "no-store",
-          }
-        );
+        const response = await fetch("/api/student/applications", {
+          cache: "no-store",
+        });
 
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(
-            data.error ||
-              "Failed to load applications."
+            data.error || "Failed to load applications."
           );
         }
 
@@ -74,10 +77,7 @@ export default function StudentApplicationsPage() {
     loadApplications();
 
     // Check for status changes every 10 seconds
-    const interval = setInterval(
-      loadApplications,
-      10000
-    );
+    const interval = setInterval(loadApplications, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -112,23 +112,22 @@ export default function StudentApplicationsPage() {
 
   const appliedCount = applications.filter(
     (application) =>
-      application.status === "APPLIED"
+      application.status.toUpperCase() === "APPLIED"
   ).length;
 
   const shortlistedCount = applications.filter(
     (application) =>
-      application.status === "SHORTLISTED"
+      application.status.toUpperCase() === "SHORTLISTED"
   ).length;
 
   const selectedCount = applications.filter(
     (application) =>
-      application.status === "SELECTED"
+      application.status.toUpperCase() === "SELECTED"
   ).length;
 
   return (
     <main className="min-h-screen bg-[#0F1526] text-[#F5F1E8] px-6 py-10 font-sans">
       <div className="max-w-6xl mx-auto">
-
         {/* Header */}
         <section className="mb-10">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#E8598B] mb-2">
@@ -147,7 +146,6 @@ export default function StudentApplicationsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-
           <StatCard
             label="Total Applications"
             value={applications.length}
@@ -171,7 +169,6 @@ export default function StudentApplicationsPage() {
             value={selectedCount}
             accent="#5FD6BE"
           />
-
         </div>
 
         {/* Empty State */}
@@ -195,9 +192,7 @@ export default function StudentApplicationsPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  "/student/opportunities"
-                )
+                router.push("/student/opportunities")
               }
               className="mt-6 rounded-xl bg-[#E8598B] px-5 py-3 text-sm font-medium text-[#0F1526] transition hover:bg-[#f082ab]"
             >
@@ -214,7 +209,6 @@ export default function StudentApplicationsPage() {
             ))}
           </div>
         )}
-
       </div>
 
       <ThemeStyles />
@@ -308,15 +302,11 @@ function ApplicationCard({
 
   return (
     <article className="rounded-2xl border border-[#232B47] bg-[#171E33]/60 p-6 transition hover:border-[#E8598B]/30">
-
       {/* Top Section */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-
         {/* Opportunity Information */}
         <div className="flex-1">
-
           <div className="flex flex-wrap items-center gap-3 mb-3">
-
             <span className="rounded-full border border-[#E8598B]/25 bg-[#E8598B]/10 px-3 py-1 font-mono text-[11px] uppercase tracking-wide text-[#E8598B]">
               {application.opportunity.type.replaceAll(
                 "_",
@@ -324,10 +314,7 @@ function ApplicationCard({
               )}
             </span>
 
-            <StatusBadge
-              status={application.status}
-            />
-
+            <StatusBadge status={application.status} />
           </div>
 
           <h2 className="font-serif text-2xl">
@@ -343,7 +330,6 @@ function ApplicationCard({
           </p>
 
           <div className="flex flex-wrap gap-4 mt-4 text-sm text-[#9AA3C0]">
-
             {application.opportunity.location && (
               <span>
                 📍 {application.opportunity.location}
@@ -353,16 +339,12 @@ function ApplicationCard({
             <span>
               📅 Applied {formattedDate}
             </span>
-
           </div>
-
         </div>
 
         {/* Match Score */}
         <div className="shrink-0 md:w-32 text-center">
-
           <div className="rounded-2xl border border-[#F4A93B]/25 bg-[#F4A93B]/10 p-4">
-
             <p className="font-serif text-3xl text-[#F4A93B]">
               {matchScore !== null
                 ? `${matchScore}%`
@@ -372,40 +354,27 @@ function ApplicationCard({
             <p className="font-mono text-[11px] uppercase tracking-wide text-[#9AA3C0] mt-1">
               Skill Match
             </p>
-
           </div>
-
         </div>
-
       </div>
 
       {/* Divider */}
       <div className="mt-6 pt-5 border-t border-[#232B47]">
-
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
           {/* Skills */}
           <div>
-
             <p className="font-mono text-xs uppercase tracking-wide text-[#9AA3C0] mb-3">
               Key Skills
             </p>
 
             <div className="flex flex-wrap gap-2">
-
               {application.opportunity.skills
                 .slice(0, 5)
                 .map((skill) => (
-                  <span
+                  <SkillBadge
                     key={skill.id}
-                    className={`rounded-lg border px-3 py-1.5 text-xs ${
-                      skill.required
-                        ? "border-[#2BA792]/25 bg-[#2BA792]/10 text-[#2BA792]"
-                        : "border-[#232B47] bg-[#0F1526]/60 text-[#9AA3C0]"
-                    }`}
-                  >
-                    {skill.name}
-                  </span>
+                    skill={skill}
+                  />
                 ))}
 
               {application.opportunity.skills.length >
@@ -417,9 +386,7 @@ function ApplicationCard({
                   more
                 </span>
               )}
-
             </div>
-
           </div>
 
           {/* Action */}
@@ -434,13 +401,63 @@ function ApplicationCard({
           >
             View Opportunity
           </button>
-
         </div>
-
       </div>
-
     </article>
   );
+}
+
+/* ---------------------------------------------
+   SKILL BADGE
+--------------------------------------------- */
+
+function SkillBadge({
+  skill,
+}: {
+  skill: Application["opportunity"]["skills"][number];
+}) {
+  const requiredClass = skill.required
+    ? "border-[#2BA792]/25 bg-[#2BA792]/10 text-[#2BA792]"
+    : "border-[#232B47] bg-[#0F1526]/60 text-[#9AA3C0]";
+
+  return (
+    <span
+      className={`rounded-lg border px-3 py-1.5 text-xs ${requiredClass}`}
+      title={`Required level: ${formatCompetencyLevel(
+        skill.requiredLevel
+      )}`}
+    >
+      {skill.name}
+    </span>
+  );
+}
+
+/* ---------------------------------------------
+   COMPETENCY LEVEL FORMATTER
+--------------------------------------------- */
+
+function formatCompetencyLevel(
+  level: CompetencyLevel
+): string {
+  switch (level) {
+    case "EXPOSURE":
+      return "Exposure";
+
+    case "FOUNDATIONAL":
+      return "Foundational";
+
+    case "INTERMEDIATE":
+      return "Intermediate";
+
+    case "ADVANCED":
+      return "Advanced";
+
+    case "EXPERT":
+      return "Expert";
+
+    default:
+      return level;
+  }
 }
 
 /* ---------------------------------------------
@@ -452,8 +469,7 @@ function StatusBadge({
 }: {
   status: string;
 }) {
-  const normalizedStatus =
-    status.toUpperCase();
+  const normalizedStatus = status.toUpperCase();
 
   // Default = APPLIED
   let className =
@@ -487,10 +503,7 @@ function StatusBadge({
     <span
       className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-wide ${className}`}
     >
-      {normalizedStatus.replaceAll(
-        "_",
-        " "
-      )}
+      {normalizedStatus.replaceAll("_", " ")}
     </span>
   );
 }

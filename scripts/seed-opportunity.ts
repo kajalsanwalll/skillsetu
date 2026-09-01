@@ -3,12 +3,17 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create a development industry user
+  // ============================================================
+  // 1. Create development industry user
+  // ============================================================
+
   const industry = await prisma.user.upsert({
     where: {
       clerkId: "dev-industry-user",
     },
+
     update: {},
+
     create: {
       clerkId: "dev-industry-user",
       name: "TechNova",
@@ -16,6 +21,10 @@ async function main() {
       role: "INDUSTRY",
     },
   });
+
+  // ============================================================
+  // 2. Find required skills
+  // ============================================================
 
   const skillNames = [
     "Node.js",
@@ -38,7 +47,24 @@ async function main() {
     skills.map((skill) => [skill.name, skill])
   );
 
-  // Prevent duplicate opportunities during development
+  // ============================================================
+  // 3. Make sure all skills exist
+  // ============================================================
+
+  const missingSkills = skillNames.filter(
+    (skillName) => !skillMap.has(skillName)
+  );
+
+  if (missingSkills.length > 0) {
+    throw new Error(
+      `Missing skills in database: ${missingSkills.join(", ")}`
+    );
+  }
+
+  // ============================================================
+  // 4. Prevent duplicate opportunity
+  // ============================================================
+
   const existing = await prisma.opportunity.findFirst({
     where: {
       title: "Backend Engineer Intern",
@@ -47,57 +73,106 @@ async function main() {
   });
 
   if (existing) {
-    console.log("Opportunity already exists:", existing.id);
+    console.log(
+      "Opportunity already exists:",
+      existing.id
+    );
+
     return;
   }
+
+  // ============================================================
+  // 5. Create opportunity
+  // ============================================================
 
   const opportunity = await prisma.opportunity.create({
     data: {
       title: "Backend Engineer Intern",
+
       company: "TechNova",
+
       description:
         "Backend engineering internship focused on APIs, databases, caching and scalable services.",
+
       location: "Remote",
+
       type: "INTERNSHIP",
+
       industryId: industry.id,
+
+      // ========================================================
+      // Required skills
+      //
+      // Current SkillSetu system:
+      //
+      // EXPOSURE
+      // FOUNDATIONAL
+      // INTERMEDIATE
+      // ADVANCED
+      // EXPERT
+      //
+      // ========================================================
 
       skills: {
         create: [
           {
             skillId: skillMap.get("Node.js")!.id,
+
             required: true,
+
             weight: 1.0,
-            minimumProficiency: 80,
+
+            requiredLevel: "ADVANCED",
           },
+
           {
             skillId: skillMap.get("Express")!.id,
+
             required: true,
+
             weight: 0.9,
-            minimumProficiency: 70,
+
+            requiredLevel: "INTERMEDIATE",
           },
+
           {
             skillId: skillMap.get("REST APIs")!.id,
+
             required: true,
+
             weight: 1.0,
-            minimumProficiency: 75,
+
+            requiredLevel: "ADVANCED",
           },
+
           {
             skillId: skillMap.get("PostgreSQL")!.id,
+
             required: true,
+
             weight: 0.9,
-            minimumProficiency: 70,
+
+            requiredLevel: "INTERMEDIATE",
           },
+
           {
             skillId: skillMap.get("Docker")!.id,
+
             required: false,
+
             weight: 0.6,
-            minimumProficiency: 50,
+
+            requiredLevel: "INTERMEDIATE",
           },
+
           {
             skillId: skillMap.get("Redis")!.id,
+
             required: false,
+
             weight: 0.4,
-            minimumProficiency: 40,
+
+            requiredLevel: "FOUNDATIONAL",
           },
         ],
       },
@@ -112,10 +187,32 @@ async function main() {
     },
   });
 
-  console.log("Created opportunity:");
-  console.log(opportunity);
+  // ============================================================
+  // 6. Output
+  // ============================================================
+
+  console.log(
+    "Created opportunity successfully:"
+  );
+
+  console.log(
+    JSON.stringify(
+      opportunity,
+      null,
+      2
+    )
+  );
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((error) => {
+    console.error(
+      "SEED_OPPORTUNITY_ERROR:",
+      error
+    );
+
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

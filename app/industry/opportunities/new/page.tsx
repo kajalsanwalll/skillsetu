@@ -14,17 +14,19 @@ type OpportunityType =
   | "INDUSTRIAL_TRAINING"
   | "GUEST_LECTURE";
 
+type CompetencyLevel =
+  | "EXPOSURE"
+  | "FOUNDATIONAL"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
 type Skill = {
   name: string;
   category: string;
   importance: "CORE" | "IMPORTANT" | "USEFUL";
   required: boolean;
-  requiredLevel:
-    | "EXPOSURE"
-    | "FOUNDATIONAL"
-    | "INTERMEDIATE"
-    | "ADVANCED"
-    | "EXPERT";
+  requiredLevel: CompetencyLevel;
   weight: number;
 };
 
@@ -58,7 +60,32 @@ const opportunityTypes: {
   },
 ];
 
-// Shared field styling — matches the SkillSetu input language
+const competencyLevels: {
+  value: CompetencyLevel;
+  label: string;
+}[] = [
+  {
+    value: "EXPOSURE",
+    label: "Exposure",
+  },
+  {
+    value: "FOUNDATIONAL",
+    label: "Foundational",
+  },
+  {
+    value: "INTERMEDIATE",
+    label: "Intermediate",
+  },
+  {
+    value: "ADVANCED",
+    label: "Advanced",
+  },
+  {
+    value: "EXPERT",
+    label: "Expert",
+  },
+];
+
 const fieldClass = `
   mt-2 w-full rounded-lg border border-[#232B47] bg-[#0F1526]
   px-4 py-3 text-[#F5F1E8] placeholder:text-[#5B6386]
@@ -66,22 +93,31 @@ const fieldClass = `
   focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
 `;
 
+const smallFieldClass = `
+  mt-1 w-full rounded-lg
+  border border-[#232B47] bg-[#171E33]/60
+  px-3 py-2 text-[#F5F1E8]
+  outline-none transition
+  focus:border-[#F4A93B]
+  focus:ring-1 focus:ring-[#F4A93B]/30
+`;
+
 export default function NewOpportunityPage() {
   const router = useRouter();
 
   const [jobDescription, setJobDescription] = useState("");
-
   const [opportunity, setOpportunity] =
     useState<ExtractedOpportunity | null>(null);
 
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
 
   async function handleExtract() {
     if (!jobDescription.trim()) {
-      setError("Please paste a job or opportunity description.");
+      setError(
+        "Please paste a job or opportunity description."
+      );
       return;
     }
 
@@ -194,21 +230,17 @@ export default function NewOpportunityPage() {
       return;
     }
 
+    if (opportunity.skills.length === 0) {
+      setError("At least one skill is required.");
+      return;
+    }
+
     const invalidSkill = opportunity.skills.some(
       (skill) => !skill.name.trim()
     );
 
     if (invalidSkill) {
-      setError(
-        "Every skill must have a name."
-      );
-      return;
-    }
-
-    if (opportunity.skills.length === 0) {
-      setError(
-        "At least one skill is required."
-      );
+      setError("Every skill must have a name.");
       return;
     }
 
@@ -295,13 +327,15 @@ export default function NewOpportunityPage() {
                 setJobDescription(e.target.value)
               }
               placeholder="Paste the complete job description here..."
-              className={`
+              className="
                 w-full min-h-[350px] rounded-xl
                 border border-[#232B47] bg-[#0F1526]
-                p-5 text-[#F5F1E8] placeholder:text-[#5B6386]
+                p-5 text-[#F5F1E8]
+                placeholder:text-[#5B6386]
                 outline-none transition resize-y
-                focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
-              `}
+                focus:border-[#F4A93B]
+                focus:ring-1 focus:ring-[#F4A93B]/30
+              "
             />
 
             {error && (
@@ -321,7 +355,8 @@ export default function NewOpportunityPage() {
                 bg-[#F4A93B] px-6 py-4
                 font-medium text-[#0F1526]
                 transition hover:bg-[#f7b85e]
-                disabled:opacity-30 disabled:cursor-not-allowed
+                disabled:opacity-30
+                disabled:cursor-not-allowed
               "
             >
               {extracting
@@ -345,8 +380,8 @@ export default function NewOpportunityPage() {
                   </h2>
 
                   <p className="text-sm text-[#9AA3C0] mt-1">
-                    SkillSetu extracted the following. Edit
-                    anything before publishing.
+                    SkillSetu extracted the following.
+                    Edit anything before publishing.
                   </p>
                 </div>
 
@@ -430,8 +465,8 @@ export default function NewOpportunityPage() {
                     onChange={(e) =>
                       setOpportunity({
                         ...opportunity,
-                        type: e.target
-                          .value as OpportunityType,
+                        type:
+                          e.target.value as OpportunityType,
                       })
                     }
                     className={fieldClass}
@@ -447,7 +482,6 @@ export default function NewOpportunityPage() {
                     ))}
                   </select>
                 </div>
-
               </div>
 
               {/* Description */}
@@ -489,7 +523,9 @@ export default function NewOpportunityPage() {
                   className="
                     rounded-xl border border-[#3A4266]
                     px-4 py-2 text-sm text-[#F5F1E8]
-                    transition hover:border-[#F4A93B] hover:text-[#F4A93B]
+                    transition
+                    hover:border-[#F4A93B]
+                    hover:text-[#F4A93B]
                   "
                 >
                   + Add skill
@@ -523,13 +559,7 @@ export default function NewOpportunityPage() {
                                 name: e.target.value,
                               })
                             }
-                            className="
-                              mt-1 w-full rounded-lg
-                              border border-[#232B47] bg-[#171E33]/60
-                              px-3 py-2 text-[#F5F1E8]
-                              outline-none transition
-                              focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
-                            "
+                            className={smallFieldClass}
                           />
                         </div>
 
@@ -547,65 +577,91 @@ export default function NewOpportunityPage() {
                                   e.target.value,
                               })
                             }
-                            className="
-                              mt-1 w-full rounded-lg
-                              border border-[#232B47] bg-[#171E33]/60
-                              px-3 py-2 text-[#F5F1E8]
-                              outline-none transition
-                              focus:border-[#F4A93B] focus:ring-1 focus:ring-[#F4A93B]/30
-                            "
+                            className={smallFieldClass}
                           />
                         </div>
 
-                        {/* Proficiency */}
+                        {/* Importance */}
                         <div>
                           <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
-                            {" "}
-                            <span className="text-[#2BA792]">
-                              {skill.minimumProficiency}
-                            </span>
+                            Importance
                           </label>
 
-                          <div>
-                         <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
-                         Required level {" "}
-                          <span className="text-[#2BA792]">
-                          {skill.requiredLevel}
-                          </span>
-                         </label>
+                          <select
+                            value={skill.importance}
+                            onChange={(e) =>
+                              updateSkill(index, {
+                                importance:
+                                  e.target
+                                    .value as Skill["importance"],
+                              })
+                            }
+                            className={smallFieldClass}
+                          >
+                            <option
+                              value="CORE"
+                              className="bg-[#0F1526]"
+                            >
+                              Core
+                            </option>
+
+                            <option
+                              value="IMPORTANT"
+                              className="bg-[#0F1526]"
+                            >
+                              Important
+                            </option>
+
+                            <option
+                              value="USEFUL"
+                              className="bg-[#0F1526]"
+                            >
+                              Useful
+                            </option>
+                          </select>
+                        </div>
+
+                        {/* Required level */}
+                        <div>
+                          <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
+                            Required level
+                          </label>
 
                           <select
-                          value={skill.requiredLevel}
-                          onChange={(e) =>
-                          updateSkill(index, {
-                            requiredLevel:
-                            e.target.value as Skill["requiredLevel"],
-                          })
-                          }
-                          className="
-                           mt-1 w-full rounded-lg
-                           border border-[#232B47] bg-[#171E33]/60
-                             px-3 py-2 text-[#F5F1E8]
-                            outline-none transition
-                            focus:border-[#F4A93B]
-                            focus:ring-1 focus:ring-[#F4A93B]/30
-                            "
-                         >
-                         <option value="EXPOSURE">Exposure</option>
-                         <option value="FOUNDATIONAL">Foundational</option>
-                         <option value="INTERMEDIATE">Intermediate</option>
-                         <option value="ADVANCED">Advanced</option>
-                         <option value="EXPERT">Expert</option>
-                        </select>
-                        </div>
+                            value={
+                              skill.requiredLevel
+                            }
+                            onChange={(e) =>
+                              updateSkill(index, {
+                                requiredLevel:
+                                  e.target
+                                    .value as CompetencyLevel,
+                              })
+                            }
+                            className={smallFieldClass}
+                          >
+                            {competencyLevels.map(
+                              (level) => (
+                                <option
+                                  key={level.value}
+                                  value={level.value}
+                                  className="bg-[#0F1526]"
+                                >
+                                  {level.label}
+                                </option>
+                              )
+                            )}
+                          </select>
                         </div>
 
                         {/* Weight */}
-                        <div>
+                        <div className="md:col-span-2">
                           <label className="font-mono text-[11px] uppercase tracking-wide text-[#7A82A6]">
                             Weight ·{" "}
                             <span className="text-[#E8598B]">
-                              {(skill.weight ?? 0).toFixed(2)}
+                              {(
+                                skill.weight ?? 0
+                              ).toFixed(2)}
                             </span>
                           </label>
 
@@ -614,7 +670,9 @@ export default function NewOpportunityPage() {
                             min="0"
                             max="1"
                             step="0.05"
-                            value={skill.weight ?? 0}
+                            value={
+                              skill.weight ?? 0
+                            }
                             onChange={(e) =>
                               updateSkill(index, {
                                 weight: Number(
@@ -625,7 +683,6 @@ export default function NewOpportunityPage() {
                             className="mt-3 w-full accent-[#E8598B]"
                           />
                         </div>
-
                       </div>
 
                       {/* Required + delete */}
@@ -655,13 +712,10 @@ export default function NewOpportunityPage() {
                         >
                           Remove
                         </button>
-
                       </div>
-
                     </div>
                   )
                 )}
-
               </div>
             </section>
 
@@ -678,19 +732,19 @@ export default function NewOpportunityPage() {
               disabled={saving}
               className="
                 w-full rounded-xl bg-[#F4A93B]
-                px-6 py-4 text-lg font-medium text-[#0F1526]
+                px-6 py-4 text-lg font-medium
+                text-[#0F1526]
                 transition hover:bg-[#f7b85e]
-                disabled:opacity-30 disabled:cursor-not-allowed
+                disabled:opacity-30
+                disabled:cursor-not-allowed
               "
             >
               {saving
                 ? "Creating opportunity…"
                 : "Create opportunity"}
             </button>
-
           </div>
         )}
-
       </div>
 
       <style>{`
@@ -699,9 +753,11 @@ export default function NewOpportunityPage() {
         .font-serif {
           font-family: "Fraunces", serif;
         }
+
         main {
           font-family: "IBM Plex Sans", sans-serif;
         }
+
         .font-mono {
           font-family: "IBM Plex Mono", monospace;
         }

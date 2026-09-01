@@ -1,4 +1,4 @@
-    import { auth } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -38,6 +38,7 @@ function proficiencyToCompetencyLevel(
   if (proficiency >= 75) return "ADVANCED";
   if (proficiency >= 50) return "INTERMEDIATE";
   if (proficiency >= 25) return "FOUNDATIONAL";
+
   return "EXPOSURE";
 }
 
@@ -60,8 +61,11 @@ function generateLearningSteps(
   currentLevel: CompetencyLevel,
   targetLevel: CompetencyLevel
 ) {
-  const current = COMPETENCY_LEVEL_VALUE[currentLevel];
-  const target = COMPETENCY_LEVEL_VALUE[targetLevel];
+  const current =
+    COMPETENCY_LEVEL_VALUE[currentLevel];
+
+  const target =
+    COMPETENCY_LEVEL_VALUE[targetLevel];
 
   const levelGap = target - current;
 
@@ -320,24 +324,38 @@ export async function POST(request: Request) {
 
     // ============================================================
     // 7. Prepare opportunity requirements
+    //
+    // IMPORTANT:
+    // calculate-gap.ts now expects requiredLevel.
+    // We therefore pass BOTH:
+    //
+    // requiredLevel
+    // minimumProficiency
+    //
+    // This keeps the numerical compatibility while
+    // preserving the competency-level information.
     // ============================================================
 
     const opportunitySkillsForGap =
-  opportunity.skills.map(
-    (opportunitySkill) => ({
-      skillId: opportunitySkill.skillId,
-      required: opportunitySkill.required,
-      weight: opportunitySkill.weight,
-      requiredLevel: opportunitySkill.requiredLevel,
+      opportunity.skills.map(
+        (opportunitySkill) => ({
+          skillId: opportunitySkill.skillId,
 
-      // Keep this if calculate-gap.ts still uses
-      // numeric proficiency internally.
-      minimumProficiency:
-        COMPETENCY_PROFICIENCY[
-          opportunitySkill.requiredLevel
-        ],
-    })
-  );
+          required:
+            opportunitySkill.required,
+
+          weight:
+            opportunitySkill.weight,
+
+          requiredLevel:
+            opportunitySkill.requiredLevel,
+
+          minimumProficiency:
+            COMPETENCY_PROFICIENCY[
+              opportunitySkill.requiredLevel
+            ] ?? 40,
+        })
+      );
 
     // ============================================================
     // 8. Calculate gap analysis
@@ -353,92 +371,95 @@ export async function POST(request: Request) {
     // 9. Build roadmap ONLY for skills that need improvement
     // ============================================================
 
-    const roadmapSkills = gapAnalysis.skills
-      .filter(
-        (gap) =>
-          gap.status === "GAP" ||
-          gap.status === "MODERATE"
-      )
-      .map((gap, index) => {
-        const opportunitySkill =
-          opportunity.skills.find(
-            (skill) =>
-              skill.skillId === gap.skillId
-          );
+    const roadmapSkills =
+      gapAnalysis.skills
+        .filter(
+          (gap) =>
+            gap.status === "GAP" ||
+            gap.status === "MODERATE"
+        )
+        .map((gap, index) => {
+          const opportunitySkill =
+            opportunity.skills.find(
+              (skill) =>
+                skill.skillId === gap.skillId
+            );
 
-        if (!opportunitySkill) {
-          return null;
-        }
+          if (!opportunitySkill) {
+            return null;
+          }
 
-        const studentSkill =
-          trustedSkills.find(
-            (skill) =>
-              skill.skillId ===
-              gap.skillId
-          );
+          const studentSkill =
+            trustedSkills.find(
+              (skill) =>
+                skill.skillId === gap.skillId
+            );
 
-        const currentProficiency =
-          studentSkill?.trustedProficiency ?? 0;
+          const currentProficiency =
+            studentSkill?.trustedProficiency ?? 0;
 
-        const currentLevel =
-          proficiencyToCompetencyLevel(
-            currentProficiency
-          );
+          const currentLevel =
+            proficiencyToCompetencyLevel(
+              currentProficiency
+            );
 
-        const targetLevel =
-          opportunitySkill.requiredLevel;
+          const targetLevel =
+            opportunitySkill.requiredLevel;
 
-        const steps =
-          generateLearningSteps(
-            opportunitySkill.skill.name,
-            currentLevel,
-            targetLevel
-          );
-
-        return {
-          skillId: opportunitySkill.skillId,
-
-          skillName:
-            opportunitySkill.skill.name,
-
-          category:
-            opportunitySkill.skill.category,
-
-          currentLevel,
-
-          targetLevel,
-
-          currentProficiency,
-
-          requiredProficiency:
-            COMPETENCY_PROFICIENCY[
+          const steps =
+            generateLearningSteps(
+              opportunitySkill.skill.name,
+              currentLevel,
               targetLevel
-            ],
+            );
 
-          gap: Math.max(
-            0,
-            gap.gap
-          ),
+          return {
+            skillId:
+              opportunitySkill.skillId,
 
-          required:
-            opportunitySkill.required,
+            skillName:
+              opportunitySkill.skill.name,
 
-          weight:
-            opportunitySkill.weight,
+            category:
+              opportunitySkill.skill.category,
 
-          status: gap.status,
+            currentLevel,
 
-          order: index + 1,
+            targetLevel,
 
-          steps,
-        };
-      })
-      .filter(
-        (
-          skill
-        ): skill is NonNullable<typeof skill> =>
-          skill !== null
-      );
+            currentProficiency,
+
+            requiredProficiency:
+              COMPETENCY_PROFICIENCY[
+                targetLevel
+              ] ?? 40,
+
+            gap: Math.max(
+              0,
+              gap.gap
+            ),
+
+            required:
+              opportunitySkill.required,
+
+            weight:
+              opportunitySkill.weight,
+
+            status:
+              gap.status,
+
+            order:
+              index + 1,
+
+            steps,
+          };
+        })
+        .filter(
+          (
+            skill
+          ): skill is NonNullable<typeof skill> =>
+            skill !== null
+        );
 
     // ============================================================
     // 10. Calculate total estimated hours
@@ -467,10 +488,19 @@ export async function POST(request: Request) {
       roadmap: {
         opportunity: {
           id: opportunity.id,
-          title: opportunity.title,
-          company: opportunity.company,
-          type: opportunity.type,
-          location: opportunity.location,
+
+          title:
+            opportunity.title,
+
+          company:
+            opportunity.company,
+
+          type:
+            opportunity.type,
+
+          location:
+            opportunity.location,
+
           industry:
             opportunity.industry.name,
         },
@@ -503,7 +533,9 @@ export async function POST(request: Request) {
         message:
           roadmapSkills.length === 0
             ? "You already meet the required competency levels for this opportunity."
-            : `You have ${roadmapSkills.length} skill${
+            : `You have ${
+                roadmapSkills.length
+              } skill${
                 roadmapSkills.length === 1
                   ? ""
                   : "s"
